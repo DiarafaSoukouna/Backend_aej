@@ -11,6 +11,10 @@ use App\Http\Controllers\TypeEmploiController;
 use App\Http\Controllers\PersonnelController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\RoleController;
+use App\Http\Controllers\TypeOrganismeController;
+use App\Http\Controllers\OrganismeController;
+use App\Http\Controllers\IndicateurController;
+
 
 Route::apiResource('directions', DirectionController::class);
 Route::apiResource('services', ServiceController::class);
@@ -27,3 +31,6 @@ Route::post('personnels/login', [PersonnelController::class, 'auth']);
 Route::post('personnels/logout', [PersonnelController::class, 'logout']);
 Route::apiResource('permissions', PermissionController::class);
 Route::apiResource('roles', RoleController::class);
+Route::apiResource('type-organismes', TypeOrganismeController::class);
+Route::apiResource('organismes', OrganismeController::class);
+Route::apiResource('indicateurs', IndicateurController::class);

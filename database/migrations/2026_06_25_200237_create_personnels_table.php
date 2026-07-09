@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->string('telephone')->nullable();
             $table->string('adresse')->nullable();
+            $table->string('mot_de_passe');
             $table->foreignId('role_id')->constrained('roles')->onDelete('cascade');
             $table->boolean('is_active')->default(true);
             $table->foreignId('fonction_id')->constrained('fonctions')->onDelete('cascade');

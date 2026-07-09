@@ -91,14 +91,31 @@ CREATE TABLE entreprises (
  created_at DATETIME NOT NULL,
  updated_at DATETIME NOT NULL
 );
-
+CREATE TABLE types_organismes (
+ id BIGINT AUTO_INCREMENT PRIMARY KEY,
+ code VARCHAR(30) UNIQUE,
+ libelle VARCHAR(100) NOT NULL,
+ created_at DATETIME NOT NULL,
+ updated_at DATETIME NOT NULL
+);
 CREATE TABLE organismes (
  id BIGINT AUTO_INCREMENT PRIMARY KEY,
  nom VARCHAR(200) NOT NULL,
  sigle VARCHAR(30),
- type ENUM('banque','fonds','cooperation','etat','ong') NOT NULL,
+ type BIGINT NOT NULL,
+ site_web VARCHAR(255),
+ description TEXT,
+ adresse VARCHAR(255),
+ telephone VARCHAR(20),
+ email VARCHAR(100),
  created_at DATETIME NOT NULL,
- updated_at DATETIME NOT NULL
+ updated_at DATETIME NOT NULL,
+
+CONSTRAINT fk_organismes_type
+    FOREIGN KEY (type)
+    REFERENCES types_organismes(id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE
 );
 
 CREATE TABLE financements (
@@ -158,9 +175,14 @@ CREATE TABLE remboursements (
 CREATE TABLE indicateurs (
  id BIGINT AUTO_INCREMENT PRIMARY KEY,
  nom VARCHAR(150) NOT NULL UNIQUE,
+ description TEXT,
+ type_valeur ENUM('numerique','texte','pourcentage','booleen') NOT NULL,
+ unite VARCHAR(50),
+ statut TINYINT(1) NOT NULL DEFAULT 1,
  created_at DATETIME NOT NULL,
  updated_at DATETIME NOT NULL
 );
+
 
 CREATE TABLE indicateurs_suivi (
  id BIGINT AUTO_INCREMENT PRIMARY KEY,
@@ -200,4 +222,86 @@ CREATE TABLE configurations (
  id BIGINT AUTO_INCREMENT PRIMARY KEY,
  nom_systeme VARCHAR(255) NOT NULL,
  sigle_systeme VARCHAR(255) NOT NULL
+);
+
+
+CREATE TABLE formulaires_evaluation (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    code VARCHAR(50) NOT NULL UNIQUE,
+    libelle VARCHAR(200) NOT NULL,
+    public_cible VARCHAR(50) NOT NULL,
+    actif TINYINT(1) NOT NULL DEFAULT 1,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+        ON UPDATE CURRENT_TIMESTAMP
+);
+
+
+CREATE TABLE questions_evaluation (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    formulaire_id BIGINT UNSIGNED NOT NULL,
+    code VARCHAR(50) NOT NULL,
+    libelle TEXT NOT NULL,
+    type_question VARCHAR(50) NOT NULL,
+    options JSON DEFAULT NULL,
+    ordre SMALLINT NOT NULL DEFAULT 0,
+    affichage BOOLEAN DEFAULT NULL,
+    obligatoire TINYINT(1) NOT NULL DEFAULT 1,
+
+    CONSTRAINT fk_questions_formulaire
+        FOREIGN KEY (formulaire_id)
+        REFERENCES formulaires_evaluation(id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
+);
+
+
+CREATE TABLE evaluations (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+
+    formulaire_id BIGINT UNSIGNED NOT NULL,
+
+    cible_type VARCHAR(50) NOT NULL,
+
+    evaluateur_id BIGINT UNSIGNED NOT NULL,
+
+    date_evaluation DATETIME NOT NULL,
+
+    score_global DECIMAL(5,2) DEFAULT NULL,
+
+    commentaire TEXT DEFAULT NULL,
+
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+        ON UPDATE CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_evaluations_formulaire
+        FOREIGN KEY (formulaire_id)
+        REFERENCES formulaires_evaluation(id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
+);
+
+
+CREATE TABLE reponses_evaluation (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+
+    evaluation_id BIGINT UNSIGNED NOT NULL,
+    question_id BIGINT UNSIGNED NOT NULL,
+
+    reponse_texte TEXT DEFAULT NULL,
+
+    INDEX idx_reponses_evaluation (evaluation_id),
+
+    CONSTRAINT fk_reponses_evaluation
+        FOREIGN KEY (evaluation_id)
+        REFERENCES evaluations(id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE,
+
+    CONSTRAINT fk_reponses_question
+        FOREIGN KEY (question_id)
+        REFERENCES questions_evaluation(id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
 );
