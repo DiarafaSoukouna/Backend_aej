@@ -173,7 +173,6 @@ CREATE TABLE
         FOREIGN KEY (commune_id) REFERENCES communes (id)
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
--- Bank, micro 
 CREATE TABLE
     IF NOT EXISTS type_organismes (
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
