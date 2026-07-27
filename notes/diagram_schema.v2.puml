@@ -1,7 +1,7 @@
 @startuml schema_aej
 
 ' ===============================================================
-' Diagramme Entité-Relation - à coller dans https://www.planttext.com/
+' Diagramme Entité-Relation - à coller dans https://uml.planttext.com/
 ' ===============================================================
 
 hide circle
@@ -119,9 +119,9 @@ package "3. Référentiels métier" {
 }
 
 ' ---------------------------------------------------------------
-' 4. AGENCES & ENTREPRISES
+' 4. ENTREPRISES & ORGANISMES
 ' ---------------------------------------------------------------
-package "4. Agences & entreprises" {
+package "4. Entreprises & organismes" {
   entity type_entreprises {
     * id : BIGINT <<PK>>
     --
@@ -238,36 +238,9 @@ package "7. Référentiels jeunes" {
 }
 
 ' ---------------------------------------------------------------
-' 8. JEUNES
+' 8. WORKFLOWS
 ' ---------------------------------------------------------------
-package "8. Jeunes" {
-  entity jeunes {
-    * id : BIGINT <<PK>>
-    --
-    typepieceidentite_id : BIGINT <<FK>>
-    secteuractivite_id : BIGINT <<FK>>
-    soussecteuractivite_id : BIGINT <<FK>>
-    situationmatrimoniale_id : BIGINT <<FK>>
-    nom
-    prenom
-    email
-    telephone
-    sexe
-    datenaissance
-    matriculeaej
-    statut
-  }
-
-  pieces_identite ||--o{ jeunes
-  secteurs_activites ||--o{ jeunes
-  sous_secteurs_activites ||--o{ jeunes
-  situation_matrimoniale ||--o{ jeunes
-}
-
-' ---------------------------------------------------------------
-' 9. WORKFLOWS
-' ---------------------------------------------------------------
-package "9. Workflows" {
+package "8. Workflows" {
   entity workflows {
     * id : BIGINT <<PK>>
     --
@@ -361,55 +334,61 @@ package "9. Workflows" {
 }
 
 ' ---------------------------------------------------------------
-' 10. PROJETS
+' 9. PROJETS
 ' ---------------------------------------------------------------
-package "10. Projets" {
+package "9. Projets" {
   entity projets {
     * id : BIGINT <<PK>>
     --
     secteur_id : BIGINT <<FK>>
     titre
-    type_projet
-    tranche_age
-    date_certification
   }
 
   entity zones_intervention {
     * id : BIGINT <<PK>>
     --
     projet_id : BIGINT <<FK>>
-    region_id : BIGINT <<FK>>
     departement_id : BIGINT <<FK>>
-    commune_id : BIGINT <<FK>>
     latitude
     longitude
   }
 
   secteurs_activites ||--o{ projets
   projets ||--o{ zones_intervention
-  regions ||--o{ zones_intervention
   departements ||--o{ zones_intervention
-  communes ||--o{ zones_intervention
 }
 
 ' ---------------------------------------------------------------
-' 11. GUICHETS
+' 10. GUICHETS & AGENCES
 ' ---------------------------------------------------------------
-package "11. Guichets" {
+package "10. Guichets & agences" {
   entity guichets {
     * id : BIGINT <<PK>>
     --
     code
     intitule
-    budget_alloue
+    montant_max
+    montant_min
     type
   }
+
+  entity agences_regionales {
+    * id : BIGINT <<PK>>
+    --
+    chef_agence_id : BIGINT <<FK>>
+    code
+    intitule
+    localisation
+    contact
+  }
+
+  personnels ||--o{ agences_regionales : "chef d'agence"
 }
 
 ' ---------------------------------------------------------------
-' 12. DISPOSITIFS
+' 11. DISPOSITIFS
 ' ---------------------------------------------------------------
-package "12. Dispositifs" {
+package "11. Dispositifs" {
   entity dispositifs {
     * id : BIGINT <<PK>>
     --
@@ -423,6 +402,34 @@ package "12. Dispositifs" {
 }
 
 ' ---------------------------------------------------------------
+' 12. JEUNES (porteurs de projet)
+' ---------------------------------------------------------------
+package "12. Jeunes" {
+  entity jeunes {
+    * id : BIGINT <<PK>>
+    --
+    typepieceidentite_id : BIGINT <<FK>>
+    secteuractivite_id : BIGINT <<FK>>
+    soussecteuractivite_id : BIGINT <<FK>>
+    situationmatrimoniale_id : BIGINT <<FK>>
+    nom
+    prenom
+    email
+    telephone
+    sexe
+    tranche_age
+    datenaissance
+    matriculeaej
+    statut
+  }
+
+  pieces_identite ||--o{ jeunes
+  secteurs_activites ||--o{ jeunes
+  sous_secteurs_activites ||--o{ jeunes
+  situation_matrimoniale ||--o{ jeunes
+}
+
+' ---------------------------------------------------------------
 ' 13. MICRO PROJETS
 ' ---------------------------------------------------------------
 package "13. Micro projets" {
@@ -432,22 +439,37 @@ package "13. Micro projets" {
     dispositif_id : BIGINT <<FK>>
     organisme_id : BIGINT <<FK>>
     guichet_id : BIGINT <<FK>>
+    agence_id : BIGINT <<FK>>
     jeune_id : BIGINT <<FK>>
     code
     intitule
     statut
+    transmission_plan_affaire
+    disponibilite_plan_decaissement
+    validation_plan_decaissement
   }
 
   dispositifs ||--o{ micro_projets
   organisme_financements ||--o{ micro_projets
   guichets ||--o{ micro_projets
+  agences_regionales ||--o{ micro_projets
   jeunes ||--o{ micro_projets
 }
 
 ' ---------------------------------------------------------------
-' 14. OBSERVATIONS, DOCUMENTS
+' 14. COMPTES, OBSERVATIONS, DOCUMENTS
 ' ---------------------------------------------------------------
-package "14. Observations & documents" {
+package "14. Comptes, observations & documents" {
+  entity compte_financements {
+    * id : BIGINT <<PK>>
+    --
+    organisme_id : BIGINT <<FK>>
+    micro_projet_id : BIGINT <<FK>>
+    etat_ouverture
+    date_ouverture
+    avis_partenaire
+  }
+
   entity observations {
     * id : BIGINT <<PK>>
     --
@@ -464,6 +486,8 @@ package "14. Observations & documents" {
     fichier
   }
 
+  organisme_financements ||--o{ compte_financements
+  micro_projets ||--o{ compte_financements
   micro_projets ||--o{ observations
   personnels ||--o{ observations
   micro_projets ||--o{ documents
@@ -480,6 +504,38 @@ package "15. Financements" {
     valide_par : BIGINT <<FK>>
     intitule
     montant_alloue
+    annee_financement
+    statut
+    deblocage
+    signature_convention
+    reception_acte_credit
+  }
+
+  entity budgets_remboursements {
+    budget_id : BIGINT <<FK>>
+    --
+    montant_remboursement
+    montant_garantie
+    montant_recouvrement
+    dure_remboursement
+    dure_differe
+    date_premiere_echeance
+    date_derniere_cheance
+    restructuration_pret
+    capital_amorti
+    interets
+  }
+
+  entity remboursements {
+    * id : BIGINT <<PK>>
+    --
+    jeune_id : BIGINT <<FK>>
+    budget_id : BIGINT <<FK>>
+    montant_echu
+    montant_paye
+    montant_impaye
+    date_paiement
+    penalites
     statut
   }
 
@@ -511,25 +567,15 @@ package "15. Financements" {
     statut
   }
 
-  entity remboursements {
-    * id : BIGINT <<PK>>
-    --
-    jeune_id : BIGINT <<FK>>
-    budget_id : BIGINT <<FK>>
-    numero_echeance
-    montant_prevu
-    montant_paye
-    statut
-  }
-
   micro_projets ||--|| budgets
   personnels ||--o{ budgets
+  budgets ||--|| budgets_remboursements
+  jeunes ||--o{ remboursements
+  budgets ||--o{ remboursements
   micro_projets ||--o{ depenses
   personnels ||--o{ depenses
   budgets ||--o{ plan_decaissements
   plan_decaissements ||--o{ decaissements
-  jeunes ||--o{ remboursements
-  budgets ||--o{ remboursements
 }
 
 ' ---------------------------------------------------------------
@@ -541,9 +587,10 @@ package "16. Exploitations, indicateurs & suivis" {
     --
     micro_projet_id : BIGINT <<FK>>
     agent_id : BIGINT <<FK>>
+    etat_installation
+    etat_activite
+    nbre_visites
     date_debut_visite
-    nbre_emplois
-    chiffre_affaires
   }
 
   entity visite_photos {

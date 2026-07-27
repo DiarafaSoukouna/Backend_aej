@@ -1,5 +1,8 @@
-SET NAMES utf8mb4;
-SET FOREIGN_KEY_CHECKS = 0;
+SET
+    NAMES utf8mb4;
+
+SET
+    FOREIGN_KEY_CHECKS = 0;
 
 -- ##############################################################
 -- 1. CONFIGURATION GLOBALE
@@ -22,8 +25,8 @@ CREATE TABLE
         taux_devise_principale DECIMAL(10, 2) NOT NULL,
         mise_en_maintenance TINYINT (1) NOT NULL DEFAULT 0,
         delai_inactivite_minutes INT NOT NULL,
-        nombre_session_possible INT NOT NULL,
-        nombre_tentatives_connexion INT NOT NULL,
+        nbre_session_possible INT NOT NULL,
+        nbre_tentatives_connexion INT NOT NULL,
         delai_code_tp_minutes INT NOT NULL,
         delai_changement_mdp_mois INT NOT NULL,
         delai_suppression_secondes INT NOT NULL,
@@ -170,6 +173,7 @@ CREATE TABLE
         FOREIGN KEY (commune_id) REFERENCES communes (id)
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
+-- Bank, micro 
 CREATE TABLE
     IF NOT EXISTS type_organismes (
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -313,6 +317,18 @@ CREATE TABLE
         parent_etape_id BIGINT UNSIGNED,
         code VARCHAR(30) NOT NULL,
         name VARCHAR(200) NOT NULL,
+        impact ENUM (
+            'EN_SOUMISSION',
+            'EN_COURS',
+            'EN_ANALYSE',
+            'EN_FORMATION',
+            'EN_FINANCEMENT',
+            'EN_DECAISSEMENT',
+            'EN_SUIVI',
+            'EN_REMBOURSEMENT',
+            'TERMINE'
+        ),
+        statut ENUM ('OUI', 'NON'),
         description TEXT,
         level SMALLINT NOT NULL DEFAULT 1,
         sequence_order INTEGER NOT NULL,
@@ -425,14 +441,6 @@ CREATE TABLE
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
         secteur_id BIGINT UNSIGNED,
         titre VARCHAR(255) NOT NULL,
-        stade_projet ENUM ('CREATION', 'DEVELOPPEMENT') DEFAULT 'CREATION',
-        type_projet ENUM ('INDIVIDUEL', 'COLLECTIF') DEFAULT 'INDIVIDUEL',
-        nbre_beneficiaires INT,
-        nbre_emplois INT,
-        localisation VARCHAR(50),
-        geolocalisation TEXT,
-        date_certification DATE,
-        date_transmission_partenaire DATE,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         FOREIGN KEY (secteur_id) REFERENCES secteurs_activites (id),
@@ -444,17 +452,13 @@ CREATE TABLE
     IF NOT EXISTS zones_intervention (
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
         projet_id BIGINT UNSIGNED NOT NULL,
-        region_id BIGINT UNSIGNED,
         departement_id BIGINT UNSIGNED,
-        commune_id BIGINT UNSIGNED,
         adresse TEXT,
         latitude DECIMAL(10, 8),
         longitude DECIMAL(11, 8),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (projet_id) REFERENCES projets (id) ON DELETE CASCADE,
-        FOREIGN KEY (region_id) REFERENCES regions (id),
         FOREIGN KEY (departement_id) REFERENCES departements (id),
-        FOREIGN KEY (commune_id) REFERENCES communes (id)
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
 -- ##############################################################
@@ -465,7 +469,8 @@ CREATE TABLE
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
         code VARCHAR(10) UNIQUE,
         intitule VARCHAR(100) NOT NULL,
-        budget_alloue DECIMAL(15, 2) DEFAULT 0,
+        montant_min DECIMAL(15, 2) DEFAULT 0,
+        montant_max DECIMAL(15, 2) DEFAULT 0,
         type VARCHAR(50) NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
@@ -499,6 +504,9 @@ CREATE TABLE
         projet_id BIGINT UNSIGNED NOT NULL UNIQUE,
         intitule VARCHAR(200) NOT NULL,
         budget_alloue DECIMAL(15, 2) NOT NULL,
+        nbre_emplois_prevu INT DEFAULT 0,
+        nbre_beneficiaire_prevu INT DEFAULT 0,
+        nbre_micro_projet_prevu INT DEFAULT 0,
         created_at DATETIME NOT NULL,
         updated_at DATETIME NOT NULL,
         FOREIGN KEY (projet_id) REFERENCES projets (id) ON DELETE CASCADE
@@ -552,28 +560,24 @@ CREATE TABLE
         guichet_id BIGINT UNSIGNED NOT NULL,
         agence_id BIGINT UNSIGNED NOT NULL,
         jeune_id BIGINT UNSIGNED NOT NULL,
+        stade_projet ENUM ('CREATION', 'DEVELOPPEMENT') DEFAULT 'CREATION',
+        type_projet ENUM ('INDIVIDUEL', 'COLLECTIF') DEFAULT 'INDIVIDUEL',
         statut ENUM (
             'BROUILLON',
-            'SOUMIS',
+            'EN_SOUMISSION',
             'EN_COURS',
             'EN_ANALYSE',
             'EN_FORMATION',
-            'EN_ATTENTE',
-            'EN_CORRECTION',
-            'VALIDE',
-            'FINANCE',
-            'DECAISSE',
+            'EN_FINANCEMENT',
+            'EN_DECAISSEMENT',
             'EN_SUIVI',
             'EN_REMBOURSEMENT',
-            'CONTENTIEUX',
-            'TERMINE',
-            'REJETE',
-            'ABANDONNE'
+            'TERMINE'
         ) DEFAULT 'BROUILLON',
-        transmission_plan_affaire ENUM ('OUI', 'NON') DEFAULT 'NON',
-        disponibilite_plan_decaissement ENUM ('ELABORE', 'EN_COURS', 'EN_ATTENTE') DEFAULT 'EN_ATTENTE',
-        date_transmission_plan_decaissement DATE,
-        validation_plan_decaissement ENUM ('OUI', 'NON') DEFAULT 'NON',
+        localisation VARCHAR(50),
+        geolocalisation TEXT,
+        date_certification DATE,
+        date_transmission_partenaire DATE,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         FOREIGN KEY (dispositif_id) REFERENCES dispositifs (id) ON DELETE CASCADE,
@@ -666,7 +670,7 @@ CREATE TABLE
         capital_amorti DECIMAL(18, 2) DEFAULT 0,
         interets DECIMAL(18, 2) DEFAULT 0,
         FOREIGN KEY (budget_id) REFERENCES budgets (id) ON DELETE CASCADE
-    )ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
+    ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
 CREATE TABLE
     IF NOT EXISTS remboursements (
@@ -964,32 +968,38 @@ CREATE TABLE
         FOREIGN KEY (commented_by_id) REFERENCES personnels (id)
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
+-- ##############################################################
+-- 19. ANALYSE DYNAMIQUE DES DONNEES
+-- ##############################################################
+-- CATEGORIE D'ETAPES (SELECTION MULTIPLE D'ETAPES VALIDEES)
+CREATE TABLE
+    IF NOT EXISTS workflow_categories_etapes (
+        id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+        etape_id BIGINT UNSIGNED NOT NULL,
+        comment TEXT,
+        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (etape_id) REFERENCES workflow_etapes (id)
+    ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
+
 SET
     FOREIGN_KEY_CHECKS = 1;
 
 -- ##############################################################
--- 19. TRIGGERS
+-- 20. TRIGGERS
 -- ##############################################################
-DELIMITER //
+DELIMITER / / CREATE TRIGGER before_insert_workflow_etape BEFORE INSERT ON workflow_etapes FOR EACH ROW BEGIN IF NEW.parent_etape_id IS NOT NULL
+AND NEW.parent_etape_id = NEW.id THEN SIGNAL SQLSTATE '45000'
+SET
+    MESSAGE_TEXT = 'Une étape ne peut pas être son propre parent';
 
-CREATE TRIGGER before_insert_workflow_etape
-BEFORE INSERT ON workflow_etapes
-FOR EACH ROW
-BEGIN
-    IF NEW.parent_etape_id IS NOT NULL AND NEW.parent_etape_id = NEW.id THEN
-        SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'Une étape ne peut pas être son propre parent';
-    END IF;
-END//
+END IF;
 
-CREATE TRIGGER before_update_workflow_etape
-BEFORE UPDATE ON workflow_etapes
-FOR EACH ROW
-BEGIN
-    IF NEW.parent_etape_id IS NOT NULL AND NEW.parent_etape_id = NEW.id THEN
-        SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'Une étape ne peut pas être son propre parent';
-    END IF;
-END//
+END / / CREATE TRIGGER before_update_workflow_etape BEFORE
+UPDATE ON workflow_etapes FOR EACH ROW BEGIN IF NEW.parent_etape_id IS NOT NULL
+AND NEW.parent_etape_id = NEW.id THEN SIGNAL SQLSTATE '45000'
+SET
+    MESSAGE_TEXT = 'Une étape ne peut pas être son propre parent';
 
-DELIMITER ;
+END IF;
+
+END / / DELIMITER;
