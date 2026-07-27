@@ -1,7 +1,5 @@
 # Documentation du schéma — Rôle de chaque table
 
-Ce document explique, section par section (reprenant la numérotation du script SQL), l'objet de chaque table.
-
 ---
 
 ## 1. Configuration globale
