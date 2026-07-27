@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Personnel;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\JsonResponse;
@@ -32,7 +33,7 @@ class PersonnelController extends Controller
         'email' => 'required|string|email|max:255|unique:personnels',
         'telephone' => 'nullable|string|max:20',
         'adresse' => 'nullable|string|max:255',
-        'mot_de_passe' => 'required|string|min:8',
+        'mot_de_passe' => 'nullable|string|min:8',
         'role_id' => 'required|exists:roles,id',
         'is_active' => 'boolean',
         'fonction_id' => 'required|exists:fonctions,id',
@@ -48,13 +49,16 @@ class PersonnelController extends Controller
     try {
         $data = $request->except('mot_de_passe');
 
+        $motDePasseGenere = $request->mot_de_passe ?? 'AEJ' . now()->format('YmdHis');
+
         $personnel = Personnel::create(array_merge($data, [
-            'mot_de_passe' => Hash::make($request->mot_de_passe)
+            'mot_de_passe' => Hash::make($motDePasseGenere)
         ]));
 
         return new JsonResponse([
             'message' => 'Personnel created successfully',
-            'data' => $personnel
+            'data' => $personnel,
+            'mot_de_passe_temporaire' => $motDePasseGenere
         ], 201);
 
     } catch (\Exception $e) {
@@ -163,12 +167,12 @@ public function auth(Request $request): JsonResponse
     }
 
     try {
-        $token = $personnel->createToken('auth_token')->plainTextToken;
-
+        Auth::guard('web')->login($personnel);
+        $request->session()->regenerate();
+        $userId = $personnel->id;
         return new JsonResponse([
             'message' => 'Authentification réussie',
-            'data' => $personnel,
-            'token' => $token
+            'user_id' => $userId,
         ], 200);
 
     } catch (\Exception $e) {
@@ -180,10 +184,30 @@ public function auth(Request $request): JsonResponse
 }
 public function logout(Request $request): JsonResponse
 {
-   $request->user()->currentAccessToken()->delete();
+    Auth::guard('web')->logout();
+
+    $request->session()->invalidate();
+    $request->session()->regenerateToken();
 
     return response()->json([
         'Message' => 'Logout successful'
+    ], 200);
+}
+
+public function refresh(Request $request): JsonResponse
+{
+    $request->session()->regenerate();
+
+    return new JsonResponse([
+        'message' => 'Session refreshed',
+        'data' => $request->user(),
+    ], 200);
+}
+public function me(Request $request): JsonResponse
+{
+    return new JsonResponse([
+        'message' => 'Utilisateur récupéré avec succès',
+        'data' => $request->user(),
     ], 200);
 }
 public function destroy($id) : JsonResponse
