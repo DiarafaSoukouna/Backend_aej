@@ -8,6 +8,9 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\JsonResponse;
+use App\Http\Controllers\MessageController;
+
+
 
 
 class PersonnelController extends Controller
@@ -25,7 +28,7 @@ class PersonnelController extends Controller
         }
         return new JsonResponse(['Message' => 'Personnel retrieved successfully', 'data' => $personnel], 200);
     }
-   public function store(Request $request): JsonResponse
+  public function store(Request $request): JsonResponse
 {
     $validation = Validator::make($request->all(), [
         'nom' => 'required|string|max:255',
@@ -55,10 +58,57 @@ class PersonnelController extends Controller
             'mot_de_passe' => Hash::make($motDePasseGenere)
         ]));
 
+        $sendMessage = new MessageController();
+        $sendMessage->SendMailTo(new Request([
+            'email'   => $personnel->email,
+            'subject' => 'Bienvenue sur AEJ – Votre compte a été créé',
+            'message' => "
+            <div style='font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;'>
+                <h2 style='color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px;'>
+                    Bienvenue sur AEJ 🎉
+                </h2>
+
+                <p style='color: #555; font-size: 15px;'>
+                    Bonjour <strong>{$personnel->prenom} {$personnel->nom}</strong>,
+                </p>
+
+                <p style='color: #555; font-size: 15px;'>
+                    Votre compte sur <strong>AEJ</strong> a été créé avec succès. 
+                    Nous sommes ravis de vous compter parmi nos utilisateurs.
+                </p>
+
+                <div style='background-color: #e8f5e9; border-left: 4px solid #4caf50; padding: 15px; border-radius: 4px; margin: 20px 0;'>
+                    <p style='color: #2e7d32; font-size: 15px; margin: 0;'>
+                        <strong>Votre compte est maintenant actif.</strong><br><br>
+                        C'est bien cet e-mail et ce mot de passe qui vous permettront de vous connecter :<br><br>
+                        <strong>Email :</strong> {$personnel->email}<br>
+                        <strong>Mot de passe :</strong> {$motDePasseGenere}
+                    </p>
+                </div>
+
+                <p style='color: #555; font-size: 15px;'>
+                    Pour des raisons de sécurité, vous devrez modifier votre mot de passe 
+                    lors de votre première connexion.
+                </p>
+
+                <p style='color: #555; font-size: 15px;'>
+                    Si vous avez besoin d'aide, n'hésitez pas à contacter notre équipe.
+                </p>
+
+                <div style='margin-top: 30px; padding-top: 15px; border-top: 1px solid #e0e0e0; text-align: center;'>
+                    <p style='color: #888; font-size: 13px;'>
+                        Cordialement,<br>
+                        <strong style='color: #2c3e50;'>L'équipe AEJ</strong>
+                    </p>
+                </div>
+
+            </div>
+            "
+        ]));
+
         return new JsonResponse([
             'message' => 'Personnel created successfully',
-            'data' => $personnel,
-            'mot_de_passe_temporaire' => $motDePasseGenere
+            'data' => $personnel
         ], 201);
 
     } catch (\Exception $e) {
