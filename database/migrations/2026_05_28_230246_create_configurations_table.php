@@ -11,44 +11,50 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('configurations', function (Blueprint $table) {
-            $table->id();
-            $table->string('sigle_systeme');
-            $table->string('intitule_systeme');
+       Schema::create('configurations', function (Blueprint $table) {
+    $table->id();
 
-            $table->string('sigle_structure');
-            $table->string('intitule_structure');
-            $table->string('logo_structure')->nullable();
+    $table->string('logo_systeme')->nullable();
+    $table->string('sigle_systeme');
+    $table->string('intitule_systeme');
 
-            $table->text('adresse_sociale_structure')->nullable();
-            $table->string('email_structure');
-            $table->string('whatsapp_structure');
-            $table->string('telephone_structure');
+    $table->string('sigle_structure');
+    $table->string('intitule_structure');
+    $table->string('logo_structure')->nullable();
 
-            $table->string('sigle_monnaie_pays');
-            $table->string('sigle_devise_principale');
-            $table->decimal('taux_devise_principale', 10, 2);
+    $table->text('adresse_sociale_structure')->nullable();
+    $table->string('email_structure');
+    $table->string('whatsapp_structure');
+    $table->string('telephone_structure');
 
-            $table->boolean('mise_en_maintenance')->default(false);
+    $table->string('sigle_monnaie_pays');
+    $table->string('sigle_devise_principale');
+    $table->decimal('taux_devise_principale', 10, 2);
 
-            $table->integer('delai_inactivite_minutes');
-            $table->integer('nombre_session_possible');
-            $table->integer('nombre_tentatives_connexion');
+    $table->boolean('mise_en_maintenance')->default(false);
 
-            $table->integer('delai_code_tp_minutes');
-            $table->integer('delai_changement_mdp_mois');
-            $table->integer('delai_suppression_secondes');
+    $table->integer('delai_inactivite_minutes');
+    $table->integer('nombre_session_possible');
+    $table->integer('nombre_tentatives_connexion');
 
-            $table->string('code_instance_whatsapp')->nullable();
+    $table->integer('delai_code_tp_minutes');
+    $table->integer('delai_changement_mdp_mois');
+    $table->integer('delai_suppression_secondes');
 
-            $table->string('email_notifications');
-            $table->string('mot_de_passe_email_notifications');
-            $table->string('smtp_email_notifications');
+    $table->string('code_instance_whatsapp')->nullable();
+    $table->string('token_instance_whatsapp')->nullable();
 
-            $table->text('lien_api_parent')->nullable();
-            $table->timestamps();
-        });
+    $table->string('email_notifications');
+    $table->string('mot_de_passe_email_notifications');
+    $table->string('smtp_email_notifications');
+    $table->string('smtp_host_notifications');
+    $table->integer('smtp_port_notifications')->default(587);
+    $table->string('smtp_encrypt_notifications', 10)->default('tls');
+
+    $table->timestamps();
+});
     }
+
 
     /**
      * Reverse the migrations.

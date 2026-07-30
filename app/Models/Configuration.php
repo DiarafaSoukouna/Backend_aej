@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Configuration extends Model
 {
     protected $fillable = [
+        'logo_systeme',
         'sigle_systeme',
         'intitule_systeme',
         'sigle_structure',
@@ -27,9 +28,12 @@ class Configuration extends Model
         'delai_changement_mdp_mois',
         'delai_suppression_secondes',
         'code_instance_whatsapp',
+        'token_instance_whatsapp',
         'email_notifications',
         'mot_de_passe_email_notifications',
         'smtp_email_notifications',
-        'lien_api_parent'
+        'smtp_host_notifications',
+        'smtp_port_notifications',
+        'smtp_encrypt_notifications',
     ];
 }

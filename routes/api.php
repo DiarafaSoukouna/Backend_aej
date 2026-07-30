@@ -33,11 +33,19 @@ Route::apiResource('type-entreprises', TypeEntrepriseController::class);
 Route::get('localites/niveau/{niveauId}', [LocaliteController::class, 'getLocalitesByNiveau']);
 Route::apiResource('localites', LocaliteController::class);
 Route::apiResource('configurations', ConfigurationController::class);
+Route::patch('/configurations', [ConfigurationController::class, 'patch']);
 Route::apiResource('type-emplois', TypeEmploiController::class);
 Route::apiResource('personnels', PersonnelController::class);
 Route::put('personnels/updatePassword/{id}', [PersonnelController::class, 'updatePassword']);
-Route::post('personnels/login', [PersonnelController::class, 'auth']);
-Route::post('personnels/logout', [PersonnelController::class, 'logout']);
+
+Route::middleware('web')->group(function () {
+    Route::post('personnels/login', [PersonnelController::class, 'auth']);
+    Route::post('personnels/logout', [PersonnelController::class, 'logout']);
+    Route::post('auth/refresh', [PersonnelController::class, 'refresh']);
+    Route::get('/personnel/me', [PersonnelController::class, 'me']);
+
+});
+
 Route::apiResource('permissions', PermissionController::class);
 Route::apiResource('roles', RoleController::class);
 Route::apiResource('type-organismes', TypeOrganismeController::class);

@@ -31,4 +31,8 @@ class Personnel extends Authenticatable
 
     ];
           
+    public function getAuthPassword(): string
+    {
+        return $this->mot_de_passe;
+    }
 }
