@@ -14,6 +14,15 @@ use App\Http\Controllers\RoleController;
 use App\Http\Controllers\TypeOrganismeController;
 use App\Http\Controllers\OrganismeController;
 use App\Http\Controllers\IndicateurController;
+use App\Http\Controllers\WorkflowController;
+use App\Http\Controllers\WorkflowVersionController;
+use App\Http\Controllers\WorkflowEtapeController;
+use App\Http\Controllers\WorkflowEtapeSlaController;
+use App\Http\Controllers\WorkflowEtapeDeliverableController;
+use App\Http\Controllers\WorkflowEtapeRoleController;
+use App\Http\Controllers\WorkflowEtapeTransitionController;
+use App\Http\Controllers\WorkflowEtapeDecisionController;
+use App\Http\Controllers\WorkflowDecisionOutcomeController;
 
 
 Route::apiResource('directions', DirectionController::class);
@@ -34,3 +43,14 @@ Route::apiResource('roles', RoleController::class);
 Route::apiResource('type-organismes', TypeOrganismeController::class);
 Route::apiResource('organismes', OrganismeController::class);
 Route::apiResource('indicateurs', IndicateurController::class);
+
+// Workflow routes
+Route::apiResource('workflows', WorkflowController::class);
+Route::apiResource('workflow-versions', WorkflowVersionController::class);
+Route::apiResource('workflow-etapes', WorkflowEtapeController::class);
+Route::apiResource('workflow-etape-slas', WorkflowEtapeSlaController::class);
+Route::apiResource('workflow-etape-deliverables', WorkflowEtapeDeliverableController::class);
+Route::apiResource('workflow-etape-roles', WorkflowEtapeRoleController::class);
+Route::apiResource('workflow-etape-transitions', WorkflowEtapeTransitionController::class);
+Route::apiResource('workflow-etape-decisions', WorkflowEtapeDecisionController::class);
+Route::apiResource('workflow-decision-outcomes', WorkflowDecisionOutcomeController::class);
