@@ -23,6 +23,12 @@ use App\Http\Controllers\WorkflowEtapeRoleController;
 use App\Http\Controllers\WorkflowEtapeTransitionController;
 use App\Http\Controllers\WorkflowEtapeDecisionController;
 use App\Http\Controllers\WorkflowDecisionOutcomeController;
+use App\Http\Controllers\SuiviController;
+use App\Http\Controllers\BudgetController;
+use App\Http\Controllers\RemboursementController;
+use App\Http\Controllers\DepenseController;
+use App\Http\Controllers\IndicateurSuiviController;
+use App\Http\Controllers\BalanceComptableController;
 
 
 Route::apiResource('directions', DirectionController::class);
@@ -62,3 +68,12 @@ Route::apiResource('workflow-etape-roles', WorkflowEtapeRoleController::class);
 Route::apiResource('workflow-etape-transitions', WorkflowEtapeTransitionController::class);
 Route::apiResource('workflow-etape-decisions', WorkflowEtapeDecisionController::class);
 Route::apiResource('workflow-decision-outcomes', WorkflowDecisionOutcomeController::class);
+
+// Finances routes
+Route::apiResource('suivis', SuiviController::class);
+Route::apiResource('budgets', BudgetController::class);
+Route::apiResource('remboursements', RemboursementController::class);
+Route::apiResource('depenses', DepenseController::class);
+Route::apiResource('indicateur-suivis', IndicateurSuiviController::class);
+Route::get('balance-comptable', [BalanceComptableController::class, 'index']);
+Route::get('balance-comptable/micro-projet/{microProjetId}', [BalanceComptableController::class, 'byMicroProjet']);
