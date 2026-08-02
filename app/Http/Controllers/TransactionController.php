@@ -5,33 +5,34 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Validator;
-use App\Models\Depense;
+use App\Models\Transaction;
 
-class DepenseController extends Controller
+class TransactionController extends Controller
 {
     public function index(): JsonResponse
     {
-        $depenses = Depense::with(['microProjet', 'saisiPar'])->get();
-        return new JsonResponse(['Message' => 'Depense list retrieved successfully', 'data' => $depenses], 200);
+        $transactions = Transaction::with(['microProjet', 'saisiPar'])->get();
+        return new JsonResponse(['Message' => 'Transaction list retrieved successfully', 'data' => $transactions], 200);
     }
 
     public function show($id): JsonResponse
     {
-        $depense = Depense::with(['microProjet', 'saisiPar'])->find($id);
-        if (!$depense) {
-            return new JsonResponse(['Message' => 'Depense not found'], 404);
+        $transaction = Transaction::with(['microProjet', 'saisiPar'])->find($id);
+        if (!$transaction) {
+            return new JsonResponse(['Message' => 'Transaction not found'], 404);
         }
-        return new JsonResponse(['Message' => 'Depense retrieved successfully', 'data' => $depense], 200);
+        return new JsonResponse(['Message' => 'Transaction retrieved successfully', 'data' => $transaction], 200);
     }
 
     public function store(Request $request): JsonResponse
     {
         $validation = Validator::make($request->all(), [
             'micro_projet_id' => 'required|exists:micro_projets,id',
-            'categorie' => 'required|in:MATERIEL,STOCK,SALAIRE,CHARGE,TRANSPORT,AUTRE',
-            'intitule' => 'required|string|max:200',
-            'montant_depense' => 'required|numeric',
-            'date_depense' => 'required|date',
+            'categorie_id' => 'required|exists:categories_transactions,id',
+            'libelle' => 'required|string|max:200',
+            'montant' => 'required|numeric',
+            'date' => 'required|date',
+            'type' => 'required|in:DEBIT,CREDIT',
             'justificatif_path' => 'nullable|string|max:255',
             'observations' => 'nullable|string',
             'saisi_par' => 'nullable|exists:personnels,id',
@@ -45,16 +46,16 @@ class DepenseController extends Controller
         }
 
         try {
-            $depense = Depense::create($request->all());
+            $transaction = Transaction::create($request->all());
 
             return new JsonResponse([
-                'message' => 'Depense created successfully',
-                'data' => $depense
+                'message' => 'Transaction created successfully',
+                'data' => $transaction
             ], 201);
 
         } catch (\Exception $e) {
             return new JsonResponse([
-                'message' => 'Error creating depense',
+                'message' => 'Error creating transaction',
                 'error' => $e->getMessage()
             ], 500);
         }
@@ -62,17 +63,18 @@ class DepenseController extends Controller
 
     public function update(Request $request, $id): JsonResponse
     {
-        $depense = Depense::find($id);
-        if (!$depense) {
-            return new JsonResponse(['Message' => 'Depense not found'], 404);
+        $transaction = Transaction::find($id);
+        if (!$transaction) {
+            return new JsonResponse(['Message' => 'Transaction not found'], 404);
         }
 
         $validation = Validator::make($request->all(), [
             'micro_projet_id' => 'sometimes|required|exists:micro_projets,id',
-            'categorie' => 'sometimes|required|in:MATERIEL,STOCK,SALAIRE,CHARGE,TRANSPORT,AUTRE',
-            'intitule' => 'sometimes|required|string|max:200',
-            'montant_depense' => 'sometimes|required|numeric',
-            'date_depense' => 'sometimes|required|date',
+            'categorie_id' => 'sometimes|required|exists:categories_transactions,id',
+            'libelle' => 'sometimes|required|string|max:200',
+            'montant' => 'sometimes|required|numeric',
+            'date' => 'sometimes|required|date',
+            'type' => 'sometimes|required|in:DEBIT,CREDIT',
             'justificatif_path' => 'nullable|string|max:255',
             'observations' => 'nullable|string',
             'saisi_par' => 'nullable|exists:personnels,id',
@@ -86,16 +88,16 @@ class DepenseController extends Controller
         }
 
         try {
-            $depense->update($request->all());
+            $transaction->update($request->all());
 
             return new JsonResponse([
-                'message' => 'Depense updated successfully',
-                'data' => $depense
+                'message' => 'Transaction updated successfully',
+                'data' => $transaction
             ], 200);
 
         } catch (\Exception $e) {
             return new JsonResponse([
-                'message' => 'Error updating depense',
+                'message' => 'Error updating transaction',
                 'error' => $e->getMessage()
             ], 500);
         }
@@ -103,18 +105,18 @@ class DepenseController extends Controller
 
     public function destroy($id): JsonResponse
     {
-        $depense = Depense::find($id);
-        if (!$depense) {
-            return new JsonResponse(['Message' => 'Depense not found'], 404);
+        $transaction = Transaction::find($id);
+        if (!$transaction) {
+            return new JsonResponse(['Message' => 'Transaction not found'], 404);
         }
 
         try {
-            $depense->delete();
-            return new JsonResponse(['Message' => 'Depense deleted successfully'], 200);
+            $transaction->delete();
+            return new JsonResponse(['Message' => 'Transaction deleted successfully'], 200);
 
         } catch (\Exception $e) {
             return new JsonResponse([
-                'message' => 'Error deleting depense',
+                'message' => 'Error deleting transaction',
                 'error' => $e->getMessage()
             ], 500);
         }

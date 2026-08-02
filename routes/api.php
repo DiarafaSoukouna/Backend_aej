@@ -26,9 +26,12 @@ use App\Http\Controllers\WorkflowDecisionOutcomeController;
 use App\Http\Controllers\SuiviController;
 use App\Http\Controllers\BudgetController;
 use App\Http\Controllers\RemboursementController;
-use App\Http\Controllers\DepenseController;
 use App\Http\Controllers\IndicateurSuiviController;
+use App\Http\Controllers\TransactionController;
+use App\Http\Controllers\CategorieTransactionController;
 use App\Http\Controllers\BalanceComptableController;
+use App\Http\Controllers\SyncAejController;
+use App\Http\Controllers\AejApiController;
 
 
 Route::apiResource('directions', DirectionController::class);
@@ -73,7 +76,31 @@ Route::apiResource('workflow-decision-outcomes', WorkflowDecisionOutcomeControll
 Route::apiResource('suivis', SuiviController::class);
 Route::apiResource('budgets', BudgetController::class);
 Route::apiResource('remboursements', RemboursementController::class);
-Route::apiResource('depenses', DepenseController::class);
 Route::apiResource('indicateur-suivis', IndicateurSuiviController::class);
+Route::apiResource('categories-transactions', CategorieTransactionController::class);
+Route::apiResource('transactions', TransactionController::class);
 Route::get('balance-comptable', [BalanceComptableController::class, 'index']);
 Route::get('balance-comptable/micro-projet/{microProjetId}', [BalanceComptableController::class, 'byMicroProjet']);
+
+// AEJ API Routes
+Route::prefix('aej')->group(function () {
+    Route::get('types-pieces-identites', [AejApiController::class, 'getTypesPiecesIdentites']);
+    Route::get('situations-matrimoniale', [AejApiController::class, 'getSituationsMatrimoniale']);
+    Route::get('secteurs', [AejApiController::class, 'getSecteurs']);
+    Route::get('sous-secteurs', [AejApiController::class, 'getSousSecteurs']);
+    Route::get('niveaux-etudes', [AejApiController::class, 'getNiveauxEtudes']);
+    Route::get('agences-regionales', [AejApiController::class, 'getAgencesRegionales']);
+    Route::get('sexes', [AejApiController::class, 'getSexes']);
+    Route::get('lieu-habitations', [AejApiController::class, 'getLieuHabitations']);
+    Route::get('pays', [AejApiController::class, 'getPays']);
+    Route::get('situations-handicaps', [AejApiController::class, 'getSituationsHandicaps']);
+    Route::get('communes', [AejApiController::class, 'getCommunes']);
+    Route::get('division-regionale', [AejApiController::class, 'getDivisionRegionale']);
+    Route::get('villes', [AejApiController::class, 'getVilles']);
+    Route::get('referentiels', [AejApiController::class, 'getAllReferentiels']);
+
+    // Cache and sync routes
+    Route::post('clear-cache', [AejApiController::class, 'clearCache']);
+    Route::post('sync', [SyncAejController::class, 'sync']);
+    Route::post('sync-all', [SyncAejController::class, 'syncAll']);
+});

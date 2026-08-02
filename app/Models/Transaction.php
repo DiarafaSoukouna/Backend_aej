@@ -4,27 +4,36 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Depense extends Model
+class Transaction extends Model
 {
+    protected $table = 'transactions_financieres';
+
     protected $fillable = [
         'micro_projet_id',
-        'categorie',
-        'intitule',
-        'montant_depense',
-        'date_depense',
+        'categorie_id',
+        'libelle',
+        'type',
+        'montant',
+        'date',
         'justificatif_path',
         'observations',
         'saisi_par',
     ];
 
     protected $casts = [
-        'montant_depense' => 'decimal:2',
-        'date_depense' => 'date',
+        'montant' => 'decimal:2',
+        'date' => 'date',
+        'type' => 'string',
     ];
 
     public function microProjet()
     {
         return $this->belongsTo(MicroProjet::class);
+    }
+
+    public function categorie()
+    {
+        return $this->belongsTo(CategorieTransaction::class, 'categorie_id');
     }
 
     public function saisiPar()

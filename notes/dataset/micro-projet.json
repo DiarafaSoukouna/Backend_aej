@@ -1,0 +1,99 @@
+{
+  "data": {
+    "id": 1,
+    "matricule": "PRJ-AGR-2026-00042",
+    "intitule": "Elevage de poulets de chair",
+    "description": "string",
+    "montant_total": 500000,
+    "type_guichet": {
+      "id": 1,
+      "code": "GUICHET_2_AGR_CLASSIC",
+      "libelle": "AGR Classique",
+      "description": "string",
+      "couleur": "#2E86C1",
+      "is_active": true,
+      "is_form_active": true
+    },
+    "etape": {
+      "id": 1,
+      "code": "SOUMIS",
+      "libelle": "Soumis",
+      "description": "string",
+      "order": 1,
+      "is_initial": true,
+      "is_final_success": false,
+      "is_final_failure": false
+    },
+    "statut": "soumis",
+    "secteur_activite": {
+      "id": 0,
+      "libelle": "Commerce"
+    },
+    "forme_juridique": {
+      "id": 0,
+      "libelle": "Entreprise Individuelle"
+    },
+    "commune": {
+      "id": 0,
+      "nom": "Cocody"
+    },
+    "attributs": [
+      {
+        "code": "NB_EMPLOIS_PREVUS",
+        "valeur": "5"
+      }
+    ],
+    "documents": [
+      {
+        "id": 0,
+        "nom_original": "business-plan.pdf",
+        "statut_validation": "en attente",
+        "type_document": {
+          "id": 0,
+          "code": "BUSINESS_PLAN",
+          "libelle": "Business Plan"
+        },
+        "created_at": "2026-08-01T21:32:06.276Z"
+      }
+    ],
+    "analyse": {
+      "id": 0,
+      "overall_score": 75.5,
+      "scores": {},
+      "strengths": [
+        "string"
+      ],
+      "weaknesses": [
+        "string"
+      ],
+      "recommendations": [
+        "string"
+      ],
+      "summary": "Projet viable avec un fort potentiel de croissance",
+      "status": "completed",
+      "analyzed_at": "2026-08-01T21:32:06.276Z"
+    },
+    "financement": {
+      "id": 0,
+      "montant_accorde": 500000,
+      "date_accord": "2026-03-01",
+      "source": "string",
+      "statut": "approuve",
+      "created_at": "2026-08-01T21:32:06.276Z"
+    },
+    "workflow_steps": [
+      {
+        "id": 1,
+        "code": "SOUMIS",
+        "libelle": "Soumis",
+        "description": "string",
+        "order": 1,
+        "is_initial": true,
+        "is_final_success": false,
+        "is_final_failure": false
+      }
+    ],
+    "created_at": "2026-08-01T21:32:06.276Z",
+    "updated_at": "2026-08-01T21:32:06.276Z"
+  }
+}

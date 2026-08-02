@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\JsonResponse;
 use App\Models\Budget;
-use App\Models\Depense;
+use App\Models\Transaction;
 use App\Models\Remboursement;
 
 class BalanceComptableController extends Controller
@@ -14,9 +14,9 @@ class BalanceComptableController extends Controller
         try {
             $totalBudgetAlloue = Budget::sum('montant_alloue');
             $totalRemboursements = Remboursement::where('statut', 'PAYE')->sum('montant_paye');
-            $totalRecettes = $totalBudgetAlloue + $totalRemboursements;
-            $totalDepenses = Depense::sum('montant_depense');
-            $solde = $totalRecettes - $totalDepenses;
+            $totalRecettes = Transaction::where('type', 'CREDIT')->sum('montant');
+            $totalDepenses = Transaction::where('type', 'DEBIT')->sum('montant');
+            $solde = $totalBudgetAlloue - $totalDepenses;
 
             return new JsonResponse([
                 'message' => 'Balance comptable retrieved successfully',
@@ -43,7 +43,8 @@ class BalanceComptableController extends Controller
     {
         try {
             $budget = Budget::where('micro_projet_id', $microProjetId)->first();
-            $totalDepenses = Depense::where('micro_projet_id', $microProjetId)->sum('montant_depense');
+            $totalDepenses = Transaction::where('micro_projet_id', $microProjetId)->where('type', 'DEBIT')->sum('montant');
+            $totalRecettes = Transaction::where('micro_projet_id', $microProjetId)->where('type', 'CREDIT')->sum('montant');
             $totalRemboursements = 0;
             if ($budget) {
                 $totalRemboursements = Remboursement::where('budget_id', $budget->id)
@@ -51,8 +52,7 @@ class BalanceComptableController extends Controller
                     ->sum('montant_paye');
             }
 
-            $totalRecettes = $budget ? ($budget->montant_alloue + $totalRemboursements) : 0;
-            $solde = $totalRecettes - $totalDepenses;
+            $solde = $budget->montant_alloue - $totalDepenses;
 
             return new JsonResponse([
                 'message' => 'Balance comptable for micro projet retrieved successfully',

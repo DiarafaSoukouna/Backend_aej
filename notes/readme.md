@@ -189,7 +189,7 @@ Modalités de remboursement attachées à un `budget` (montant à rembourser, ga
 ### `remboursements`
 Historique des paiements effectués par le jeune sur son `budget` (montant échu vs payé vs impayé, pénalités, statut par échéance).
 
-### `depenses`
+### `transactions`
 Dépenses réalisées par le bénéficiaire dans le cadre de l'exploitation de son `micro_projet` (catégorisées : matériel, stock, salaire, charge, transport, autre), avec justificatif.
 
 ### `plan_decaissements`

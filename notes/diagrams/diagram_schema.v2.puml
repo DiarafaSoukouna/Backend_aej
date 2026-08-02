@@ -539,7 +539,7 @@ package "15. Financements" {
     statut
   }
 
-  entity depenses {
+  entity transactions {
     * id : BIGINT <<PK>>
     --
     micro_projet_id : BIGINT <<FK>>
@@ -572,8 +572,8 @@ package "15. Financements" {
   budgets ||--|| budgets_remboursements
   jeunes ||--o{ remboursements
   budgets ||--o{ remboursements
-  micro_projets ||--o{ depenses
-  personnels ||--o{ depenses
+  micro_projets ||--o{ transactions
+  personnels ||--o{ transactions
   budgets ||--o{ plan_decaissements
   plan_decaissements ||--o{ decaissements
 }

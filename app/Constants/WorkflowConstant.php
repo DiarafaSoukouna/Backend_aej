@@ -554,9 +554,9 @@ class Workflow
 
     ];
 
-    const WorkflowDecisionOutcome = [
+    // const WorkflowDecisionOutcome = [
 
-    ];
+    // ];
 
     // const WorkflowEtapesSla = [
         
