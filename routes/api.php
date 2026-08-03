@@ -14,6 +14,7 @@ use App\Http\Controllers\RoleController;
 use App\Http\Controllers\TypeOrganismeController;
 use App\Http\Controllers\OrganismeController;
 use App\Http\Controllers\IndicateurController;
+use App\Http\Controllers\PromoteurController;
 use App\Http\Controllers\WorkflowController;
 use App\Http\Controllers\WorkflowVersionController;
 use App\Http\Controllers\WorkflowEtapeController;
@@ -68,6 +69,7 @@ Route::apiResource('permissions', PermissionController::class);
 Route::apiResource('roles', RoleController::class);
 Route::apiResource('type-organismes', TypeOrganismeController::class);
 Route::apiResource('organismes', OrganismeController::class);
+Route::get('promoteurs', [PromoteurController::class, 'index']);
 
 // Workflow routes
 Route::prefix('workflow')->group(function () {
