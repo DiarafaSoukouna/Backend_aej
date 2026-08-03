@@ -7,14 +7,14 @@ use Illuminate\Database\Eloquent\Model;
 class WorkflowEtape extends Model
 {
     protected $fillable = [
-        'version',
+        'workflow_version',
         'parent_etape_code',
         'code',
         'name',
         'impact',
         'statut',
         'description',
-        'sequence_order',
+        'order',
         'is_active',
         'valid_from',
         'valid_to',
@@ -26,9 +26,9 @@ class WorkflowEtape extends Model
         'valid_to' => 'date',
     ];
 
-    public function version()
+    public function workflowVersion()
     {
-        return $this->belongsTo(WorkflowVersion::class);
+        return $this->belongsTo(WorkflowVersion::class, 'workflow_version', 'code');
     }
 
     public function parentEtape()
@@ -43,31 +43,32 @@ class WorkflowEtape extends Model
 
     public function sla()
     {
-        return $this->hasOne(WorkflowEtapeSla::class);
+        return $this->hasOne(WorkflowEtapeSla::class, 'etape_code', 'code');
     }
 
     public function deliverables()
     {
-        return $this->hasMany(WorkflowEtapeDeliverable::class);
+        return $this->hasMany(WorkflowEtapeDeliverable::class, 'etape_code', 'code');
     }
 
     public function roles()
     {
-        return $this->hasMany(WorkflowEtapeRole::class);
+        return $this->hasMany(WorkflowEtapeRole::class, 'etape_code', 'code');
     }
 
     public function decision()
     {
-        return $this->hasOne(WorkflowEtapeDecision::class);
+        return $this->hasOne(WorkflowEtapeDecision::class, 'etape_code', 'code');
     }
 
-    public function transitionsFrom()
-    {
-        return $this->hasMany(WorkflowEtapeTransition::class, 'from_etape_code');
-    }
+    // Transitions table is commented out in schema
+    // public function transitionsFrom()
+    // {
+    //     return $this->hasMany(WorkflowEtapeTransition::class, 'from_etape_code');
+    // }
 
-    public function transitionsTo()
-    {
-        return $this->hasMany(WorkflowEtapeTransition::class, 'to_etape_code');
-    }
+    // public function transitionsTo()
+    // {
+    //     return $this->hasMany(WorkflowEtapeTransition::class, 'to_etape_code');
+    // }
 }

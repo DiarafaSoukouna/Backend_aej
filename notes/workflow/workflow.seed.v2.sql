@@ -165,7 +165,7 @@ INSERT INTO
         name,
         description,
         level,
-        sequence_order,
+        order,
         is_active
     )
 SELECT
@@ -241,7 +241,7 @@ INSERT INTO
         name,
         description,
         level,
-        sequence_order,
+        order,
         is_active
     )
 SELECT
@@ -464,7 +464,7 @@ INSERT INTO
         from_etape_id,
         to_etape_id,
         transition_type,
-        sequence_order,
+        order,
         is_active
     )
 SELECT
@@ -472,7 +472,7 @@ SELECT
     e1.id,
     e2.id,
     'default',
-    e1.sequence_order,
+    e1.order,
     TRUE
 FROM
     workflow_versions v
@@ -483,7 +483,7 @@ FROM
     AND e1.level = 1
     JOIN workflow_etape e2 ON e2.workflow_version_id = v.id
     AND e2.level = 1
-    AND e2.sequence_order = e1.sequence_order + 1;
+    AND e2.order = e1.order + 1;
 
 -- 4.4 Transitions détaillées (niveau 2, chaînage réel des sous-cycles dans l'ordre du manuel)
 INSERT INTO
@@ -492,7 +492,7 @@ INSERT INTO
         from_etape_id,
         to_etape_id,
         transition_type,
-        sequence_order,
+        order,
         is_active
     )
 SELECT
@@ -948,7 +948,7 @@ INSERT INTO
         name,
         description,
         level,
-        sequence_order,
+        order,
         is_active
     )
 SELECT
@@ -1046,7 +1046,7 @@ INSERT INTO
         from_etape_id,
         to_etape_id,
         transition_type,
-        sequence_order,
+        order,
         is_active
     )
 SELECT
@@ -1054,7 +1054,7 @@ SELECT
     e1.id,
     e2.id,
     'default',
-    e1.sequence_order,
+    e1.order,
     TRUE
 FROM
     workflow_versions v
@@ -1065,7 +1065,7 @@ FROM
     AND e1.level = 1
     JOIN workflow_etape e2 ON e2.workflow_version_id = v.id
     AND e2.level = 1
-    AND e2.sequence_order = e1.sequence_order + 1;
+    AND e2.order = e1.order + 1;
 
 -- 5.3 Point de décision sur le déblocage (souscription à l'offre Tik Tak+)
 INSERT INTO
@@ -1312,7 +1312,7 @@ INSERT INTO
         name,
         description,
         level,
-        sequence_order,
+        order,
         is_active
     )
 SELECT
@@ -1379,7 +1379,7 @@ INSERT INTO
         from_etape_id,
         to_etape_id,
         transition_type,
-        sequence_order,
+        order,
         is_active
     )
 SELECT
@@ -1387,7 +1387,7 @@ SELECT
     from_etape.id,
     to_etape.id,
     'default',
-    from_etape.sequence_order,
+    from_etape.order,
     TRUE
 FROM
     workflow_versions v
@@ -1395,14 +1395,14 @@ FROM
     AND w.code NOT IN ('AGR_CLASSIQUE', 'AGR_PLUS')
     JOIN workflow_etape from_etape ON from_etape.workflow_version_id = v.id
     JOIN workflow_etape to_etape ON to_etape.workflow_version_id = v.id
-    AND to_etape.sequence_order = from_etape.sequence_order + 1
+    AND to_etape.order = from_etape.order + 1
 WHERE
     v.is_default = TRUE
     AND from_etape.level = 1
     AND to_etape.level = 1
 ORDER BY
     v.id,
-    from_etape.sequence_order;
+    from_etape.order;
 
 -- 6.3 Point de décision générique sur l'étape "Sélection" (PRCO_4)
 INSERT INTO

@@ -11,13 +11,13 @@ class WorkflowVersionController extends Controller
 {
     public function index(): JsonResponse
     {
-        $versions = WorkflowVersion::with(['workflow', 'etapes', 'transitions'])->get();
+        $versions = WorkflowVersion::with(['workflow', 'etapes'])->get();
         return new JsonResponse(['Message' => 'Workflow version list retrieved successfully', 'data' => $versions], 200);
     }
 
     public function show($id): JsonResponse
     {
-        $version = WorkflowVersion::with(['workflow', 'etapes', 'transitions'])->find($id);
+        $version = WorkflowVersion::with(['workflow', 'etapes'])->find($id);
         if (!$version) {
             return new JsonResponse(['Message' => 'Workflow version not found'], 404);
         }

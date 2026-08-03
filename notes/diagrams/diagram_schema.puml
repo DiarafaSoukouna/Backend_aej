@@ -236,7 +236,7 @@ package "Workflows (paramétrage)" {
     # parent_etape_id : BIGINT UNSIGNED <<FK>>
     code : VARCHAR
     name : VARCHAR
-    sequence_order : INTEGER
+    order : INTEGER
   }
 
   entity "workflow_etape_sla" as workflow_etape_sla {

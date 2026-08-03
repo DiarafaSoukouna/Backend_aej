@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Remboursement extends Model
 {
     protected $fillable = [
-        'jeune_id',
+        'promoteur_id',
         'budget_id',
         'montant_echu',
         'montant_paye',
@@ -25,9 +25,9 @@ class Remboursement extends Model
         'penalites' => 'decimal:2',
     ];
 
-    public function jeune()
+    public function promoteur()
     {
-        return $this->belongsTo(Jeune::class);
+        return $this->belongsTo(Promoteur::class);
     }
 
     public function budget()

@@ -11,13 +11,13 @@ class WorkflowEtapeController extends Controller
 {
     public function index(): JsonResponse
     {
-        $etapes = WorkflowEtape::with(['version', 'parentEtape', 'sla', 'deliverables', 'roles', 'decision', 'children'])->get();
+        $etapes = WorkflowEtape::with(['workflowVersion', 'parentEtape', 'sla', 'deliverables', 'roles', 'decision', 'children'])->get();
         return new JsonResponse(['Message' => 'Workflow etape list retrieved successfully', 'data' => $etapes], 200);
     }
 
     public function show($id): JsonResponse
     {
-        $etape = WorkflowEtape::with(['version', 'parentEtape', 'sla', 'deliverables', 'roles', 'decision', 'children'])->find($id);
+        $etape = WorkflowEtape::with(['workflowVersion', 'parentEtape', 'sla', 'deliverables', 'roles', 'decision', 'children'])->find($id);
         if (!$etape) {
             return new JsonResponse(['Message' => 'Workflow etape not found'], 404);
         }
@@ -27,16 +27,16 @@ class WorkflowEtapeController extends Controller
     public function store(Request $request): JsonResponse
     {
         $validation = Validator::make($request->all(), [
-            'version' => 'required|exists:workflow_versions,version',
+            'workflow_version' => 'required|exists:workflow_versions,code',
             'parent_etape_code' => 'nullable|exists:workflow_etapes,code',
-            'code' => 'required|string|max:30',
+            'code' => 'required|string|max:50',
             'name' => 'required|string|max:200',
-            'impact' => 'nullable|in:EN_SOUMISSION,EN_COURS,EN_ANALYSE,EN_FORMATION,EN_FINANCEMENT,EN_DECAISSEMENT,EN_SUIVI,EN_REMBOURSEMENT,EN_EVALUATION,TERMINE',
-            'statut' => 'nullable|in:OUI,NON',
+            'impact' => 'nullable|string|max:50',
+            'statut' => 'nullable|string|max:10',
             'description' => 'nullable|string',
-            'sequence_order' => 'required|integer',
+            'order' => 'required|integer',
             'is_active' => 'boolean',
-            'valid_from' => 'date',
+            'valid_from' => 'nullable|date',
             'valid_to' => 'nullable|date',
         ]);
 
@@ -71,16 +71,16 @@ class WorkflowEtapeController extends Controller
         }
 
         $validation = Validator::make($request->all(), [
-            'version' => 'sometimes|required|exists:workflow_versions,version',
+            'workflow_version' => 'sometimes|required|exists:workflow_versions,code',
             'parent_etape_code' => 'nullable|exists:workflow_etapes,code',
-            'code' => 'sometimes|required|string|max:30',
+            'code' => 'sometimes|required|string|max:50',
             'name' => 'sometimes|required|string|max:200',
-            'impact' => 'nullable|in:EN_SOUMISSION,EN_COURS,EN_ANALYSE,EN_FORMATION,EN_FINANCEMENT,EN_DECAISSEMENT,EN_SUIVI,EN_REMBOURSEMENT,EN_EVALUATION,TERMINE',
-            'statut' => 'nullable|in:OUI,NON',
+            'impact' => 'nullable|string|max:50',
+            'statut' => 'nullable|string|max:10',
             'description' => 'nullable|string',
-            'sequence_order' => 'sometimes|required|integer',
+            'order' => 'sometimes|required|integer',
             'is_active' => 'boolean',
-            'valid_from' => 'date',
+            'valid_from' => 'nullable|date',
             'valid_to' => 'nullable|date',
         ]);
 

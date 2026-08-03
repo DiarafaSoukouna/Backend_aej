@@ -6,10 +6,14 @@ use Illuminate\Database\Eloquent\Model;
 
 class WorkflowEtapeRole extends Model
 {
+    protected $table = 'workflow_etapes_roles';
+    
+    public $timestamps = false;
+    
     protected $fillable = [
         'etape_code',
         'role_code',
-        'responsibility',
+        'action',
     ];
 
     public function etape()
@@ -19,6 +23,6 @@ class WorkflowEtapeRole extends Model
 
     public function role()
     {
-        return $this->belongsTo(Role::class);
+        return $this->belongsTo(WorkflowRole::class, 'role_code', 'code');
     }
 }

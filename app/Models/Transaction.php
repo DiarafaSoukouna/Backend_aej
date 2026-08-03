@@ -10,13 +10,17 @@ class Transaction extends Model
 
     protected $fillable = [
         'micro_projet_id',
+        'promoteur_id',
         'categorie_id',
         'libelle',
         'type',
         'montant',
-        'date',
+        'statut',
+        'mode_paiement',
+        'reference',
         'justificatif_path',
         'observations',
+        'date',
         'saisi_par',
     ];
 
@@ -24,11 +28,18 @@ class Transaction extends Model
         'montant' => 'decimal:2',
         'date' => 'date',
         'type' => 'string',
+        'statut' => 'string',
+        'mode_paiement' => 'string',
     ];
 
     public function microProjet()
     {
         return $this->belongsTo(MicroProjet::class);
+    }
+
+    public function promoteur()
+    {
+        return $this->belongsTo(Promoteur::class);
     }
 
     public function categorie()

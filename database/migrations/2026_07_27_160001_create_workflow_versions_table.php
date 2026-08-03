@@ -13,10 +13,11 @@ return new class extends Migration
     {
         Schema::create('workflow_versions', function (Blueprint $table) {
             $table->id();
-            $table->string('workflow_code', 20);
+            $table->string('workflow_code', 50);
+            $table->string('version', 20)->default('2026');
+            $table->string('code', 50)->unique();
             $table->string('name', 150);
             $table->text('description')->nullable();
-            $table->string('version', 20)->default('2026');
             $table->boolean('is_active')->default(true);
             $table->boolean('is_default')->default(false);
             $table->timestamps();

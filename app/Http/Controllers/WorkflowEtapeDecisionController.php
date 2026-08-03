@@ -11,13 +11,13 @@ class WorkflowEtapeDecisionController extends Controller
 {
     public function index(): JsonResponse
     {
-        $decisions = WorkflowEtapeDecision::with(['etape', 'outcomes'])->get();
+        $decisions = WorkflowEtapeDecision::with('etape')->get();
         return new JsonResponse(['Message' => 'Workflow etape decision list retrieved successfully', 'data' => $decisions], 200);
     }
 
     public function show($id): JsonResponse
     {
-        $decision = WorkflowEtapeDecision::with(['etape', 'outcomes'])->find($id);
+        $decision = WorkflowEtapeDecision::with('etape')->find($id);
         if (!$decision) {
             return new JsonResponse(['Message' => 'Workflow etape decision not found'], 404);
         }

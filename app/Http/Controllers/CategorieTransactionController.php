@@ -27,6 +27,7 @@ class CategorieTransactionController extends Controller
     public function store(Request $request): JsonResponse
     {
         $validation = Validator::make($request->all(), [
+            'code' => 'required|string|max:50|unique:categories_transactions,code',
             'libelle' => 'required|string|max:100',
             'description' => 'nullable|string',
             'niveau' => 'sometimes|integer|min:1',
@@ -64,6 +65,7 @@ class CategorieTransactionController extends Controller
         }
 
         $validation = Validator::make($request->all(), [
+            'code' => 'sometimes|required|string|max:50|unique:categories_transactions,code,' . $id,
             'libelle' => 'sometimes|required|string|max:100',
             'description' => 'nullable|string',
             'niveau' => 'sometimes|integer|min:1',

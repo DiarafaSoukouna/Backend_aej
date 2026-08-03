@@ -14,11 +14,11 @@ return new class extends Migration
         Schema::create('workflow_etapes_deliverable', function (Blueprint $table) {
             $table->id();
             $table->string('etape_code');
-            $table->string('name', 200);
-            $table->text('description')->nullable();
-            $table->boolean('is_mandatory')->default(true);
+            $table->string('deliverable_code');
+            $table->boolean('is_required')->default(true);
             
             $table->foreign('etape_code')->references('code')->on('workflow_etapes')->onDelete('cascade');
+            $table->foreign('deliverable_code')->references('code')->on('workflow_deliverables')->onDelete('cascade');
         });
     }
 

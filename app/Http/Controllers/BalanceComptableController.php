@@ -12,10 +12,10 @@ class BalanceComptableController extends Controller
     public function index(): JsonResponse
     {
         try {
-            $totalBudgetAlloue = Budget::sum('montant_alloue');
+            $totalBudgetAlloue = Budget::sum('montant_accorde');
             $totalRemboursements = Remboursement::where('statut', 'PAYE')->sum('montant_paye');
-            $totalRecettes = Transaction::where('type', 'CREDIT')->sum('montant');
-            $totalDepenses = Transaction::where('type', 'DEBIT')->sum('montant');
+            $totalRecettes = Transaction::where('type', 'RECETTE')->where('statut', 'VALIDE')->sum('montant');
+            $totalDepenses = Transaction::where('type', 'DEPENSE')->where('statut', 'VALIDE')->sum('montant');
             $solde = $totalBudgetAlloue - $totalDepenses;
 
             return new JsonResponse([
@@ -43,8 +43,8 @@ class BalanceComptableController extends Controller
     {
         try {
             $budget = Budget::where('micro_projet_id', $microProjetId)->first();
-            $totalDepenses = Transaction::where('micro_projet_id', $microProjetId)->where('type', 'DEBIT')->sum('montant');
-            $totalRecettes = Transaction::where('micro_projet_id', $microProjetId)->where('type', 'CREDIT')->sum('montant');
+            $totalDepenses = Transaction::where('micro_projet_id', $microProjetId)->where('type', 'DEPENSE')->where('statut', 'VALIDE')->sum('montant');
+            $totalRecettes = Transaction::where('micro_projet_id', $microProjetId)->where('type', 'RECETTE')->where('statut', 'VALIDE')->sum('montant');
             $totalRemboursements = 0;
             if ($budget) {
                 $totalRemboursements = Remboursement::where('budget_id', $budget->id)
@@ -52,7 +52,7 @@ class BalanceComptableController extends Controller
                     ->sum('montant_paye');
             }
 
-            $solde = $budget->montant_alloue - $totalDepenses;
+            $solde = $budget ? $budget->montant_accorde - $totalDepenses : 0;
 
             return new JsonResponse([
                 'message' => 'Balance comptable for micro projet retrieved successfully',
@@ -62,7 +62,7 @@ class BalanceComptableController extends Controller
                     'total_depenses' => $totalDepenses,
                     'solde' => $solde,
                     'details' => [
-                        'budget_alloue' => $budget ? $budget->montant_alloue : 0,
+                        'budget_alloue' => $budget ? $budget->montant_accorde : 0,
                         'remboursements_recus' => $totalRemboursements,
                     ]
                 ]

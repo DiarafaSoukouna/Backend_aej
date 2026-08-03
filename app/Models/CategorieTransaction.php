@@ -9,6 +9,7 @@ class CategorieTransaction extends Model
     protected $table = 'categories_transactions';
 
     protected $fillable = [
+        'code',
         'libelle',
         'description',
         'niveau',

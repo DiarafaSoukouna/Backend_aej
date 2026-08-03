@@ -27,7 +27,7 @@ class RemboursementController extends Controller
     public function store(Request $request): JsonResponse
     {
         $validation = Validator::make($request->all(), [
-            'jeune_id' => 'required|exists:jeunes,id',
+            'promoteur_id' => 'required|exists:promoteurs,id',
             'budget_id' => 'required|exists:budgets,id',
             'montant_echu' => 'required|numeric',
             'montant_paye' => 'nullable|numeric',
@@ -69,7 +69,7 @@ class RemboursementController extends Controller
         }
 
         $validation = Validator::make($request->all(), [
-            'jeune_id' => 'sometimes|required|exists:jeunes,id',
+            'promoteur_id' => 'sometimes|required|exists:promoteurs,id',
             'budget_id' => 'sometimes|required|exists:budgets,id',
             'montant_echu' => 'sometimes|required|numeric',
             'montant_paye' => 'nullable|numeric',

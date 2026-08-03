@@ -11,7 +11,7 @@ class WorkflowEtapeTransition extends Model
         'from_etape_code',
         'to_etape_code',
         'transition_type',
-        'sequence_order',
+        'order',
         'is_active',
     ];
 

@@ -5,7 +5,7 @@ namespace Database\Seeders;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
-use App\Models\Workflow;
+use App\Models\Workflow as WorkflowModel;
 use App\Models\WorkflowVersion;
 use App\Models\WorkflowEtape;
 use App\Models\WorkflowEtapeSla;
@@ -14,6 +14,9 @@ use App\Models\WorkflowEtapeTransition;
 use App\Models\WorkflowEtapeDeliverable;
 use App\Models\WorkflowEtapeDecision;
 use App\Models\WorkflowDecisionOutcome;
+use App\Models\WorkflowRole;
+use App\Models\WorkflowDeliverable;
+use App\Constants\Workflow;
 
 
 
@@ -27,10 +30,168 @@ class WorkflowSeeder extends Seeder
      */
     public function run(): void
     {
-        // TODO: Create workflows, versions, etapes, roles, slas, transitions, deliverables, decisions, outcomes
-        Workflow::create([
-            'name' => 'Test Workflow',
-            'description' => 'Test Workflow Description',
-        ]);
+        // Seed Roles first (required for workflow_etapes_roles foreign key)
+        foreach (Workflow::WorkflowRoles as $code => $data) {
+            \App\Models\Role::updateOrCreate(
+                ['code' => $code],
+                [
+                    'libelle' => $data['name'],
+                    'description' => $data['description'],
+                ]
+            );
+        }
+
+        // Seed Workflow Roles
+        foreach (Workflow::WorkflowRoles as $code => $data) {
+            WorkflowRole::updateOrCreate(
+                ['code' => $code],
+                [
+                    'name' => $data['name'],
+                    'description' => $data['description'],
+                    'is_active' => $data['is_active'],
+                ]
+            );
+        }
+
+        // Seed Workflow Decision Outcomes
+        foreach (Workflow::WorkflowDecisionOutcome as $code => $label) {
+            WorkflowDecisionOutcome::updateOrCreate(
+                ['code' => $code],
+                ['label' => $label]
+            );
+        }
+
+        // Seed Workflow Deliverables
+        foreach (Workflow::WorkflowDeliverables as $code => $data) {
+            WorkflowDeliverable::updateOrCreate(
+                ['code' => $code],
+                [
+                    'name' => $data['name'],
+                    'description' => $data['description'],
+                    'is_active' => $data['is_active'],
+                ]
+            );
+        }
+
+        // Seed Workflows and Versions
+        foreach (Workflow::WorkflowModels as $code => $data) {
+            $workflow = WorkflowModel::updateOrCreate(
+                ['code' => $code],
+                [
+                    'name' => $data['name'],
+                    'description' => $data['description'],
+                    'is_active' => $data['is_active'],
+                ]
+            );
+
+            if (isset(Workflow::WorkflowVersion[$code])) {
+                $versionData = Workflow::WorkflowVersion[$code];
+                $versionCode = $versionData['workflow_code'] . '_' . $versionData['version'];
+                WorkflowVersion::updateOrCreate(
+                    ['code' => $versionCode],
+                    [
+                        'workflow_code' => $versionData['workflow_code'],
+                        'version' => $versionData['version'],
+                        'name' => $versionData['name'],
+                        'description' => $versionData['description'],
+                        'is_active' => $versionData['is_active'],
+                        'is_default' => $versionData['is_default'],
+                    ]
+                );
+            }
+        }
+
+        // Seed Workflow Etapes
+        foreach (Workflow::WorkflowEtapes as $workflowCode => $etapes) {
+            foreach ($etapes as $etapeData) {
+                $versionCode = $workflowCode . '_' . $etapeData['version'];
+                WorkflowEtape::updateOrCreate(
+                    [
+                        'workflow_version' => $versionCode,
+                        'code' => $etapeData['code'],
+                    ],
+                    [
+                        'parent_etape_code' => $etapeData['parent_etape_code'] ?? null,
+                        'name' => $etapeData['name'],
+                        'impact' => $etapeData['impact'] ?? null,
+                        'statut' => 'NON',
+                        'description' => $etapeData['description'],
+                        'order' => $etapeData['order'],
+                        'is_active' => $etapeData['is_active'],
+                    ]
+                );
+            }
+        }
+
+        // Seed Workflow Etapes SLA
+        foreach (Workflow::WorkflowEtapesSla as $workflowCode => $slas) {
+            foreach ($slas as $slaData) {
+                if (WorkflowEtape::where('code', $slaData['etape_code'])->exists()) {
+                    WorkflowEtapeSla::updateOrCreate(
+                        [
+                            'etape_code' => $slaData['etape_code'],
+                            'duration_value' => $slaData['duration_value'],
+                            'duration_unit' => $slaData['duration_unit'],
+                        ],
+                        [
+                            'description' => $slaData['description'],
+                        ]
+                    );
+                }
+            }
+        }
+
+        // Seed Workflow Etapes Roles
+        foreach (Workflow::WorkflowEtapesRoles as $workflowCode => $roles) {
+            foreach ($roles as $roleData) {
+                if (WorkflowEtape::where('code', $roleData['etape_code'])->exists()) {
+                    WorkflowEtapeRole::updateOrCreate(
+                        [
+                            'etape_code' => $roleData['etape_code'],
+                            'role_code' => $roleData['role_code'],
+                        ],
+                        [
+                            'responsibility' => $roleData['action'] ?? null,
+                        ]
+                    );
+                }
+            }
+        }
+
+        // Seed Workflow Etapes Decisions
+        foreach (Workflow::WorkflowEtapesDecision as $workflowCode => $decisions) {
+            foreach ($decisions as $decisionData) {
+                if (WorkflowEtape::where('code', $decisionData['etape_code'])->exists()) {
+                    WorkflowEtapeDecision::updateOrCreate(
+                        [
+                            'etape_code' => $decisionData['etape_code'],
+                            'code' => $decisionData['code'],
+                        ],
+                        [
+                            'name' => $decisionData['name'],
+                            'description' => $decisionData['description'] ?? null,
+                            'outcomes' => implode('|', $decisionData['outcomes']),
+                        ]
+                    );
+                }
+            }
+        }
+
+        // Seed Workflow Etapes Deliverables
+        foreach (Workflow::WorkflowEtapesDeliverable as $workflowCode => $deliverables) {
+            foreach ($deliverables as $deliverableData) {
+                if (WorkflowEtape::where('code', $deliverableData['etape_code'])->exists()) {
+                    WorkflowEtapeDeliverable::updateOrCreate(
+                        [
+                            'etape_code' => $deliverableData['etape_code'],
+                            'deliverable_code' => $deliverableData['deliverable_code'],
+                        ],
+                        [
+                            'is_required' => $deliverableData['is_required'] ?? true,
+                        ]
+                    );
+                }
+            }
+        }
     }
 }

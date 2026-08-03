@@ -31,7 +31,7 @@ class WorkflowEtapeTransitionController extends Controller
             'from_etape_id' => 'required|exists:workflow_etapes,id',
             'to_etape_id' => 'required|exists:workflow_etapes,id|different:from_etape_id',
             'transition_type' => 'required|in:NEXT,RETURN,PARALLEL,MERGE,CANCEL,END',
-            'sequence_order' => 'integer',
+            'order' => 'integer',
             'is_active' => 'boolean',
         ]);
 
@@ -70,7 +70,7 @@ class WorkflowEtapeTransitionController extends Controller
             'from_etape_id' => 'sometimes|required|exists:workflow_etapes,id',
             'to_etape_id' => 'sometimes|required|exists:workflow_etapes,id|different:from_etape_id',
             'transition_type' => 'sometimes|required|in:NEXT,RETURN,PARALLEL,MERGE,CANCEL,END',
-            'sequence_order' => 'integer',
+            'order' => 'integer',
             'is_active' => 'boolean',
         ]);
 

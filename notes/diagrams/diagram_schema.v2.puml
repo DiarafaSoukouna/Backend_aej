@@ -266,7 +266,7 @@ package "8. Workflows" {
     code
     name
     level
-    sequence_order
+    order
   }
 
   entity workflow_etapes_sla {

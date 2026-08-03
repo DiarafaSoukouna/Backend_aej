@@ -8,9 +8,10 @@ class WorkflowVersion extends Model
 {
     protected $fillable = [
         'workflow_code',
+        'version',
+        'code',
         'name',
         'description',
-        'version',
         'is_active',
         'is_default',
     ];
@@ -22,16 +23,17 @@ class WorkflowVersion extends Model
 
     public function workflow()
     {
-        return $this->belongsTo(Workflow::class);
+        return $this->belongsTo(Workflow::class, 'workflow_code', 'code');
     }
 
     public function etapes()
     {
-        return $this->hasMany(WorkflowEtape::class);
+        return $this->hasMany(WorkflowEtape::class, 'workflow_version', 'code');
     }
 
-    public function transitions()
-    {
-        return $this->hasMany(WorkflowEtapeTransition::class);
-    }
+    // Transitions table is commented out in schema
+    // public function transitions()
+    // {
+    //     return $this->hasMany(WorkflowEtapeTransition::class);
+    // }
 }

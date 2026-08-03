@@ -11,13 +11,13 @@ class WorkflowDecisionOutcomeController extends Controller
 {
     public function index(): JsonResponse
     {
-        $outcomes = WorkflowDecisionOutcome::with(['decision', 'nextEtape'])->get();
+        $outcomes = WorkflowDecisionOutcome::all();
         return new JsonResponse(['Message' => 'Workflow decision outcome list retrieved successfully', 'data' => $outcomes], 200);
     }
 
     public function show($id): JsonResponse
     {
-        $outcome = WorkflowDecisionOutcome::with(['decision', 'nextEtape'])->find($id);
+        $outcome = WorkflowDecisionOutcome::find($id);
         if (!$outcome) {
             return new JsonResponse(['Message' => 'Workflow decision outcome not found'], 404);
         }
@@ -27,10 +27,8 @@ class WorkflowDecisionOutcomeController extends Controller
     public function store(Request $request): JsonResponse
     {
         $validation = Validator::make($request->all(), [
-            'decision_id' => 'required|exists:workflow_etapes_decision,id',
-            'code' => 'required|string|max:30',
+            'code' => 'required|string|max:50|unique:workflow_decision_outcome,code',
             'label' => 'required|string|max:150',
-            'next_etape_id' => 'nullable|exists:workflow_etapes,id',
         ]);
 
         if ($validation->fails()) {
@@ -64,10 +62,8 @@ class WorkflowDecisionOutcomeController extends Controller
         }
 
         $validation = Validator::make($request->all(), [
-            'decision_id' => 'sometimes|required|exists:workflow_etapes_decision,id',
-            'code' => 'sometimes|required|string|max:30',
+            'code' => 'sometimes|required|string|max:50|unique:workflow_decision_outcome,code,' . $id,
             'label' => 'sometimes|required|string|max:150',
-            'next_etape_id' => 'nullable|exists:workflow_etapes,id',
         ]);
 
         if ($validation->fails()) {

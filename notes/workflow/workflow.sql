@@ -33,7 +33,7 @@ CREATE TABLE IF NOT EXISTS workflow_etape (
     name VARCHAR(200) NOT NULL,
     description TEXT,
     level SMALLINT NOT NULL DEFAULT 1,
-    sequence_order INTEGER NOT NULL,
+    order INTEGER NOT NULL,
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
     valid_from DATE NOT NULL DEFAULT (CURRENT_DATE),
     valid_to DATE,
@@ -67,7 +67,7 @@ CREATE TABLE IF NOT EXISTS workflow_etape_transition (
     from_etape_id BIGINT NOT NULL,
     to_etape_id BIGINT NOT NULL,
     transition_type VARCHAR(20) NOT NULL DEFAULT 'default',
-    sequence_order INTEGER NOT NULL DEFAULT 1,
+    order INTEGER NOT NULL DEFAULT 1,
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
     CHECK (from_etape_id <> to_etape_id),
     CHECK (transition_type IN (

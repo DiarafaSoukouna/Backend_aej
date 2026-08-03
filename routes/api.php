@@ -23,6 +23,8 @@ use App\Http\Controllers\WorkflowEtapeRoleController;
 use App\Http\Controllers\WorkflowEtapeTransitionController;
 use App\Http\Controllers\WorkflowEtapeDecisionController;
 use App\Http\Controllers\WorkflowDecisionOutcomeController;
+use App\Http\Controllers\WorkflowRoleController;
+use App\Http\Controllers\WorkflowDeliverableController;
 use App\Http\Controllers\SuiviController;
 use App\Http\Controllers\BudgetController;
 use App\Http\Controllers\RemboursementController;
@@ -32,6 +34,13 @@ use App\Http\Controllers\CategorieTransactionController;
 use App\Http\Controllers\BalanceComptableController;
 use App\Http\Controllers\SyncAejController;
 use App\Http\Controllers\AejApiController;
+use App\Http\Controllers\CompteFinancementController;
+use App\Http\Controllers\ObservationController;
+use App\Http\Controllers\DocumentController;
+use App\Http\Controllers\PlanDecaissementController;
+use App\Http\Controllers\DecaissementController;
+use App\Http\Controllers\RemboursementsDeclarationController;
+use App\Http\Controllers\DecaissementsDeclarationController;
 
 
 Route::apiResource('directions', DirectionController::class);
@@ -59,28 +68,43 @@ Route::apiResource('permissions', PermissionController::class);
 Route::apiResource('roles', RoleController::class);
 Route::apiResource('type-organismes', TypeOrganismeController::class);
 Route::apiResource('organismes', OrganismeController::class);
-Route::apiResource('indicateurs', IndicateurController::class);
 
 // Workflow routes
-Route::apiResource('workflows', WorkflowController::class);
-Route::apiResource('workflow-versions', WorkflowVersionController::class);
-Route::apiResource('workflow-etapes', WorkflowEtapeController::class);
-Route::apiResource('workflow-etape-slas', WorkflowEtapeSlaController::class);
-Route::apiResource('workflow-etape-deliverables', WorkflowEtapeDeliverableController::class);
-Route::apiResource('workflow-etape-roles', WorkflowEtapeRoleController::class);
-Route::apiResource('workflow-etape-transitions', WorkflowEtapeTransitionController::class);
-Route::apiResource('workflow-etape-decisions', WorkflowEtapeDecisionController::class);
-Route::apiResource('workflow-decision-outcomes', WorkflowDecisionOutcomeController::class);
+Route::prefix('workflow')->group(function () {
+    Route::apiResource('models', WorkflowController::class);
+    Route::apiResource('versions', WorkflowVersionController::class);
+    Route::apiResource('roles', WorkflowRoleController::class);
+    Route::apiResource('deliverables', WorkflowDeliverableController::class);
+    Route::apiResource('decision-outcomes', WorkflowDecisionOutcomeController::class);
+    Route::apiResource('etapes', WorkflowEtapeController::class);
+    Route::apiResource('etape-slas', WorkflowEtapeSlaController::class);
+    Route::apiResource('etape-deliverables', WorkflowEtapeDeliverableController::class);
+    Route::apiResource('etape-roles', WorkflowEtapeRoleController::class);
+    Route::apiResource('etape-decisions', WorkflowEtapeDecisionController::class);
+    // Route::apiResource('etape-transitions', WorkflowEtapeTransitionController::class);
+});
+
+// Suivis & Indicateurs
+Route::apiResource('suivis', SuiviController::class);
+Route::apiResource('indicateurs', IndicateurController::class);
+Route::apiResource('indicateur-suivis', IndicateurSuiviController::class);
 
 // Finances routes
-Route::apiResource('suivis', SuiviController::class);
 Route::apiResource('budgets', BudgetController::class);
+Route::apiResource('compte-financements', CompteFinancementController::class);
+Route::apiResource('plan-decaissements', PlanDecaissementController::class);
+Route::apiResource('decaissements', DecaissementController::class);
+Route::apiResource('decaissements-declarations', DecaissementsDeclarationController::class);
 Route::apiResource('remboursements', RemboursementController::class);
-Route::apiResource('indicateur-suivis', IndicateurSuiviController::class);
-Route::apiResource('categories-transactions', CategorieTransactionController::class);
+Route::apiResource('remboursements-declarations', RemboursementsDeclarationController::class);
 Route::apiResource('transactions', TransactionController::class);
+Route::apiResource('categories-transactions', CategorieTransactionController::class);
 Route::get('balance-comptable', [BalanceComptableController::class, 'index']);
 Route::get('balance-comptable/micro-projet/{microProjetId}', [BalanceComptableController::class, 'byMicroProjet']);
+
+// Autres routes
+Route::apiResource('observations', ObservationController::class);
+Route::apiResource('documents', DocumentController::class);
 
 // AEJ API Routes
 Route::prefix('aej')->group(function () {

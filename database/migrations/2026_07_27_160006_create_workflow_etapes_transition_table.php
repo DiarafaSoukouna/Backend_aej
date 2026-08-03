@@ -11,22 +11,21 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('workflow_etapes_transition', function (Blueprint $table) {
-            $table->id();
-            $table->unsignedBigInteger('version');
-            $table->string('from_etape_code');
-            $table->string('to_etape_code');
-            $table->string('transition_type', 20)->default('NEXT');
-            $table->integer('sequence_order')->default(1);
-            $table->boolean('is_active')->default(true);
-            
-            $table->foreign('version')->references('id')->on('workflow_versions')->onDelete('cascade');
-            $table->foreign('from_etape_code')->references('code')->on('workflow_etapes')->onDelete('cascade');
-            $table->foreign('to_etape_code')->references('code')->on('workflow_etapes')->onDelete('cascade');
-            $table->unique(['version', 'from_etape_code', 'to_etape_code']);
-            
-            $table->enum('transition_type', ['NEXT', 'RETURN', 'PARALLEL', 'MERGE', 'CANCEL', 'END']);
-        });
+        // Table commented out in schema.v2.sql - not needed for current workflow implementation
+        // Schema::create('workflow_etapes_transition', function (Blueprint $table) {
+        //     $table->id();
+        //     $table->unsignedBigInteger('version');
+        //     $table->string('from_etape_code');
+        //     $table->string('to_etape_code');
+        //     $table->enum('transition_type', ['NEXT', 'RETURN', 'PARALLEL', 'MERGE', 'CANCEL', 'END'])->default('NEXT');
+        //     $table->integer('order')->default(1);
+        //     $table->boolean('is_active')->default(true);
+        //     
+        //     $table->foreign('version')->references('id')->on('workflow_versions')->onDelete('cascade');
+        //     $table->foreign('from_etape_code')->references('code')->on('workflow_etapes')->onDelete('cascade');
+        //     $table->foreign('to_etape_code')->references('code')->on('workflow_etapes')->onDelete('cascade');
+        //     $table->unique(['version', 'from_etape_code', 'to_etape_code']);
+        // });
     }
 
     /**

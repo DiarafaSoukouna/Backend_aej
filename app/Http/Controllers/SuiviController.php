@@ -28,7 +28,7 @@ class SuiviController extends Controller
     {
         $validation = Validator::make($request->all(), [
             'micro_projet_id' => 'required|exists:micro_projets,id',
-            'jeune_id' => 'required|exists:jeunes,id',
+            'promoteur_id' => 'required|exists:promoteurs,id',
             'libelle' => 'required|string|max:100',
         ]);
 
@@ -64,7 +64,7 @@ class SuiviController extends Controller
 
         $validation = Validator::make($request->all(), [
             'micro_projet_id' => 'sometimes|required|exists:micro_projets,id',
-            'jeune_id' => 'sometimes|required|exists:jeunes,id',
+            'promoteur_id' => 'sometimes|required|exists:promoteurs,id',
             'libelle' => 'sometimes|required|string|max:100',
         ]);
 

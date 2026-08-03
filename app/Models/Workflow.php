@@ -19,6 +19,6 @@ class Workflow extends Model
 
     public function versions()
     {
-        return $this->hasMany(WorkflowVersion::class);
+        return $this->hasMany(WorkflowVersion::class, 'workflow_code', 'code');
     }
 }

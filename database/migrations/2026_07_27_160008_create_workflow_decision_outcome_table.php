@@ -13,14 +13,8 @@ return new class extends Migration
     {
         Schema::create('workflow_decision_outcome', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('decision_id');
-            $table->string('code', 30);
+            $table->string('code', 50)->unique();
             $table->string('label', 150);
-            $table->string('next_etape_code')->nullable();
-            
-            $table->foreign('decision_id')->references('id')->on('workflow_etapes_decision')->onDelete('cascade');
-            $table->foreign('next_etape_code')->references('code')->on('workflow_etapes')->onDelete('set null');
-            $table->unique(['decision_id', 'code']);
         });
     }
 

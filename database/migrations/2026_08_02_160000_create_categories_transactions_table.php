@@ -10,6 +10,7 @@ return new class extends Migration
     {
         Schema::create('categories_transactions', function (Blueprint $table) {
             $table->id();
+            $table->string('code', 50)->unique();
             $table->string('libelle', 100);
             $table->text('description')->nullable();
             $table->integer('niveau')->default(1);

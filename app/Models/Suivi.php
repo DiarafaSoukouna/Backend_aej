@@ -8,7 +8,7 @@ class Suivi extends Model
 {
     protected $fillable = [
         'micro_projet_id',
-        'jeune_id',
+        'promoteur_id',
         'libelle',
     ];
 
@@ -17,8 +17,8 @@ class Suivi extends Model
         return $this->belongsTo(MicroProjet::class);
     }
 
-    public function jeune()
+    public function promoteur()
     {
-        return $this->belongsTo(Jeune::class);
+        return $this->belongsTo(Promoteur::class);
     }
 }

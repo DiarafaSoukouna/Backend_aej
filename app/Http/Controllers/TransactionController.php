@@ -11,13 +11,13 @@ class TransactionController extends Controller
 {
     public function index(): JsonResponse
     {
-        $transactions = Transaction::with(['microProjet', 'saisiPar'])->get();
+        $transactions = Transaction::with(['microProjet', 'promoteur', 'categorie', 'saisiPar'])->get();
         return new JsonResponse(['Message' => 'Transaction list retrieved successfully', 'data' => $transactions], 200);
     }
 
     public function show($id): JsonResponse
     {
-        $transaction = Transaction::with(['microProjet', 'saisiPar'])->find($id);
+        $transaction = Transaction::with(['microProjet', 'promoteur', 'categorie', 'saisiPar'])->find($id);
         if (!$transaction) {
             return new JsonResponse(['Message' => 'Transaction not found'], 404);
         }
@@ -27,14 +27,18 @@ class TransactionController extends Controller
     public function store(Request $request): JsonResponse
     {
         $validation = Validator::make($request->all(), [
-            'micro_projet_id' => 'required|exists:micro_projets,id',
+            'micro_projet_id' => 'nullable|exists:micro_projets,id',
+            'promoteur_id' => 'nullable|exists:promoteurs,id',
             'categorie_id' => 'required|exists:categories_transactions,id',
             'libelle' => 'required|string|max:200',
+            'type' => 'required|in:RECETTE,DEPENSE',
             'montant' => 'required|numeric',
-            'date' => 'required|date',
-            'type' => 'required|in:DEBIT,CREDIT',
-            'justificatif_path' => 'nullable|string|max:255',
+            'statut' => 'sometimes|in:BROUILLON,SOUMIS,VALIDE,REJETE,ANNULE',
+            'mode_paiement' => 'nullable|in:ESPECES,BANQUE,MOBILE_MONEY,CHEQUE,AUTRE',
+            'reference' => 'nullable|string|max:50|unique:transactions_financieres,reference',
+            'justificatif_path' => 'nullable|string',
             'observations' => 'nullable|string',
+            'date' => 'required|date',
             'saisi_par' => 'nullable|exists:personnels,id',
         ]);
 
@@ -69,14 +73,18 @@ class TransactionController extends Controller
         }
 
         $validation = Validator::make($request->all(), [
-            'micro_projet_id' => 'sometimes|required|exists:micro_projets,id',
+            'micro_projet_id' => 'sometimes|nullable|exists:micro_projets,id',
+            'promoteur_id' => 'sometimes|nullable|exists:promoteurs,id',
             'categorie_id' => 'sometimes|required|exists:categories_transactions,id',
             'libelle' => 'sometimes|required|string|max:200',
+            'type' => 'sometimes|required|in:RECETTE,DEPENSE',
             'montant' => 'sometimes|required|numeric',
-            'date' => 'sometimes|required|date',
-            'type' => 'sometimes|required|in:DEBIT,CREDIT',
-            'justificatif_path' => 'nullable|string|max:255',
+            'statut' => 'sometimes|in:BROUILLON,SOUMIS,VALIDE,REJETE,ANNULE',
+            'mode_paiement' => 'nullable|in:ESPECES,BANQUE,MOBILE_MONEY,CHEQUE,AUTRE',
+            'reference' => 'nullable|string|max:50|unique:transactions_financieres,reference,' . $id,
+            'justificatif_path' => 'nullable|string',
             'observations' => 'nullable|string',
+            'date' => 'sometimes|required|date',
             'saisi_par' => 'nullable|exists:personnels,id',
         ]);
 

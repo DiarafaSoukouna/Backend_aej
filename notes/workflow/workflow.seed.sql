@@ -88,7 +88,7 @@ INSERT INTO
         name,
         description,
         level,
-        sequence_order,
+        order,
         is_active
     )
 SELECT
@@ -154,7 +154,7 @@ INSERT INTO
         from_etape_id,
         to_etape_id,
         transition_type,
-        sequence_order,
+        order,
         is_active
     )
 SELECT
@@ -162,20 +162,20 @@ SELECT
     from_etape.id,
     to_etape.id,
     'default',
-    from_etape.sequence_order, -- on reprend l'ordre de l'étape source
+    from_etape.order, -- on reprend l'ordre de l'étape source
     TRUE
 FROM
     workflow_versions v
     JOIN workflow_etape from_etape ON from_etape.workflow_version_id = v.id
     JOIN workflow_etape to_etape ON to_etape.workflow_version_id = v.id
-    AND to_etape.sequence_order = from_etape.sequence_order + 1
+    AND to_etape.order = from_etape.order + 1
 WHERE
     v.is_default = TRUE
     AND from_etape.level = 1
     AND to_etape.level = 1
 ORDER BY
     v.id,
-    from_etape.sequence_order;
+    from_etape.order;
 
 -- 5. Ajout d'un point de décision sur l'étape "Sélection" (PRCO_4) pour chaque version
 INSERT INTO
