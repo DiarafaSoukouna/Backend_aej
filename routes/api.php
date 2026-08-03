@@ -56,6 +56,7 @@ Route::patch('/configurations', [ConfigurationController::class, 'patch']);
 Route::apiResource('type-emplois', TypeEmploiController::class);
 Route::apiResource('personnels', PersonnelController::class);
 Route::put('personnels/updatePassword/{id}', [PersonnelController::class, 'updatePassword']);
+Route::get('promoteurs', [PromoteurController::class, 'index']);
 
 Route::middleware('web')->group(function () {
     Route::post('personnels/login', [PersonnelController::class, 'auth']);
