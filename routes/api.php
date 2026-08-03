@@ -14,6 +14,7 @@ use App\Http\Controllers\RoleController;
 use App\Http\Controllers\TypeOrganismeController;
 use App\Http\Controllers\OrganismeController;
 use App\Http\Controllers\IndicateurController;
+use App\Http\Controllers\PromoteurController;
 
 
 Route::apiResource('directions', DirectionController::class);
@@ -24,13 +25,23 @@ Route::apiResource('type-entreprises', TypeEntrepriseController::class);
 Route::get('localites/niveau/{niveauId}', [LocaliteController::class, 'getLocalitesByNiveau']);
 Route::apiResource('localites', LocaliteController::class);
 Route::apiResource('configurations', ConfigurationController::class);
+Route::patch('/configurations', [ConfigurationController::class, 'patch']);
 Route::apiResource('type-emplois', TypeEmploiController::class);
 Route::apiResource('personnels', PersonnelController::class);
 Route::put('personnels/updatePassword/{id}', [PersonnelController::class, 'updatePassword']);
-Route::post('personnels/login', [PersonnelController::class, 'auth']);
-Route::post('personnels/logout', [PersonnelController::class, 'logout']);
+Route::get('promoteurs', [PromoteurController::class, 'index']);
+
+Route::middleware('web')->group(function () {
+    Route::post('personnels/login', [PersonnelController::class, 'auth']);
+    Route::post('personnels/logout', [PersonnelController::class, 'logout']);
+    Route::post('auth/refresh', [PersonnelController::class, 'refresh']);
+    Route::get('/personnel/me', [PersonnelController::class, 'me']);
+
+});
+
 Route::apiResource('permissions', PermissionController::class);
 Route::apiResource('roles', RoleController::class);
 Route::apiResource('type-organismes', TypeOrganismeController::class);
 Route::apiResource('organismes', OrganismeController::class);
 Route::apiResource('indicateurs', IndicateurController::class);
+
