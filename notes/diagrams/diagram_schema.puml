@@ -1,0 +1,651 @@
+@startuml schema_aej
+
+' =====================================================================
+' Diagramme ERD du schéma, organisé par processus métier
+' A coller sur https://www.planttext.com/
+' =====================================================================
+
+hide circle
+skinparam linetype ortho
+skinparam roundcorner 8
+skinparam shadowing false
+skinparam class {
+  BackgroundColor White
+  BorderColor #556B8C
+  ArrowColor #556B8C
+}
+skinparam package {
+  BackgroundColor #F7F9FC
+  BorderColor #B0BCD0
+}
+
+' ---------------------------------------------------------------------
+' 0. CONFIGURATION
+' ---------------------------------------------------------------------
+package "Configuration" {
+  entity "configurations" as configurations {
+    * id : BIGINT UNSIGNED <<PK>>
+    --
+    sigle_systeme : VARCHAR
+    intitule_systeme : VARCHAR
+    sigle_structure : VARCHAR
+    email_structure : VARCHAR
+    mise_en_maintenance : TINYINT
+  }
+}
+
+' ---------------------------------------------------------------------
+' 1. GÉOGRAPHIE
+' ---------------------------------------------------------------------
+package "Géographie" {
+  entity "regions" as regions {
+    * id : BIGINT UNSIGNED <<PK>>
+    --
+    code : VARCHAR
+    libelle : VARCHAR
+  }
+
+  entity "departements" as departements {
+    * id : BIGINT UNSIGNED <<PK>>
+    --
+    # region_id : BIGINT UNSIGNED <<FK>>
+    code : VARCHAR
+    libelle : VARCHAR
+  }
+
+  entity "communes" as communes {
+    * id : BIGINT UNSIGNED <<PK>>
+    --
+    # departement_id : BIGINT UNSIGNED <<FK>>
+    code : VARCHAR
+    libelle : VARCHAR
+  }
+}
+
+' ---------------------------------------------------------------------
+' 2. RÉFÉRENTIELS MÉTIER
+' ---------------------------------------------------------------------
+package "Référentiels" {
+  entity "secteurs" as secteurs {
+    * id : BIGINT UNSIGNED <<PK>>
+    --
+    code : VARCHAR
+    libelle : VARCHAR
+  }
+
+  entity "directions" as directions {
+    * id : BIGINT UNSIGNED <<PK>>
+    --
+    nom : VARCHAR
+    code : VARCHAR
+  }
+
+  entity "services" as services {
+    * id : BIGINT UNSIGNED <<PK>>
+    --
+    # direction_id : BIGINT UNSIGNED <<FK>>
+    nom : VARCHAR
+    code : VARCHAR
+  }
+
+  entity "fonctions" as fonctions {
+    * id : BIGINT UNSIGNED <<PK>>
+    --
+    # service_id : BIGINT UNSIGNED <<FK>>
+    nom : VARCHAR
+    code : VARCHAR
+  }
+
+  entity "guichets" as guichets {
+    * id : BIGINT UNSIGNED <<PK>>
+    --
+    code : VARCHAR
+    libelle : VARCHAR
+  }
+
+  entity "branches_activite" as branches_activite {
+    * id : BIGINT UNSIGNED <<PK>>
+    --
+    code : VARCHAR
+    libelle : VARCHAR
+  }
+
+  entity "pieces_identite" as pieces_identite {
+    * id : BIGINT UNSIGNED <<PK>>
+    --
+    code : VARCHAR
+    libelle : VARCHAR
+  }
+
+  entity "type_entreprises" as type_entreprises {
+    * id : BIGINT UNSIGNED <<PK>>
+    --
+    code : VARCHAR
+    libelle : VARCHAR
+  }
+
+  entity "type_organismes" as type_organismes {
+    * id : BIGINT UNSIGNED <<PK>>
+    --
+    code : VARCHAR
+    libelle : VARCHAR
+  }
+
+  entity "type_emplois" as type_emplois {
+    * id : BIGINT UNSIGNED <<PK>>
+    --
+    code : VARCHAR
+    libelle : VARCHAR
+  }
+}
+
+' ---------------------------------------------------------------------
+' 3. ORGANISMES & ENTREPRISES
+' ---------------------------------------------------------------------
+package "Organismes & Entreprises" {
+  entity "organismes" as organismes {
+    * id : BIGINT UNSIGNED <<PK>>
+    --
+    # type : BIGINT UNSIGNED <<FK>>
+    # region_id : BIGINT UNSIGNED <<FK>>
+    nom : VARCHAR
+    sigle : VARCHAR
+  }
+
+  entity "entreprises" as entreprises {
+    * id : BIGINT UNSIGNED <<PK>>
+    --
+    # type_entreprise_id : BIGINT UNSIGNED <<FK>>
+    # region_id : BIGINT UNSIGNED <<FK>>
+    # commune_id : BIGINT UNSIGNED <<FK>>
+    raison_sociale : VARCHAR
+    rccm : VARCHAR
+  }
+}
+
+' ---------------------------------------------------------------------
+' 4. RÔLES & PERSONNELS
+' ---------------------------------------------------------------------
+package "Rôles & Personnels" {
+  entity "roles" as roles {
+    * id : BIGINT UNSIGNED <<PK>>
+    --
+    code : VARCHAR
+    libelle : VARCHAR
+  }
+
+  entity "permissions" as permissions {
+    * id : BIGINT UNSIGNED <<PK>>
+    --
+    # role_id : BIGINT UNSIGNED <<FK>>
+    module : VARCHAR
+    autorise : BOOLEAN
+  }
+
+  entity "personnels" as personnels {
+    * id : BIGINT UNSIGNED <<PK>>
+    --
+    # role_id : BIGINT UNSIGNED <<FK>>
+    # organisme_id : BIGINT UNSIGNED <<FK>>
+    nom : VARCHAR
+    email : VARCHAR
+    statut : TINYINT
+  }
+}
+
+' ---------------------------------------------------------------------
+' 5. JEUNES (porteurs de projet)
+' ---------------------------------------------------------------------
+package "Jeunes" {
+  entity "jeunes" as jeunes {
+    * id : BIGINT UNSIGNED <<PK>>
+    --
+    # piece_identite_id : BIGINT UNSIGNED <<FK>>
+    nom : VARCHAR
+    prenom : VARCHAR
+    numero_piece_identite : VARCHAR
+    numero_aej : VARCHAR
+    statut : TINYINT
+  }
+}
+
+' ---------------------------------------------------------------------
+' 6. WORKFLOWS (modèle / paramétrage)
+' ---------------------------------------------------------------------
+package "Workflows (paramétrage)" {
+  entity "workflows" as workflows {
+    * id : BIGINT UNSIGNED <<PK>>
+    --
+    code : VARCHAR
+    name : VARCHAR
+    is_active : BOOLEAN
+  }
+
+  entity "workflow_versions" as workflow_versions {
+    * id : BIGINT UNSIGNED <<PK>>
+    --
+    # workflow_id : BIGINT UNSIGNED <<FK>>
+    version : VARCHAR
+    is_default : BOOLEAN
+  }
+
+  entity "workflow_etape" as workflow_etape {
+    * id : BIGINT UNSIGNED <<PK>>
+    --
+    # workflow_version_id : BIGINT UNSIGNED <<FK>>
+    # parent_etape_id : BIGINT UNSIGNED <<FK>>
+    code : VARCHAR
+    name : VARCHAR
+    order : INTEGER
+  }
+
+  entity "workflow_etape_sla" as workflow_etape_sla {
+    * id : BIGINT UNSIGNED <<PK>>
+    --
+    # etape_id : BIGINT UNSIGNED <<FK>>
+    duration_value : INTEGER
+    duration_unit : VARCHAR
+  }
+
+  entity "workflow_etape_transition" as workflow_etape_transition {
+    * id : BIGINT UNSIGNED <<PK>>
+    --
+    # workflow_version_id : BIGINT UNSIGNED <<FK>>
+    # from_etape_id : BIGINT UNSIGNED <<FK>>
+    # to_etape_id : BIGINT UNSIGNED <<FK>>
+    transition_type : VARCHAR
+  }
+
+  entity "decision_point" as decision_point {
+    * id : BIGINT UNSIGNED <<PK>>
+    --
+    # etape_id : BIGINT UNSIGNED <<FK>>
+    name : VARCHAR
+  }
+
+  entity "decision_outcome" as decision_outcome {
+    * id : BIGINT UNSIGNED <<PK>>
+    --
+    # decision_point_id : BIGINT UNSIGNED <<FK>>
+    # next_etape_id : BIGINT UNSIGNED <<FK>>
+    code : VARCHAR
+    label : VARCHAR
+  }
+
+  entity "deliverable_template" as deliverable_template {
+    * id : BIGINT UNSIGNED <<PK>>
+    --
+    # etape_id : BIGINT UNSIGNED <<FK>>
+    name : VARCHAR
+    is_mandatory : BOOLEAN
+  }
+
+  entity "workflow_etape_roles" as workflow_etape_roles {
+    * id : BIGINT UNSIGNED <<PK>>
+    --
+    # etape_id : BIGINT UNSIGNED <<FK>>
+    # role_id : BIGINT UNSIGNED <<FK>>
+    responsibility : TEXT
+  }
+}
+
+' ---------------------------------------------------------------------
+' 7. PROJETS
+' ---------------------------------------------------------------------
+package "Projets" {
+  entity "projets" as projets {
+    * id : BIGINT UNSIGNED <<PK>>
+    --
+    # jeune_id : BIGINT UNSIGNED <<FK>>
+    # secteur_id : BIGINT UNSIGNED <<FK>>
+    # guichet_id : BIGINT UNSIGNED <<FK>>
+    # organisme_id : BIGINT UNSIGNED <<FK>>
+    # workflow_version_id : BIGINT UNSIGNED <<FK>>
+    # branche_activite_id : BIGINT UNSIGNED <<FK>>
+    titre : VARCHAR
+    statut : ENUM
+  }
+
+  entity "budgets_projets" as budgets_projets {
+    * id : BIGINT UNSIGNED <<PK>>
+    --
+    # projet_id : BIGINT UNSIGNED <<FK>>
+    budget_alloue : DECIMAL
+    devise : VARCHAR
+  }
+
+  entity "depenses_projets" as depenses_projets {
+    * id : BIGINT UNSIGNED <<PK>>
+    --
+    # projet_id : BIGINT UNSIGNED <<FK>>
+    # saisi_par : BIGINT UNSIGNED <<FK>>
+    categorie : ENUM
+    montant : DECIMAL
+  }
+
+  entity "zones_intervention" as zones_intervention {
+    * id : BIGINT UNSIGNED <<PK>>
+    --
+    # projet_id : BIGINT UNSIGNED <<FK>>
+    # region_id : BIGINT UNSIGNED <<FK>>
+    # departement_id : BIGINT UNSIGNED <<FK>>
+    # commune_id : BIGINT UNSIGNED <<FK>>
+    latitude : DECIMAL
+    longitude : DECIMAL
+  }
+
+  entity "observations" as observations {
+    * id : BIGINT UNSIGNED <<PK>>
+    --
+    # projet_id : BIGINT UNSIGNED <<FK>>
+    # auteur_id : BIGINT UNSIGNED <<FK>>
+    observation : TEXT
+  }
+
+  entity "documents" as documents {
+    * id : BIGINT UNSIGNED <<PK>>
+    --
+    # projet_id : BIGINT UNSIGNED <<FK>>
+    type_document : VARCHAR
+    fichier : VARCHAR
+  }
+}
+
+' ---------------------------------------------------------------------
+' 8. FINANCEMENTS & REMBOURSEMENTS
+' ---------------------------------------------------------------------
+package "Financements & Remboursements" {
+  entity "financements" as financements {
+    * id : BIGINT UNSIGNED <<PK>>
+    --
+    # projet_id : BIGINT UNSIGNED <<FK>>
+    # jeune_id : BIGINT UNSIGNED <<FK>>
+    # organisme_id : BIGINT UNSIGNED <<FK>>
+    # valide_par : BIGINT UNSIGNED <<FK>>
+    montant_demande : DECIMAL
+    montant_octroye : DECIMAL
+    statut : ENUM
+  }
+
+  entity "lots_financements" as lots_financements {
+    * id : BIGINT UNSIGNED <<PK>>
+    --
+    # projet_id : BIGINT UNSIGNED <<FK>>
+    # financement_id : BIGINT UNSIGNED <<FK>>
+    code : VARCHAR
+    montant_planifie : DECIMAL
+  }
+
+  entity "decaissements" as decaissements {
+    * id : BIGINT UNSIGNED <<PK>>
+    --
+    # projet_id : BIGINT UNSIGNED <<FK>>
+    # lot_id : BIGINT UNSIGNED <<FK>>
+    montant : DECIMAL
+    statut : ENUM
+  }
+
+  entity "remboursements" as remboursements {
+    * id : BIGINT UNSIGNED <<PK>>
+    --
+    # projet_id : BIGINT UNSIGNED <<FK>>
+    # jeune_id : BIGINT UNSIGNED <<FK>>
+    # financement_id : BIGINT UNSIGNED <<FK>>
+    numero_echeance : INT
+    montant_prevu : DECIMAL
+    montant_paye : DECIMAL
+    statut : ENUM
+  }
+}
+
+' ---------------------------------------------------------------------
+' 9. SUIVI, EXPLOITATION & INDICATEURS
+' ---------------------------------------------------------------------
+package "Suivi & Exploitation" {
+  entity "exploitations" as exploitations {
+    * id : BIGINT UNSIGNED <<PK>>
+    --
+    # projet_id : BIGINT UNSIGNED <<FK>>
+    # agent_id : BIGINT UNSIGNED <<FK>>
+    nbre_emplois : INT
+    chiffre_affaires : DECIMAL
+  }
+
+  entity "visite_photos" as visite_photos {
+    * id : BIGINT UNSIGNED <<PK>>
+    --
+    # exploitation_id : BIGINT UNSIGNED <<FK>>
+    # prise_par_id : BIGINT UNSIGNED <<FK>>
+    photo_url : VARCHAR
+  }
+
+  entity "indicateurs" as indicateurs {
+    * id : BIGINT UNSIGNED <<PK>>
+    --
+    nom : VARCHAR
+    type_valeur : VARCHAR
+  }
+
+  entity "indicateurs_suivi" as indicateurs_suivi {
+    * id : BIGINT UNSIGNED <<PK>>
+    --
+    # indicateur_id : BIGINT UNSIGNED <<FK>>
+    # projet_id : BIGINT UNSIGNED <<FK>>
+    valeur : VARCHAR
+  }
+
+  entity "suivis" as suivis {
+    * id : BIGINT UNSIGNED <<PK>>
+    --
+    # jeune_id : BIGINT UNSIGNED <<FK>>
+    intitule : VARCHAR
+  }
+
+  entity "embauches" as embauches {
+    * id : BIGINT UNSIGNED <<PK>>
+    --
+    # jeune_id : BIGINT UNSIGNED <<FK>>
+    # entreprise_id : BIGINT UNSIGNED <<FK>>
+    # type_emploi_id : BIGINT UNSIGNED <<FK>>
+    poste : VARCHAR
+  }
+
+  entity "notifications" as notifications {
+    * id : BIGINT UNSIGNED <<PK>>
+    --
+    # personnel_id : BIGINT UNSIGNED <<FK>>
+    titre : VARCHAR
+    lue : TINYINT
+  }
+}
+
+' ---------------------------------------------------------------------
+' 10. ÉVALUATIONS
+' ---------------------------------------------------------------------
+package "Évaluations" {
+  entity "formulaires_evaluation" as formulaires_evaluation {
+    * id : BIGINT UNSIGNED <<PK>>
+    --
+    code : VARCHAR
+    public_cible : VARCHAR
+  }
+
+  entity "questions_evaluation" as questions_evaluation {
+    * id : BIGINT UNSIGNED <<PK>>
+    --
+    # formulaire_id : BIGINT UNSIGNED <<FK>>
+    libelle : TEXT
+    type_question : VARCHAR
+  }
+
+  entity "evaluations" as evaluations {
+    * id : BIGINT UNSIGNED <<PK>>
+    --
+    # formulaire_id : BIGINT UNSIGNED <<FK>>
+    # evaluateur_id : BIGINT UNSIGNED <<FK>>
+    cible_type : VARCHAR
+    score_global : DECIMAL
+  }
+
+  entity "reponses_evaluation" as reponses_evaluation {
+    * id : BIGINT UNSIGNED <<PK>>
+    --
+    # evaluation_id : BIGINT UNSIGNED <<FK>>
+    # question_id : BIGINT UNSIGNED <<FK>>
+    reponse_texte : TEXT
+  }
+}
+
+' ---------------------------------------------------------------------
+' 11. INSTANCES DE WORKFLOW (exécution, par projet)
+' ---------------------------------------------------------------------
+package "Instances de Workflow" {
+  entity "workflow_instance" as workflow_instance {
+    * id : BIGINT UNSIGNED <<PK>>
+    --
+    # projet_id : BIGINT UNSIGNED <<FK>>
+    # workflow_version_id : BIGINT UNSIGNED <<FK>>
+    # current_etape_id : BIGINT UNSIGNED <<FK>>
+    status : VARCHAR
+  }
+
+  entity "workflow_instance_history" as workflow_instance_history {
+    * id : BIGINT UNSIGNED <<PK>>
+    --
+    # workflow_instance_id : BIGINT UNSIGNED <<FK>>
+    # etape_id : BIGINT UNSIGNED <<FK>>
+    # role_id : BIGINT UNSIGNED <<FK>>
+    # performed_by_id : BIGINT UNSIGNED <<FK>>
+    # decision_outcome_id : BIGINT UNSIGNED <<FK>>
+    entered_at : TIMESTAMP
+  }
+
+  entity "workflow_instance_document" as workflow_instance_document {
+    * id : BIGINT UNSIGNED <<PK>>
+    --
+    # workflow_instance_id : BIGINT UNSIGNED <<FK>>
+    # deliverable_template_id : BIGINT UNSIGNED <<FK>>
+    # produced_by_id : BIGINT UNSIGNED <<FK>>
+    file_reference : VARCHAR
+  }
+
+  entity "workflow_instance_comment" as workflow_instance_comment {
+    * id : BIGINT UNSIGNED <<PK>>
+    --
+    # workflow_instance_id : BIGINT UNSIGNED <<FK>>
+    # etape_id : BIGINT UNSIGNED <<FK>>
+    # commented_by_id : BIGINT UNSIGNED <<FK>>
+    comment : TEXT
+  }
+}
+
+' =====================================================================
+' RELATIONS
+' =====================================================================
+
+' --- Géographie ---
+regions ||--o{ departements
+departements ||--o{ communes
+
+' --- Référentiels ---
+directions ||--o{ services
+services ||--o{ fonctions
+
+' --- Organismes & Entreprises ---
+type_organismes ||--o{ organismes
+regions ||--o{ organismes
+type_entreprises ||--o{ entreprises
+regions ||--o{ entreprises
+communes ||--o{ entreprises
+
+' --- Rôles & Personnels ---
+roles ||--o{ permissions
+roles ||--o{ personnels
+organismes ||--o{ personnels
+
+' --- Jeunes ---
+pieces_identite ||--o{ jeunes
+
+' --- Workflows (paramétrage) ---
+workflows ||--o{ workflow_versions
+workflow_versions ||--o{ workflow_etape
+workflow_etape ||--o{ workflow_etape : parent
+workflow_etape ||--o{ workflow_etape_sla
+workflow_versions ||--o{ workflow_etape_transition
+workflow_etape ||--o{ workflow_etape_transition : from
+workflow_etape ||--o{ workflow_etape_transition : to
+workflow_etape ||--o{ decision_point
+decision_point ||--o{ decision_outcome
+workflow_etape ||--o{ decision_outcome : next_etape
+workflow_etape ||--o{ deliverable_template
+workflow_etape ||--o{ workflow_etape_roles
+roles ||--o{ workflow_etape_roles
+
+' --- Projets ---
+jeunes ||--o{ projets
+secteurs ||--o{ projets
+guichets ||--o{ projets
+organismes ||--o{ projets
+workflow_versions ||--o{ projets
+branches_activite ||--o{ projets
+projets ||--o| budgets_projets
+projets ||--o{ depenses_projets
+personnels ||--o{ depenses_projets
+projets ||--o{ zones_intervention
+regions ||--o{ zones_intervention
+departements ||--o{ zones_intervention
+communes ||--o{ zones_intervention
+projets ||--o{ observations
+personnels ||--o{ observations
+projets ||--o{ documents
+
+' --- Financements & Remboursements ---
+projets ||--o{ financements
+jeunes ||--o{ financements
+organismes ||--o{ financements
+personnels ||--o{ financements : valide_par
+projets ||--o{ lots_financements
+financements ||--o{ lots_financements
+projets ||--o{ decaissements
+lots_financements ||--o{ decaissements
+projets ||--o{ remboursements
+jeunes ||--o{ remboursements
+financements ||--o{ remboursements
+
+' --- Suivi & Exploitation ---
+projets ||--o{ exploitations
+personnels ||--o{ exploitations : agent
+exploitations ||--o{ visite_photos
+personnels ||--o{ visite_photos : prise_par
+indicateurs ||--o{ indicateurs_suivi
+projets ||--o{ indicateurs_suivi
+jeunes ||--o{ suivis
+jeunes ||--o{ embauches
+entreprises ||--o{ embauches
+type_emplois ||--o{ embauches
+personnels ||--o{ notifications
+
+' --- Évaluations ---
+formulaires_evaluation ||--o{ questions_evaluation
+formulaires_evaluation ||--o{ evaluations
+personnels ||--o{ evaluations : evaluateur
+evaluations ||--o{ reponses_evaluation
+questions_evaluation ||--o{ reponses_evaluation
+
+' --- Instances de Workflow ---
+projets ||--o{ workflow_instance
+workflow_versions ||--o{ workflow_instance
+workflow_etape ||--o{ workflow_instance : current_etape
+workflow_instance ||--o{ workflow_instance_history
+workflow_etape ||--o{ workflow_instance_history
+roles ||--o{ workflow_instance_history
+personnels ||--o{ workflow_instance_history : performed_by
+decision_outcome ||--o{ workflow_instance_history
+workflow_instance ||--o{ workflow_instance_document
+deliverable_template ||--o{ workflow_instance_document
+personnels ||--o{ workflow_instance_document : produced_by
+workflow_instance ||--o{ workflow_instance_comment
+workflow_etape ||--o{ workflow_instance_comment
+personnels ||--o{ workflow_instance_comment : commented_by
+
+@enduml

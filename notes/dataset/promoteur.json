@@ -1,0 +1,43 @@
+{
+  "promoteur": {
+    "id": 1,
+    "numero_aej": "AEJ-2024-00123",
+    "date_naissance": "2026-08-01",
+    "telephone2": "string",
+    "numero_cmu": "string",
+    "localisation_precise": "string",
+    "handicap": "string",
+    "numeropiece": "string",
+    "user": {
+      "id": 1,
+      "prenoms": "Kouame",
+      "nom": "Konan",
+      "nom_complet": "Kouame Konan",
+      "email": "kouame@example.com",
+      "telephone": "0500000001",
+      "date_de_naissance": "1995-06-15",
+      "email_verified_at": "2026-08-01T21:33:37.809Z",
+      "created_at": "2026-08-01T21:33:37.809Z"
+    },
+    "sexe": {
+      "id": 0,
+      "libelle": "Homme"
+    },
+    "nationalite": {
+      "id": 0,
+      "libelle": "Ivoirienne"
+    },
+    "situation_matrimoniale": {
+      "id": 0,
+      "libelle": "Celibataire"
+    },
+    "commune": {
+      "id": 0,
+      "nom": "Cocody"
+    },
+    "documents_count": 3,
+    "projets_count": 2,
+    "created_at": "2026-08-01T21:33:37.809Z",
+    "updated_at": "2026-08-01T21:33:37.809Z"
+  }
+}

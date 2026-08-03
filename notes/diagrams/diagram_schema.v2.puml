@@ -1,0 +1,769 @@
+@startuml schema_aej
+
+' ===============================================================
+' Diagramme Entité-Relation - à coller dans https://uml.planttext.com/
+' ===============================================================
+
+hide circle
+skinparam linetype ortho
+skinparam roundcorner 8
+skinparam class {
+  BackgroundColor White
+  BorderColor #555555
+  ArrowColor #555555
+}
+
+' ---------------------------------------------------------------
+' 1. CONFIGURATION GLOBALE
+' ---------------------------------------------------------------
+package "1. Configuration" {
+  entity configurations {
+    * id : BIGINT <<PK>>
+    --
+    sigle_systeme
+    intitule_systeme
+    sigle_structure
+    intitule_structure
+    email_structure
+    mise_en_maintenance
+  }
+}
+
+' ---------------------------------------------------------------
+' 2. DONNÉES GÉOGRAPHIQUES
+' ---------------------------------------------------------------
+package "2. Géographie" {
+  entity regions {
+    * id : BIGINT <<PK>>
+    --
+    code
+    libelle
+  }
+
+  entity departements {
+    * id : BIGINT <<PK>>
+    --
+    region_id : BIGINT <<FK>>
+    code
+    libelle
+  }
+
+  entity villes {
+    * id : BIGINT <<PK>>
+    --
+    departement_id : BIGINT <<FK>>
+    code
+    libelle
+  }
+
+  entity communes {
+    * id : BIGINT <<PK>>
+    --
+    ville_id : BIGINT <<FK>>
+    divisionregionaleaej_id
+    guichetemploi_id
+    code
+    libelle
+  }
+
+  regions ||--o{ departements
+  departements ||--o{ villes
+  villes ||--o{ communes
+}
+
+' ---------------------------------------------------------------
+' 3. RÉFÉRENTIELS MÉTIER
+' ---------------------------------------------------------------
+package "3. Référentiels métier" {
+  entity secteurs_activites {
+    * id : BIGINT <<PK>>
+    --
+    code
+    libelle
+  }
+
+  entity sous_secteurs_activites {
+    * id : BIGINT <<PK>>
+    --
+    secteur_activite_id : BIGINT <<FK>>
+    code
+    libelle
+  }
+
+  entity directions {
+    * id : BIGINT <<PK>>
+    --
+    nom
+    code
+  }
+
+  entity services {
+    * id : BIGINT <<PK>>
+    --
+    direction_id : BIGINT <<FK>>
+    nom
+    code
+  }
+
+  entity fonctions {
+    * id : BIGINT <<PK>>
+    --
+    service_id : BIGINT <<FK>>
+    nom
+    code
+  }
+
+  secteurs_activites ||--o{ sous_secteurs_activites
+  directions ||--o{ services
+  services ||--o{ fonctions
+}
+
+' ---------------------------------------------------------------
+' 4. ENTREPRISES & ORGANISMES
+' ---------------------------------------------------------------
+package "4. Entreprises & organismes" {
+  entity type_entreprises {
+    * id : BIGINT <<PK>>
+    --
+    code
+    libelle
+  }
+
+  entity entreprises {
+    * id : BIGINT <<PK>>
+    --
+    type_entreprise_id : BIGINT <<FK>>
+    region_id : BIGINT <<FK>>
+    commune_id : BIGINT <<FK>>
+    numero
+    raison_sociale
+    rccm
+    ninea
+  }
+
+  entity type_organismes {
+    * id : BIGINT <<PK>>
+    --
+    code
+    libelle
+  }
+
+  entity organisme_financements {
+    * id : BIGINT <<PK>>
+    --
+    type : BIGINT <<FK>>
+    region_id : BIGINT <<FK>>
+    nom
+    sigle
+  }
+
+  type_entreprises ||--o{ entreprises
+  regions ||--o{ entreprises
+  communes ||--o{ entreprises
+  type_organismes ||--o{ organisme_financements
+  regions ||--o{ organisme_financements
+}
+
+' ---------------------------------------------------------------
+' 5. RÔLES & PERMISSIONS
+' ---------------------------------------------------------------
+package "5. Rôles & permissions" {
+  entity roles {
+    * id : BIGINT <<PK>>
+    --
+    code
+    libelle
+  }
+
+  entity permissions {
+    * id : BIGINT <<PK>>
+    --
+    role_id : BIGINT <<FK>>
+    module
+    autorise
+    acces
+    full_access
+  }
+
+  roles ||--o{ permissions
+}
+
+' ---------------------------------------------------------------
+' 6. PERSONNELS
+' ---------------------------------------------------------------
+package "6. Personnels" {
+  entity personnels {
+    * id : BIGINT <<PK>>
+    --
+    role_id : BIGINT <<FK>>
+    fonction_id : BIGINT <<FK>>
+    nom
+    prenom
+    email
+    type_utilisateur
+    statut
+  }
+
+  entity notifications {
+    * id : BIGINT <<PK>>
+    --
+    personnel_id : BIGINT <<FK>>
+    titre
+    message
+    lue
+  }
+
+  roles ||--o{ personnels
+  fonctions ||--o{ personnels
+  personnels ||--o{ notifications
+}
+
+' ---------------------------------------------------------------
+' 7. RÉFÉRENTIELS POUR JEUNES
+' ---------------------------------------------------------------
+package "7. Référentiels jeunes" {
+  entity pieces_identite {
+    * id : BIGINT <<PK>>
+    --
+    code
+    libelle
+  }
+
+  entity situation_matrimoniale {
+    * id : BIGINT <<PK>>
+    --
+    code
+    libelle
+  }
+}
+
+' ---------------------------------------------------------------
+' 8. WORKFLOWS
+' ---------------------------------------------------------------
+package "8. Workflows" {
+  entity workflows {
+    * id : BIGINT <<PK>>
+    --
+    code
+    name
+    is_active
+  }
+
+  entity workflow_versions {
+    * id : BIGINT <<PK>>
+    --
+    workflow_id : BIGINT <<FK>>
+    name
+    version
+    is_default
+  }
+
+  entity workflow_etapes {
+    * id : BIGINT <<PK>>
+    --
+    version_id : BIGINT <<FK>>
+    parent_etape_id : BIGINT <<FK>>
+    code
+    name
+    level
+    order
+  }
+
+  entity workflow_etapes_sla {
+    * id : BIGINT <<PK>>
+    --
+    etape_id : BIGINT <<FK>>
+    duration_value
+    duration_unit
+    delay_type
+  }
+
+  entity workflow_etapes_deliverable {
+    * id : BIGINT <<PK>>
+    --
+    etape_id : BIGINT <<FK>>
+    name
+    is_mandatory
+  }
+
+  entity workflow_etapes_roles {
+    * id : BIGINT <<PK>>
+    --
+    etape_id : BIGINT <<FK>>
+    role_id : BIGINT <<FK>>
+    responsibility
+  }
+
+  entity workflow_etapes_transition {
+    * id : BIGINT <<PK>>
+    --
+    version_id : BIGINT <<FK>>
+    from_etape_id : BIGINT <<FK>>
+    to_etape_id : BIGINT <<FK>>
+    transition_type
+  }
+
+  entity workflow_etapes_decision {
+    * id : BIGINT <<PK>>
+    --
+    etape_id : BIGINT <<FK>>
+    name
+  }
+
+  entity workflow_decision_outcome {
+    * id : BIGINT <<PK>>
+    --
+    decision_id : BIGINT <<FK>>
+    next_etape_id : BIGINT <<FK>>
+    code
+    label
+  }
+
+  workflows ||--o{ workflow_versions
+  workflow_versions ||--o{ workflow_etapes
+  workflow_etapes ||--o{ workflow_etapes : "parent"
+  workflow_etapes ||--o{ workflow_etapes_sla
+  workflow_etapes ||--o{ workflow_etapes_deliverable
+  workflow_etapes ||--o{ workflow_etapes_roles
+  roles ||--o{ workflow_etapes_roles
+  workflow_versions ||--o{ workflow_etapes_transition
+  workflow_etapes ||--o{ workflow_etapes_transition : "from/to"
+  workflow_etapes ||--o{ workflow_etapes_decision
+  workflow_etapes_decision ||--o{ workflow_decision_outcome
+  workflow_etapes ||--o{ workflow_decision_outcome : "next"
+}
+
+' ---------------------------------------------------------------
+' 9. PROJETS
+' ---------------------------------------------------------------
+package "9. Projets" {
+  entity projets {
+    * id : BIGINT <<PK>>
+    --
+    secteur_id : BIGINT <<FK>>
+    titre
+  }
+
+  entity zones_intervention {
+    * id : BIGINT <<PK>>
+    --
+    projet_id : BIGINT <<FK>>
+    departement_id : BIGINT <<FK>>
+    latitude
+    longitude
+  }
+
+  secteurs_activites ||--o{ projets
+  projets ||--o{ zones_intervention
+  departements ||--o{ zones_intervention
+}
+
+' ---------------------------------------------------------------
+' 10. GUICHETS & AGENCES
+' ---------------------------------------------------------------
+package "10. Guichets & agences" {
+  entity guichets {
+    * id : BIGINT <<PK>>
+    --
+    code
+    intitule
+    montant_max
+    montant_min
+    type
+  }
+
+  entity agences_regionales {
+    * id : BIGINT <<PK>>
+    --
+    chef_agence_id : BIGINT <<FK>>
+    code
+    intitule
+    localisation
+    contact
+  }
+
+  personnels ||--o{ agences_regionales : "chef d'agence"
+}
+
+' ---------------------------------------------------------------
+' 11. DISPOSITIFS
+' ---------------------------------------------------------------
+package "11. Dispositifs" {
+  entity dispositifs {
+    * id : BIGINT <<PK>>
+    --
+    projet_id : BIGINT <<FK>>
+    code
+    intitule
+    budget_alloue
+  }
+
+  projets ||--|| dispositifs
+}
+
+' ---------------------------------------------------------------
+' 12. JEUNES (porteurs de projet)
+' ---------------------------------------------------------------
+package "12. Jeunes" {
+  entity jeunes {
+    * id : BIGINT <<PK>>
+    --
+    typepieceidentite_id : BIGINT <<FK>>
+    secteuractivite_id : BIGINT <<FK>>
+    soussecteuractivite_id : BIGINT <<FK>>
+    situationmatrimoniale_id : BIGINT <<FK>>
+    nom
+    prenom
+    email
+    telephone
+    sexe
+    tranche_age
+    datenaissance
+    matriculeaej
+    statut
+  }
+
+  pieces_identite ||--o{ jeunes
+  secteurs_activites ||--o{ jeunes
+  sous_secteurs_activites ||--o{ jeunes
+  situation_matrimoniale ||--o{ jeunes
+}
+
+' ---------------------------------------------------------------
+' 13. MICRO PROJETS
+' ---------------------------------------------------------------
+package "13. Micro projets" {
+  entity micro_projets {
+    * id : BIGINT <<PK>>
+    --
+    dispositif_id : BIGINT <<FK>>
+    organisme_id : BIGINT <<FK>>
+    guichet_id : BIGINT <<FK>>
+    agence_id : BIGINT <<FK>>
+    jeune_id : BIGINT <<FK>>
+    code
+    intitule
+    statut
+    transmission_plan_affaire
+    disponibilite_plan_decaissement
+    validation_plan_decaissement
+  }
+
+  dispositifs ||--o{ micro_projets
+  organisme_financements ||--o{ micro_projets
+  guichets ||--o{ micro_projets
+  agences_regionales ||--o{ micro_projets
+  jeunes ||--o{ micro_projets
+}
+
+' ---------------------------------------------------------------
+' 14. COMPTES, OBSERVATIONS, DOCUMENTS
+' ---------------------------------------------------------------
+package "14. Comptes, observations & documents" {
+  entity compte_financements {
+    * id : BIGINT <<PK>>
+    --
+    organisme_id : BIGINT <<FK>>
+    micro_projet_id : BIGINT <<FK>>
+    etat_ouverture
+    date_ouverture
+    avis_partenaire
+  }
+
+  entity observations {
+    * id : BIGINT <<PK>>
+    --
+    micro_projet_id : BIGINT <<FK>>
+    auteur_id : BIGINT <<FK>>
+    observation
+  }
+
+  entity documents {
+    * id : BIGINT <<PK>>
+    --
+    micro_projet_id : BIGINT <<FK>>
+    type_document
+    fichier
+  }
+
+  organisme_financements ||--o{ compte_financements
+  micro_projets ||--o{ compte_financements
+  micro_projets ||--o{ observations
+  personnels ||--o{ observations
+  micro_projets ||--o{ documents
+}
+
+' ---------------------------------------------------------------
+' 15. FINANCEMENTS, LOTS, DÉCAISSEMENTS, REMBOURSEMENTS
+' ---------------------------------------------------------------
+package "15. Financements" {
+  entity budgets {
+    * id : BIGINT <<PK>>
+    --
+    micro_projet_id : BIGINT <<FK>>
+    valide_par : BIGINT <<FK>>
+    intitule
+    montant_alloue
+    annee_financement
+    statut
+    deblocage
+    signature_convention
+    reception_acte_credit
+  }
+
+  entity budgets_remboursements {
+    budget_id : BIGINT <<FK>>
+    --
+    montant_remboursement
+    montant_garantie
+    montant_recouvrement
+    dure_remboursement
+    dure_differe
+    date_premiere_echeance
+    date_derniere_cheance
+    restructuration_pret
+    capital_amorti
+    interets
+  }
+
+  entity remboursements {
+    * id : BIGINT <<PK>>
+    --
+    jeune_id : BIGINT <<FK>>
+    budget_id : BIGINT <<FK>>
+    montant_echu
+    montant_paye
+    montant_impaye
+    date_paiement
+    penalites
+    statut
+  }
+
+  entity transactions {
+    * id : BIGINT <<PK>>
+    --
+    micro_projet_id : BIGINT <<FK>>
+    saisi_par : BIGINT <<FK>>
+    categorie
+    intitule
+    montant_depense
+  }
+
+  entity plan_decaissements {
+    * id : BIGINT <<PK>>
+    --
+    budget_id : BIGINT <<FK>>
+    code
+    intitule
+    montant_planifie
+  }
+
+  entity decaissements {
+    * id : BIGINT <<PK>>
+    --
+    plan_id : BIGINT <<FK>>
+    montant_decaisse
+    date_decaissement
+    statut
+  }
+
+  micro_projets ||--|| budgets
+  personnels ||--o{ budgets
+  budgets ||--|| budgets_remboursements
+  jeunes ||--o{ remboursements
+  budgets ||--o{ remboursements
+  micro_projets ||--o{ transactions
+  personnels ||--o{ transactions
+  budgets ||--o{ plan_decaissements
+  plan_decaissements ||--o{ decaissements
+}
+
+' ---------------------------------------------------------------
+' 16. EXPLOITATIONS & INDICATEURS & SUIVIS
+' ---------------------------------------------------------------
+package "16. Exploitations, indicateurs & suivis" {
+  entity exploitations {
+    * id : BIGINT <<PK>>
+    --
+    micro_projet_id : BIGINT <<FK>>
+    agent_id : BIGINT <<FK>>
+    etat_installation
+    etat_activite
+    nbre_visites
+    date_debut_visite
+  }
+
+  entity visite_photos {
+    * id : BIGINT <<PK>>
+    --
+    exploitation_id : BIGINT <<FK>>
+    prise_par_id : BIGINT <<FK>>
+    photo_url
+    description
+  }
+
+  entity indicateurs {
+    * id : BIGINT <<PK>>
+    --
+    micro_projet_id : BIGINT <<FK>>
+    nom
+    type_valeur
+    unite
+  }
+
+  entity indicateurs_suivi {
+    * id : BIGINT <<PK>>
+    --
+    indicateur_id : BIGINT <<FK>>
+    valeur
+  }
+
+  entity suivis {
+    * id : BIGINT <<PK>>
+    --
+    micro_projet_id : BIGINT <<FK>>
+    jeune_id : BIGINT <<FK>>
+    libelle
+  }
+
+  entity type_emplois {
+    * id : BIGINT <<PK>>
+    --
+    code
+    libelle
+  }
+
+  entity embauches {
+    * id : BIGINT <<PK>>
+    --
+    jeune_id : BIGINT <<FK>>
+    entreprise_id : BIGINT <<FK>>
+    micro_projet_id : BIGINT <<FK>>
+    type_emploi_id : BIGINT <<FK>>
+    poste
+  }
+
+  micro_projets ||--o{ exploitations
+  personnels ||--o{ exploitations
+  exploitations ||--o{ visite_photos
+  personnels ||--o{ visite_photos
+  micro_projets ||--o{ indicateurs
+  indicateurs ||--o{ indicateurs_suivi
+  micro_projets ||--o{ suivis
+  jeunes ||--o{ suivis
+  jeunes ||--o{ embauches
+  entreprises ||--o{ embauches
+  micro_projets ||--o{ embauches
+  type_emplois ||--o{ embauches
+}
+
+' ---------------------------------------------------------------
+' 17. FORMULAIRES & QUESTIONNAIRES
+' ---------------------------------------------------------------
+package "17. Formulaires & questionnaires" {
+  entity formulaires_evaluation {
+    * id : BIGINT <<PK>>
+    --
+    micro_projet_id : BIGINT <<FK>>
+    code
+    libelle
+    public_cible
+    actif
+  }
+
+  entity questions_evaluation {
+    * id : BIGINT <<PK>>
+    --
+    formulaire_id : BIGINT <<FK>>
+    code
+    libelle
+    type_question
+    ordre
+  }
+
+  entity evaluations {
+    * id : BIGINT <<PK>>
+    --
+    formulaire_id : BIGINT <<FK>>
+    evaluateur_id : BIGINT <<FK>>
+    cible_type
+    date_evaluation
+    score_global
+  }
+
+  entity reponses_evaluation {
+    * id : BIGINT <<PK>>
+    --
+    evaluation_id : BIGINT <<FK>>
+    question_id : BIGINT <<FK>>
+    reponse_texte
+  }
+
+  micro_projets ||--o{ formulaires_evaluation
+  formulaires_evaluation ||--o{ questions_evaluation
+  formulaires_evaluation ||--o{ evaluations
+  personnels ||--o{ evaluations
+  evaluations ||--o{ reponses_evaluation
+  questions_evaluation ||--o{ reponses_evaluation
+}
+
+' ---------------------------------------------------------------
+' 18. INSTANCES DE WORKFLOW & HISTORIQUE
+' ---------------------------------------------------------------
+package "18. Instances de workflow" {
+  entity workflow_instance {
+    * id : BIGINT <<PK>>
+    --
+    micro_projet_id : BIGINT <<FK>>
+    version_id : BIGINT <<FK>>
+    current_etape_id : BIGINT <<FK>>
+    status
+    started_at
+  }
+
+  entity workflow_instance_history {
+    * id : BIGINT <<PK>>
+    --
+    workflow_instance_id : BIGINT <<FK>>
+    etape_id : BIGINT <<FK>>
+    role_id : BIGINT <<FK>>
+    performed_by_id : BIGINT <<FK>>
+    decision_outcome_id : BIGINT <<FK>>
+    entered_at
+  }
+
+  entity workflow_instance_document {
+    * id : BIGINT <<PK>>
+    --
+    workflow_instance_id : BIGINT <<FK>>
+    deliverable_id : BIGINT <<FK>>
+    produced_by_id : BIGINT <<FK>>
+    file_reference
+  }
+
+  entity workflow_instance_comment {
+    * id : BIGINT <<PK>>
+    --
+    workflow_instance_id : BIGINT <<FK>>
+    etape_id : BIGINT <<FK>>
+    commented_by_id : BIGINT <<FK>>
+    comment
+  }
+
+  micro_projets ||--o{ workflow_instance
+  workflow_versions ||--o{ workflow_instance
+  workflow_etapes ||--o{ workflow_instance : "étape courante"
+  workflow_instance ||--o{ workflow_instance_history
+  workflow_etapes ||--o{ workflow_instance_history
+  roles ||--o{ workflow_instance_history
+  personnels ||--o{ workflow_instance_history
+  workflow_decision_outcome ||--o{ workflow_instance_history
+  workflow_instance ||--o{ workflow_instance_document
+  workflow_etapes_deliverable ||--o{ workflow_instance_document
+  personnels ||--o{ workflow_instance_document
+  workflow_instance ||--o{ workflow_instance_comment
+  workflow_etapes ||--o{ workflow_instance_comment
+  personnels ||--o{ workflow_instance_comment
+}
+
+@enduml

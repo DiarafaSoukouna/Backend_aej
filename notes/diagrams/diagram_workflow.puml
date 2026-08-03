@@ -1,0 +1,272 @@
+@startuml Database_Schema_Plan
+!define table(x) class x << (T,#FFAAAA) >>
+skinparam classAttributeIconSize 0
+skinparam backgroundColor #FEFEFE
+skinparam class {
+    BackgroundColor White
+    BorderColor Black
+    ArrowColor #2C3E50
+    FontName Arial
+}
+skinparam package {
+    BackgroundColor #ECF0F1
+    BorderColor #34495E
+    FontColor #2C3E50
+    FontName Arial
+}
+
+' ============================================================
+' PACKAGE : COUCHE DEFINITION
+' ============================================================
+package "COUCHE DÉFINITION" {
+    table(workflows) {
+        + id : BIGINT PK
+        code : VARCHAR(20) UNIQUE
+        name : VARCHAR(150)
+        description : TEXT
+        is_active : BOOLEAN
+        created_at : TIMESTAMP
+        updated_at : TIMESTAMP
+    }
+
+    table(workflow_versions) {
+        + id : BIGINT PK
+        workflow_id : BIGINT FK
+        name : VARCHAR(150)
+        description : TEXT
+        version : VARCHAR(20)
+        is_active : BOOLEAN
+        is_default : BOOLEAN
+        created_at : TIMESTAMP
+        updated_at : TIMESTAMP
+    }
+
+    table(workflow_etape) {
+        + id : BIGINT PK
+        workflow_version_id : BIGINT FK
+        parent_etape_id : BIGINT FK (self)
+        code : VARCHAR(30)
+        name : VARCHAR(200)
+        description : TEXT
+        level : SMALLINT
+        order : INTEGER
+        is_active : BOOLEAN
+        valid_from : DATE
+        valid_to : DATE
+        created_at : TIMESTAMP
+        updated_at : TIMESTAMP
+    }
+
+    table(workflow_etape_sla) {
+        + id : BIGINT PK
+        etape_id : BIGINT FK
+        duration_value : INTEGER
+        duration_unit : VARCHAR(20)
+        delay_type : VARCHAR(20)
+        description : TEXT
+    }
+
+    table(workflow_etape_transition) {
+        + id : BIGINT PK
+        workflow_version_id : BIGINT FK
+        from_etape_id : BIGINT FK
+        to_etape_id : BIGINT FK
+        transition_type : VARCHAR(20)
+        order : INTEGER
+        is_active : BOOLEAN
+    }
+}
+
+' ============================================================
+' PACKAGE : COUCHE DECISION & LIVRABLE
+' ============================================================
+package "COUCHE DÉCISION & LIVRABLE" {
+    table(decision_point) {
+        + id : BIGINT PK
+        etape_id : BIGINT FK
+        name : VARCHAR(150)
+        description : TEXT
+    }
+
+    table(decision_outcome) {
+        + id : BIGINT PK
+        decision_point_id : BIGINT FK
+        code : VARCHAR(30)
+        label : VARCHAR(150)
+        next_etape_id : BIGINT FK
+    }
+
+    table(deliverable_template) {
+        + id : BIGINT PK
+        etape_id : BIGINT FK
+        name : VARCHAR(200)
+        description : TEXT
+        is_mandatory : BOOLEAN
+    }
+}
+
+' ============================================================
+' PACKAGE : COUCHE ORGANISATION
+' ============================================================
+package "COUCHE ORGANISATION" {
+    table(roles) {
+        + id : BIGINT PK
+        code : VARCHAR(50) UNIQUE
+        libelle : VARCHAR(100)
+        description : TEXT
+        created_at : TIMESTAMP
+        updated_at : TIMESTAMP
+    }
+
+    table(personnels) {
+        + id : BIGINT PK
+        nom : VARCHAR(100)
+        prenom : VARCHAR(100)
+        email : VARCHAR(180) UNIQUE
+        telephone : VARCHAR(20)
+        mot_de_passe : VARCHAR(255)
+        role_id : BIGINT FK
+        statut : TINYINT(1)
+        remember_token : VARCHAR(100)
+        created_at : TIMESTAMP
+        updated_at : TIMESTAMP
+    }
+
+    table(workflow_etape_roles) {
+        + id : BIGINT PK
+        etape_id : BIGINT FK
+        role_id : BIGINT FK
+        responsibility : TEXT
+    }
+
+    table(promoteurs) {
+        + id : BIGINT PK
+        numero_aej : VARCHAR(50) UNIQUE
+        nom : VARCHAR(100)
+        prenom : VARCHAR(150)
+        genre : ENUM
+        date_naissance : DATE
+        contact1 : VARCHAR(30)
+        contact2 : VARCHAR(30)
+        raison_sociale : VARCHAR(200)
+        type_piece_identite_id : BIGINT
+        numero_piece_identite : VARCHAR(100)
+        numero_cmu : VARCHAR(100)
+        numero_cnps : VARCHAR(100)
+        created_at : TIMESTAMP
+        updated_at : TIMESTAMP
+    }
+
+    table(projets) {
+        + id : BIGINT PK
+        promoteur_id : BIGINT FK
+        workflow_version_id : BIGINT FK
+        secteur_id : BIGINT
+        guichet_id : BIGINT
+        agence_id : BIGINT FK
+        titre : VARCHAR(255)
+        type_projet : ENUM
+        tranche_age : ENUM
+        nbre_beneficiaires : INT
+        nbre_emplois : INT
+        date_certification : DATE
+        date_transmission_partenaire : DATE
+        statut : ENUM
+        created_at : TIMESTAMP
+        updated_at : TIMESTAMP
+    }
+}
+
+' ============================================================
+' PACKAGE : COUCHE EXECUTION
+' ============================================================
+package "COUCHE EXÉCUTION" {
+    table(workflow_instance) {
+        + id : BIGINT PK
+        projet_id : BIGINT FK
+        workflow_version_id : BIGINT FK
+        current_etape_id : BIGINT FK
+        status : VARCHAR(20)
+        started_at : TIMESTAMP
+        completed_at : TIMESTAMP
+    }
+
+    table(workflow_instance_history) {
+        + id : BIGINT PK
+        workflow_instance_id : BIGINT FK
+        etape_id : BIGINT FK
+        role_id : BIGINT FK
+        performed_by_id : BIGINT FK
+        entered_at : TIMESTAMP
+        exited_at : TIMESTAMP
+        decision_outcome_id : BIGINT FK
+        comments : TEXT
+    }
+
+    table(workflow_instance_document) {
+        + id : BIGINT PK
+        workflow_instance_id : BIGINT FK
+        deliverable_template_id : BIGINT FK
+        file_reference : VARCHAR(500)
+        produced_at : TIMESTAMP
+        produced_by_id : BIGINT FK
+    }
+
+    table(workflow_instance_etape_comment) {
+        + id : BIGINT PK
+        workflow_instance_id : BIGINT FK
+        etape_id : BIGINT FK
+        commented_by_id : BIGINT FK
+        comment : TEXT
+        created_at : TIMESTAMP
+    }
+}
+
+' ============================================================
+' RELATIONS (Foreign Keys)
+' ============================================================
+
+' --- Définition ---
+workflows "1" -- "0..*" workflow_versions : contient
+workflow_versions "1" -- "0..*" workflow_etape : définit
+workflow_etape "1" -- "0..*" workflow_etape_sla : possède
+workflow_versions "1" -- "0..*" workflow_etape_transition : possède
+workflow_etape "1" -- "0..*" workflow_etape_transition : "from/to"
+workflow_etape ||--o{ workflow_etape : "parent (auto-référence)"
+
+' --- Décision & Livrable ---
+workflow_etape "1" -- "0..*" decision_point : contient
+decision_point "1" -- "0..*" decision_outcome : possède
+decision_outcome }o--|| workflow_etape : "next_etape (optionnel)"
+workflow_etape "1" -- "0..*" deliverable_template : attend
+
+' --- Acteurs & Organisation ---
+roles "1" -- "0..*" personnels : possède
+workflow_etape "1" -- "0..*" workflow_etape_roles : utilise
+roles "1" -- "0..*" workflow_etape_roles : assigné
+
+' --- Métier ---
+promoteurs "1" -- "0..*" projets : soumet
+workflow_versions "1" -- "0..*" projets : référence
+
+' --- Exécution ---
+projets "1" -- "0..*" workflow_instance : instancie
+workflow_versions "1" -- "0..*" workflow_instance : référence
+workflow_etape "1" -- "0..*" workflow_instance : "étape courante"
+
+workflow_instance "1" -- "0..*" workflow_instance_history : historique
+workflow_instance "1" -- "0..*" workflow_instance_document : documents
+workflow_instance "1" -- "0..*" workflow_instance_etape_comment : commentaires
+
+workflow_etape "1" -- "0..*" workflow_instance_history : "étape visitée"
+roles "1" -- "0..*" workflow_instance_history : "rôle exécuté"
+personnels "1" -- "0..*" workflow_instance_history : "exécuté par"
+decision_outcome "1" -- "0..*" workflow_instance_history : "issue choisie"
+
+deliverable_template "1" -- "0..*" workflow_instance_document : "modèle attendu"
+personnels "1" -- "0..*" workflow_instance_document : "produit par"
+
+workflow_etape "1" -- "0..*" workflow_instance_etape_comment : "commentée par"
+personnels "1" -- "0..*" workflow_instance_etape_comment : "écrit par"
+
+@enduml
