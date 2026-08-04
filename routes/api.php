@@ -61,6 +61,7 @@ Route::get('promoteurs', [PromoteurController::class, 'index']);
 Route::get('promoteurs/{id}', [PromoteurController::class, 'show']);
 Route::get('projets', [MicroProjetController::class, 'index']);
 Route::get('projets/{id}', [MicroProjetController::class, 'show']);
+Route::post('projets/filter', [MicroProjetController::class, 'filter']);
 Route::middleware('web')->group(function () {
     Route::post('personnels/login', [PersonnelController::class, 'auth']);
     Route::post('personnels/logout', [PersonnelController::class, 'logout']);
