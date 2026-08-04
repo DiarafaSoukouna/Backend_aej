@@ -74,6 +74,7 @@ Route::apiResource('roles', RoleController::class);
 Route::apiResource('type-organismes', TypeOrganismeController::class);
 Route::apiResource('organismes', OrganismeController::class);
 Route::get('promoteurs', [PromoteurController::class, 'index']);
+Route::post('promoteurs/filter', [PromoteurController::class, 'filter']);
 
 // Workflow routes
 Route::prefix('workflow')->group(function () {
