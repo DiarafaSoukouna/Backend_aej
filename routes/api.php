@@ -42,6 +42,7 @@ use App\Http\Controllers\PlanDecaissementController;
 use App\Http\Controllers\DecaissementController;
 use App\Http\Controllers\RemboursementsDeclarationController;
 use App\Http\Controllers\DecaissementsDeclarationController;
+use App\Http\Controllers\MicroProjetController;  
 
 
 Route::apiResource('directions', DirectionController::class);
@@ -57,7 +58,9 @@ Route::apiResource('type-emplois', TypeEmploiController::class);
 Route::apiResource('personnels', PersonnelController::class);
 Route::put('personnels/updatePassword/{id}', [PersonnelController::class, 'updatePassword']);
 Route::get('promoteurs', [PromoteurController::class, 'index']);
-
+Route::get('promoteurs/{id}', [PromoteurController::class, 'show']);
+Route::get('projets', [MicroProjetController::class, 'index']);
+Route::get('projets/{id}', [MicroProjetController::class, 'show']);
 Route::middleware('web')->group(function () {
     Route::post('personnels/login', [PersonnelController::class, 'auth']);
     Route::post('personnels/logout', [PersonnelController::class, 'logout']);

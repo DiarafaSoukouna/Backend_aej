@@ -15,4 +15,9 @@ class PromoteurController extends Controller
 
         return response()->json($promoteurs);
     }
+    public function show($id)
+    {
+        $promoteur = Promoteur::findOrFail($id);
+        return response()->json($promoteur);
+    }
 }
