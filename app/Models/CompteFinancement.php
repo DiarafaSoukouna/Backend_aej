@@ -22,7 +22,7 @@ class CompteFinancement extends Model
 
     public function organisme()
     {
-        return $this->belongsTo(Organisme::class, 'organisme_id');
+        return $this->belongsTo(OrganismeFinancement::class, 'organisme_id');
     }
 
     public function microProjet()

@@ -24,7 +24,7 @@ class CompteFinancementController extends Controller
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
+        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
             'organisme_id' => 'nullable|exists:organisme_financements,id',
             'micro_projet_id' => 'nullable|exists:micro_projets,id',
             'etat_ouverture' => 'required|in:OUVERT,FERME,NON_OUVERT',
@@ -34,7 +34,14 @@ class CompteFinancementController extends Controller
             'observation' => 'nullable|string',
         ]);
 
-        $compte = CompteFinancement::create($validated);
+        if ($validator->fails()) {
+            return new JsonResponse([
+                'message' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $compte = CompteFinancement::create($validator->validated());
         return new JsonResponse([
             'message' => 'Compte financement created successfully',
             'data' => $compte
