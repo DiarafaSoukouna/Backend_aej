@@ -30,10 +30,4 @@ class WorkflowVersion extends Model
     {
         return $this->hasMany(WorkflowEtape::class, 'workflow_version', 'code');
     }
-
-    // Transitions table is commented out in schema
-    // public function transitions()
-    // {
-    //     return $this->hasMany(WorkflowEtapeTransition::class);
-    // }
 }

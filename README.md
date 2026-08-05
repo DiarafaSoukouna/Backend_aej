@@ -39,6 +39,14 @@ composer require laravel/boost --dev
 php artisan boost:install
 ```
 
+## Seeders Default Data
+
+Pour initialiser les données par défaut, exécutez la commande suivante :
+
+```bash
+php artisan db:seed
+```
+
 Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
 
 ## Contributing

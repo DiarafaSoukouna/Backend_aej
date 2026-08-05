@@ -9,7 +9,6 @@ class Commune extends Model
     protected $table = 'communes';
 
     protected $fillable = [
-        'external_id',
         'nom',
         'ville_id',
         'divisionregionaleaej_id',
@@ -21,6 +20,9 @@ class Commune extends Model
     protected $casts = [
         'synced_at' => 'datetime',
     ];
+
+    public $incrementing = false;
+    protected $keyType = 'int';
 
     public function ville()
     {

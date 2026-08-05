@@ -110,17 +110,11 @@ Modèles de livrables attendus à l'issue d'une étape (ex. « PV de présélect
 ### `workflow_etapes_roles`
 Table d'association qui définit quels `roles` interviennent sur une `etape` donnée et avec quelle responsabilité (texte libre).
 
-### `workflow_etapes_transition`
-Graphe de transition entre étapes : définit qu'une étape (`from_etape_id`) peut mener à une autre (`to_etape_id`) au sein d'une version de workflow, avec un type de transition (`NEXT`, `RETURN`, `PARALLEL`, `MERGE`, `CANCEL`, `END`).
-
 ### `workflow_etapes_decision`
 Points de décision/contrôle positionnés sur une étape (ex. « Décision du comité de présélection »).
 
 ### `workflow_decision_outcome`
 Issues possibles d'un point de décision (ex. `ACCEPTE`, `REJETE`, `ATTENTE`), chacune pouvant rediriger vers une étape suivante (`next_etape_id`) ou clore le parcours (`NULL`).
-
-### Index (`idx_etape_workflow_versions`, `idx_etape_parent`, `idx_transition_from`, `idx_transition_to`)
-Index techniques pour accélérer la navigation dans l'arborescence des étapes et dans le graphe de transitions.
 
 ---
 
@@ -253,7 +247,7 @@ Journal d'audit complet du parcours d'une `workflow_instance` : chaque passage p
 Livrables effectivement produits (fichiers) pour une `workflow_instance`, rattachés au modèle de livrable attendu (`workflow_etapes_deliverable`).
 
 ### `workflow_instance_comment`
-Commentaires libres déposés sur une étape précise d'une `workflow_instance`, indépendamment de l'historique de transition (échanges/annotations entre acteurs).
+Commentaires libres déposés sur une étape précise d'une `workflow_instance`, indépendamment de l'historique de passage (échanges/annotations entre acteurs).
 
 ---
 

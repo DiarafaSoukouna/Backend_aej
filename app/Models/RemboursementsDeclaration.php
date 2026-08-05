@@ -9,8 +9,8 @@ class RemboursementsDeclaration extends Model
     protected $fillable = [
         'promoteur_id',
         'budget_id',
-        'montant_paye',
-        'date_paiement',
+        'montant_declare',
+        'date_declaree',
         'reference_banque',
         'justificatif_path',
         'observations',
@@ -18,7 +18,7 @@ class RemboursementsDeclaration extends Model
     ];
 
     protected $casts = [
-        'date_paiement' => 'date',
+        'date_declaree' => 'date',
     ];
 
     public function promoteur()

@@ -3,9 +3,11 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Promoteur extends Model
 {
+    use HasFactory;
     protected $fillable = [
         'profile',
         'nom',
@@ -34,7 +36,6 @@ class Promoteur extends Model
         'typepieceidentite_id',
         'niveauetude_id',
         'paysnationalite_id',
-        'statut',
     ];
 
     protected $casts = [

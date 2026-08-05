@@ -9,9 +9,11 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('division_regionale', function (Blueprint $table) {
-            $table->id();
-            $table->string('code', 50)->unique();
+            $table->unsignedBigInteger('id')->primary();
+            $table->string('code', 10)->nullable();
             $table->string('nom', 100);
+            $table->timestamp('synced_at')->nullable();
+            $table->timestamps();
         });
     }
 

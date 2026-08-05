@@ -503,7 +503,7 @@ package "15. Financements" {
     micro_projet_id : BIGINT <<FK>>
     valide_par : BIGINT <<FK>>
     intitule
-    montant_alloue
+    montant_accorde
     annee_financement
     statut
     deblocage
