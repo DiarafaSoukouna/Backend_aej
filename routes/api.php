@@ -40,6 +40,7 @@ use App\Http\Controllers\PlanDecaissementController;
 use App\Http\Controllers\DecaissementController;
 use App\Http\Controllers\RemboursementsDeclarationController;
 use App\Http\Controllers\DecaissementsDeclarationController;
+use App\Http\Controllers\MicroProjetController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OrganismeFinancementController;
 
