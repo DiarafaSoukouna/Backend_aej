@@ -61,6 +61,7 @@ Route::get('promoteurs', [PromoteurController::class, 'index']);
 Route::get('promoteurs/{id}', [PromoteurController::class, 'show']);
 Route::get('projets', [MicroProjetController::class, 'index']);
 Route::get('projets/{id}', [MicroProjetController::class, 'show']);
+Route::post('projets/filter', [MicroProjetController::class, 'filter']);
 Route::middleware('web')->group(function () {
     Route::post('personnels/login', [PersonnelController::class, 'auth']);
     Route::post('personnels/logout', [PersonnelController::class, 'logout']);
@@ -74,6 +75,9 @@ Route::apiResource('roles', RoleController::class);
 Route::apiResource('type-organismes', TypeOrganismeController::class);
 Route::apiResource('organismes', OrganismeController::class);
 Route::get('promoteurs', [PromoteurController::class, 'index']);
+Route::get('promoteurs/{id}', [PromoteurController::class, 'show']);
+Route::post('promoteurs/filter', [PromoteurController::class, 'filter']);
+Route::post('promoteurs/filter-with-projects', [PromoteurController::class, 'filterWithProjects']);
 
 // Workflow routes
 Route::prefix('workflow')->group(function () {
