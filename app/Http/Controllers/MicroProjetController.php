@@ -34,7 +34,8 @@ class MicroProjetController extends Controller
 
         $filters = [
         'stade_projet',
-        'type_projet'
+        'type_projet',
+        'statut'
         ];
 
         foreach ($filters as $filter) {
