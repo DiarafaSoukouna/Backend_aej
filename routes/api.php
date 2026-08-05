@@ -61,7 +61,10 @@ Route::apiResource('notifications', NotificationController::class);
 Route::put('notifications/{id}/mark-read', [NotificationController::class, 'markAsRead']);
 Route::get('notifications/personnel/{personnelId}', [NotificationController::class, 'getByPersonnel']);
 Route::get('promoteurs', [PromoteurController::class, 'index']);
-
+Route::get('promoteurs/{id}', [PromoteurController::class, 'show']);
+Route::get('projets', [MicroProjetController::class, 'index']);
+Route::get('projets/{id}', [MicroProjetController::class, 'show']);
+Route::post('projets/filter', [MicroProjetController::class, 'filter']);
 Route::middleware('web')->group(function () {
     Route::post('personnels/login', [PersonnelController::class, 'auth']);
     Route::post('personnels/logout', [PersonnelController::class, 'logout']);
@@ -77,6 +80,9 @@ Route::apiResource('organismes', OrganismeFinancementController::class);
 Route::get('organismes/region/{regionId}', [OrganismeFinancementController::class, 'getByRegion']);
 Route::get('organismes/type/{typeId}', [OrganismeFinancementController::class, 'getByType']);
 Route::get('promoteurs', [PromoteurController::class, 'index']);
+Route::get('promoteurs/{id}', [PromoteurController::class, 'show']);
+Route::post('promoteurs/filter', [PromoteurController::class, 'filter']);
+Route::post('promoteurs/filter-with-projects', [PromoteurController::class, 'filterWithProjects']);
 
 // Workflow routes
 Route::prefix('workflow')->group(function () {
