@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class CompteFinancement extends Model
 {
+    public $timestamps = false;
+
     protected $fillable = [
         'organisme_id',
         'micro_projet_id',

@@ -9,7 +9,6 @@ class DivisionRegionale extends Model
     protected $table = 'division_regionale';
 
     protected $fillable = [
-        'external_id',
         'code',
         'nom',
         'synced_at',
@@ -18,6 +17,9 @@ class DivisionRegionale extends Model
     protected $casts = [
         'synced_at' => 'datetime',
     ];
+
+    public $incrementing = false;
+    protected $keyType = 'int';
 
     public function communes()
     {

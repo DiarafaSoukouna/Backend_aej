@@ -12,7 +12,6 @@ use App\Http\Controllers\PersonnelController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\TypeOrganismeController;
-use App\Http\Controllers\OrganismeController;
 use App\Http\Controllers\IndicateurController;
 use App\Http\Controllers\PromoteurController;
 use App\Http\Controllers\WorkflowController;
@@ -21,7 +20,6 @@ use App\Http\Controllers\WorkflowEtapeController;
 use App\Http\Controllers\WorkflowEtapeSlaController;
 use App\Http\Controllers\WorkflowEtapeDeliverableController;
 use App\Http\Controllers\WorkflowEtapeRoleController;
-use App\Http\Controllers\WorkflowEtapeTransitionController;
 use App\Http\Controllers\WorkflowEtapeDecisionController;
 use App\Http\Controllers\WorkflowDecisionOutcomeController;
 use App\Http\Controllers\WorkflowRoleController;
@@ -42,6 +40,8 @@ use App\Http\Controllers\PlanDecaissementController;
 use App\Http\Controllers\DecaissementController;
 use App\Http\Controllers\RemboursementsDeclarationController;
 use App\Http\Controllers\DecaissementsDeclarationController;
+use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\OrganismeFinancementController;
 
 
 Route::apiResource('directions', DirectionController::class);
@@ -56,6 +56,9 @@ Route::patch('/configurations', [ConfigurationController::class, 'patch']);
 Route::apiResource('type-emplois', TypeEmploiController::class);
 Route::apiResource('personnels', PersonnelController::class);
 Route::put('personnels/updatePassword/{id}', [PersonnelController::class, 'updatePassword']);
+Route::apiResource('notifications', NotificationController::class);
+Route::put('notifications/{id}/mark-read', [NotificationController::class, 'markAsRead']);
+Route::get('notifications/personnel/{personnelId}', [NotificationController::class, 'getByPersonnel']);
 Route::get('promoteurs', [PromoteurController::class, 'index']);
 
 Route::middleware('web')->group(function () {
@@ -69,7 +72,9 @@ Route::middleware('web')->group(function () {
 Route::apiResource('permissions', PermissionController::class);
 Route::apiResource('roles', RoleController::class);
 Route::apiResource('type-organismes', TypeOrganismeController::class);
-Route::apiResource('organismes', OrganismeController::class);
+Route::apiResource('organismes', OrganismeFinancementController::class);
+Route::get('organismes/region/{regionId}', [OrganismeFinancementController::class, 'getByRegion']);
+Route::get('organismes/type/{typeId}', [OrganismeFinancementController::class, 'getByType']);
 Route::get('promoteurs', [PromoteurController::class, 'index']);
 
 // Workflow routes
@@ -84,7 +89,6 @@ Route::prefix('workflow')->group(function () {
     Route::apiResource('etape-deliverables', WorkflowEtapeDeliverableController::class);
     Route::apiResource('etape-roles', WorkflowEtapeRoleController::class);
     Route::apiResource('etape-decisions', WorkflowEtapeDecisionController::class);
-    // Route::apiResource('etape-transitions', WorkflowEtapeTransitionController::class);
 });
 
 // Suivis & Indicateurs

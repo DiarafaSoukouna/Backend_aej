@@ -6,27 +6,22 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
-        Schema::create('workflow_etapes_deliverable', function (Blueprint $table) {
+        Schema::create('workflow_etapes_roles', function (Blueprint $table) {
             $table->id();
             $table->string('etape_code');
-            $table->string('deliverable_code');
-            $table->boolean('is_required')->default(true);
+            $table->string('role_code');
+            $table->text('responsibility')->nullable();
             
             $table->foreign('etape_code')->references('code')->on('workflow_etapes')->onDelete('cascade');
-            $table->foreign('deliverable_code')->references('code')->on('workflow_deliverables')->onDelete('cascade');
+            $table->foreign('role_code')->references('code')->on('roles')->onDelete('cascade');
+            $table->unique(['etape_code', 'role_code']);
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
-        Schema::dropIfExists('workflow_etapes_deliverable');
+        Schema::dropIfExists('workflow_etapes_roles');
     }
 };

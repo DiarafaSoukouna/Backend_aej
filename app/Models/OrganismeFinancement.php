@@ -23,8 +23,8 @@ class OrganismeFinancement extends Model
         return $this->belongsTo(TypeOrganisme::class, 'type');
     }
 
-    // public function region()
-    // {
-    //     return $this->belongsTo(Region::class, 'region_id');
-    // }
+    public function region()
+    {
+        return $this->belongsTo(Region::class, 'region_id');
+    }
 }

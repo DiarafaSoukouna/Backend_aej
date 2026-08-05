@@ -24,6 +24,32 @@
         "avis_partenaire": "ACCORDE",
         "observation": "Observation"
     },
+    "plan_decaissements": {
+        "budget_id": 1,
+        "code": "CODE-001",
+        "intitule": "Intitule",
+        "montant_planifie": 1000000,
+        "date_prevue": "2025-01-01"
+    },
+    "decaissements_declarations": {
+        "plan_id": 1,
+        "promoteur_id": 1,
+        "montant_declare": 1000000,
+        "date_declaree": "2025-01-01",
+        "reference_banque": "REF-001",
+        "justificatif_path": "/path/to/justificatif",
+        "observations": "Observation",
+        "statut": "BROUILLON"
+    },
+    "decaissements": {
+        "plan_id": 1,
+        "agence_id": 1,
+        "montant_decaisse": 1000000,
+        "date_decaissement": "2025-01-01",
+        "reference_banque": "REF-001",
+        "statut": "EN_ATTENTE",
+        "observations": "Observation"
+    },
     "budgets_remboursements": {
         "budget_id": 1,
         "montant_remboursement": 1000000,
@@ -37,5 +63,74 @@
         "restructuration_pret": "NON",
         "capital_amorti": 0,
         "interets": 0
-    }
+    },
+    "remboursements_declarations": {
+        "promoteur_id": 1,
+        "budget_id": 1,
+        "montant_declare": 1000000,
+        "date_declaree": "2025-01-01",
+        "reference_banque": "REF-001",
+        "justificatif_path": "/path/to/justificatif",
+        "observations": "Observation",
+        "statut": "BROUILLON"
+    },
+    "remboursements": {
+        "promoteur_id": 1,
+        "budget_id": 1,
+        "montant_echu": 1000000,
+        "montant_paye": 1000000,
+        "montant_impaye": 0,
+        "penalites": 0,
+        "date_paiement": "2025-01-01",
+        "observations": "Observation",
+        "statut": "EN_ATTENTE"
+    },
+    "categories_transactions": [
+        {
+            "code": "CODE-001",
+            "libelle": "Transports",
+            "description": "",
+            "niveau": 1,
+            "parent_id": null
+        },
+        {
+            "code": "CODE-002",
+            "libelle": "Subventions",
+            "description": "",
+            "niveau": 1,
+            "parent_id": null
+        }
+    ],
+    "transactions_financieres": [
+        {
+            "micro_projet_id": 1,
+            "promoteur_id": 1,
+            "categorie_id": 2,
+            "libelle": "Subvention",
+            "type": "RECETTE",
+            "montant": 1000000,
+            "statut": "BROUILLON",
+            "mode_paiement": "BANQUE",
+            "reference": "REF-001",
+            "justificatif_path": "/path/to/justificatif",
+            "observations": "Observation",
+            "date": "2025-01-01",
+            "saisi_par": 1
+        },
+        {
+            "micro_projet_id": 1,
+            "promoteur_id": 1,
+            "categorie_id": 1,
+            "libelle": "Frais de transport",
+            "type": "DEPENSE",
+            "montant": 1000000,
+            "statut": "VALIDE",
+            "mode_paiement": "BANQUE",
+            "reference": "REF-002",
+            "justificatif_path": "/path/to/justificatif",
+            "observations": "Observation",
+            "date": "2025-01-01",
+            "saisi_par": 1
+        }
+    ]
 }

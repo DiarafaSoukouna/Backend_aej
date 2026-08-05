@@ -9,10 +9,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('secteurs', function (Blueprint $table) {
-            $table->id();
-            $table->unsignedBigInteger('external_id')->unique();
-            $table->string('libelle');
+            $table->unsignedBigInteger('id')->primary();
             $table->string('nom');
+            $table->string('libelle');
             $table->timestamp('synced_at')->nullable();
             $table->timestamps();
         });

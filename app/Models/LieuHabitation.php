@@ -6,8 +6,9 @@ use Illuminate\Database\Eloquent\Model;
 
 class LieuHabitation extends Model
 {
+    protected $table = 'lieux_habitation';
+
     protected $fillable = [
-        'external_id',
         'nom',
         'ville_id',
         'synced_at',
@@ -16,6 +17,9 @@ class LieuHabitation extends Model
     protected $casts = [
         'synced_at' => 'datetime',
     ];
+
+    public $incrementing = false;
+    protected $keyType = 'int';
 
     public function ville()
     {

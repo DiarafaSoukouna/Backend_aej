@@ -11,13 +11,13 @@ class RemboursementController extends Controller
 {
     public function index(): JsonResponse
     {
-        $remboursements = Remboursement::with(['jeune', 'budget'])->get();
+        $remboursements = Remboursement::with(['promoteur', 'budget'])->get();
         return new JsonResponse(['Message' => 'Remboursement list retrieved successfully', 'data' => $remboursements], 200);
     }
 
     public function show($id): JsonResponse
     {
-        $remboursement = Remboursement::with(['jeune', 'budget'])->find($id);
+        $remboursement = Remboursement::with(['promoteur', 'budget'])->find($id);
         if (!$remboursement) {
             return new JsonResponse(['Message' => 'Remboursement not found'], 404);
         }

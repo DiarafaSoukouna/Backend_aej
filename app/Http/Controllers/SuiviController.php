@@ -11,13 +11,13 @@ class SuiviController extends Controller
 {
     public function index(): JsonResponse
     {
-        $suivis = Suivi::with(['microProjet', 'jeune'])->get();
+        $suivis = Suivi::with(['microProjet', 'promoteur'])->get();
         return new JsonResponse(['Message' => 'Suivi list retrieved successfully', 'data' => $suivis], 200);
     }
 
     public function show($id): JsonResponse
     {
-        $suivi = Suivi::with(['microProjet', 'jeune'])->find($id);
+        $suivi = Suivi::with(['microProjet', 'promoteur'])->find($id);
         if (!$suivi) {
             return new JsonResponse(['Message' => 'Suivi not found'], 404);
         }

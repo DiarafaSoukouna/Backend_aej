@@ -7,9 +7,9 @@ use Illuminate\Database\Eloquent\Model;
 class WorkflowEtapeDeliverable extends Model
 {
     protected $table = 'workflow_etapes_deliverable';
-    
+
     public $timestamps = false;
-    
+
     protected $fillable = [
         'etape_code',
         'deliverable_code',
@@ -22,7 +22,11 @@ class WorkflowEtapeDeliverable extends Model
 
     public function etape()
     {
-        return $this->belongsTo(WorkflowEtape::class);
+        return $this->belongsTo(
+            WorkflowEtape::class,
+            'etape_code',
+            'code'
+        );
     }
 
     public function deliverable()

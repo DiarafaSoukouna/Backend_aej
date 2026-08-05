@@ -29,12 +29,12 @@ class BudgetController extends Controller
         $validation = Validator::make($request->all(), [
             'micro_projet_id' => 'required|exists:micro_projets,id',
             'intitule' => 'required|string|max:100',
-            'montant_alloue' => 'required|numeric',
-            'annee_financement' => 'nullable|integer',
+            'montant_accorde' => 'required|numeric',
+            'date_accord' => 'nullable|date',
+            'source' => 'nullable|string|max:100',
             'devise' => 'required|string|max:10',
             'statut' => 'required|in:EN_ATTENTE,APPROUVE,NON_APPROUVE',
-            'date_octroye' => 'nullable|date',
-            'deblocage' => 'boolean',
+            'deblocage' => 'required|in:OUI,NON',
             'date_deblocage' => 'nullable|date',
             'signature_convention' => 'required|in:SIGNEE,NON_SIGNEE',
             'date_signature' => 'nullable|date',
@@ -52,7 +52,7 @@ class BudgetController extends Controller
         }
 
         try {
-            $budget = Budget::create($request->all());
+            $budget = Budget::create($validation->validated());
 
             return new JsonResponse([
                 'message' => 'Budget created successfully',
@@ -77,12 +77,12 @@ class BudgetController extends Controller
         $validation = Validator::make($request->all(), [
             'micro_projet_id' => 'sometimes|required|exists:micro_projets,id',
             'intitule' => 'sometimes|required|string|max:100',
-            'montant_alloue' => 'sometimes|required|numeric',
-            'annee_financement' => 'nullable|integer',
+            'montant_accorde' => 'sometimes|required|numeric',
+            'date_accord' => 'nullable|date',
+            'source' => 'nullable|string|max:100',
             'devise' => 'sometimes|required|string|max:10',
             'statut' => 'sometimes|required|in:EN_ATTENTE,APPROUVE,NON_APPROUVE',
-            'date_octroye' => 'nullable|date',
-            'deblocage' => 'boolean',
+            'deblocage' => 'sometimes|required|in:OUI,NON',
             'date_deblocage' => 'nullable|date',
             'signature_convention' => 'sometimes|required|in:SIGNEE,NON_SIGNEE',
             'date_signature' => 'nullable|date',
@@ -100,7 +100,7 @@ class BudgetController extends Controller
         }
 
         try {
-            $budget->update($request->all());
+            $budget->update($validation->validated());
 
             return new JsonResponse([
                 'message' => 'Budget updated successfully',

@@ -6,8 +6,9 @@ use Illuminate\Database\Eloquent\Model;
 
 class SituationMatrimoniale extends Model
 {
+    protected $table = 'situations_matrimoniales';
+
     protected $fillable = [
-        'external_id',
         'libelle',
         'synced_at',
     ];
@@ -15,4 +16,7 @@ class SituationMatrimoniale extends Model
     protected $casts = [
         'synced_at' => 'datetime',
     ];
+
+    public $incrementing = false;
+    protected $keyType = 'int';
 }

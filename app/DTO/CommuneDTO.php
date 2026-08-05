@@ -9,6 +9,8 @@ class CommuneDTO
         public readonly string $nom,
         public readonly ?int $ville_id,
         public readonly ?int $divisionregionaleaej_id,
+        public readonly ?int $guichetemploi_id,
+        public readonly ?string $code,
     ) {}
 
     public static function fromArray(array $data): self
@@ -18,6 +20,8 @@ class CommuneDTO
             nom: $data['nom'],
             ville_id: $data['ville_id'] ?? null,
             divisionregionaleaej_id: $data['divisionregionaleaej_id'] ?? null,
+            guichetemploi_id: $data['guichetemploi_id'] ?? null,
+            code: $data['code'] ?? null,
         );
     }
 

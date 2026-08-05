@@ -6,8 +6,9 @@ use Illuminate\Database\Eloquent\Model;
 
 class NiveauEtude extends Model
 {
+    protected $table = 'niveaux_etudes';
+
     protected $fillable = [
-        'external_id',
         'libelle',
         'synced_at',
     ];
@@ -15,4 +16,7 @@ class NiveauEtude extends Model
     protected $casts = [
         'synced_at' => 'datetime',
     ];
+
+    public $incrementing = false;
+    protected $keyType = 'int';
 }

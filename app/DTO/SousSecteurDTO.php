@@ -6,6 +6,7 @@ class SousSecteurDTO
 {
     public function __construct(
         public readonly int $id,
+        public readonly ?int $secteur_id,
         public readonly string $libelle,
     ) {}
 
@@ -13,6 +14,7 @@ class SousSecteurDTO
     {
         return new self(
             id: $data['id'],
+            secteur_id: $data['secteur_id'] ?? null,
             libelle: $data['libelle'],
         );
     }

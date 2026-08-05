@@ -70,15 +70,16 @@ class SyncAejReferentielsJob implements ShouldQueue
         $data = $service->getTypesPiecesIdentites();
         
         foreach ($data as $item) {
-            TypePieceIdentite::updateOrCreate(
-                ['external_id' => $item->id],
-                [
-                    'libelle' => $item->libelle,
-                    'description' => $item->description,
-                    'actif' => $item->actif,
-                    'synced_at' => now(),
-                ]
-            );
+            $model = TypePieceIdentite::find($item->id);
+            if (!$model) {
+                $model = new TypePieceIdentite();
+                $model->id = $item->id;
+            }
+            $model->libelle = $item->libelle;
+            $model->description = $item->description;
+            $model->actif = $item->actif;
+            $model->synced_at = now();
+            $model->save();
         }
 
         Log::info('Types pièces identités synchronized successfully');
@@ -89,13 +90,14 @@ class SyncAejReferentielsJob implements ShouldQueue
         $data = $service->getSituationsMatrimoniale();
         
         foreach ($data as $item) {
-            SituationMatrimoniale::updateOrCreate(
-                ['external_id' => $item->id],
-                [
-                    'libelle' => $item->libelle,
-                    'synced_at' => now(),
-                ]
-            );
+            $model = SituationMatrimoniale::find($item->id);
+            if (!$model) {
+                $model = new SituationMatrimoniale();
+                $model->id = $item->id;
+            }
+            $model->libelle = $item->libelle;
+            $model->synced_at = now();
+            $model->save();
         }
 
         Log::info('Situations matrimoniales synchronized successfully');
@@ -106,14 +108,15 @@ class SyncAejReferentielsJob implements ShouldQueue
         $data = $service->getSecteurs();
         
         foreach ($data as $item) {
-            Secteur::updateOrCreate(
-                ['external_id' => $item->id],
-                [
-                    'libelle' => $item->libelle,
-                    'nom' => $item->nom,
-                    'synced_at' => now(),
-                ]
-            );
+            $model = Secteur::find($item->id);
+            if (!$model) {
+                $model = new Secteur();
+                $model->id = $item->id;
+            }
+            $model->libelle = $item->libelle;
+            $model->nom = $item->nom;
+            $model->synced_at = now();
+            $model->save();
         }
 
         Log::info('Secteurs synchronized successfully');
@@ -124,13 +127,15 @@ class SyncAejReferentielsJob implements ShouldQueue
         $data = $service->getSousSecteurs();
         
         foreach ($data as $item) {
-            SousSecteur::updateOrCreate(
-                ['external_id' => $item->id],
-                [
-                    'libelle' => $item->libelle,
-                    'synced_at' => now(),
-                ]
-            );
+            $model = SousSecteur::find($item->id);
+            if (!$model) {
+                $model = new SousSecteur();
+                $model->id = $item->id;
+            }
+            $model->secteur_id = $item->secteur_id;
+            $model->libelle = $item->libelle;
+            $model->synced_at = now();
+            $model->save();
         }
 
         Log::info('Sous-secteurs synchronized successfully');
@@ -141,13 +146,14 @@ class SyncAejReferentielsJob implements ShouldQueue
         $data = $service->getNiveauxEtudes();
         
         foreach ($data as $item) {
-            NiveauEtude::updateOrCreate(
-                ['external_id' => $item->id],
-                [
-                    'libelle' => $item->libelle,
-                    'synced_at' => now(),
-                ]
-            );
+            $model = NiveauEtude::find($item->id);
+            if (!$model) {
+                $model = new NiveauEtude();
+                $model->id = $item->id;
+            }
+            $model->libelle = $item->libelle;
+            $model->synced_at = now();
+            $model->save();
         }
 
         Log::info('Niveaux études synchronized successfully');
@@ -158,14 +164,23 @@ class SyncAejReferentielsJob implements ShouldQueue
         $data = $service->getAgencesRegionales();
         
         foreach ($data as $item) {
-            AgenceRegionale::updateOrCreate(
-                ['external_id' => $item->id],
-                [
-                    'code' => $item->code,
-                    'nom' => $item->nom,
-                    'synced_at' => now(),
-                ]
-            );
+            $model = AgenceRegionale::find($item->id);
+            if (!$model) {
+                $model = new AgenceRegionale();
+                $model->id = $item->id;
+            }
+            $model->code = $item->code;
+            $model->nom = $item->nom;
+            $model->latitude = $item->latitude;
+            $model->longitude = $item->longitude;
+            $model->contact = $item->contact;
+            $model->localisation = $item->localisation;
+            $model->adresse = $item->adresse;
+            $model->telephone = $item->telephone;
+            $model->email = $item->email;
+            $model->chef_agence_id = $item->chef_agence_id;
+            $model->synced_at = now();
+            $model->save();
         }
 
         Log::info('Agences régionales synchronized successfully');
@@ -176,13 +191,14 @@ class SyncAejReferentielsJob implements ShouldQueue
         $data = $service->getSexes();
         
         foreach ($data as $item) {
-            Sexe::updateOrCreate(
-                ['external_id' => $item->id],
-                [
-                    'libelle' => $item->libelle,
-                    'synced_at' => now(),
-                ]
-            );
+            $model = Sexe::find($item->id);
+            if (!$model) {
+                $model = new Sexe();
+                $model->id = $item->id;
+            }
+            $model->libelle = $item->libelle;
+            $model->synced_at = now();
+            $model->save();
         }
 
         Log::info('Sexes synchronized successfully');
@@ -193,14 +209,15 @@ class SyncAejReferentielsJob implements ShouldQueue
         $data = $service->getLieuHabitations();
         
         foreach ($data as $item) {
-            LieuHabitation::updateOrCreate(
-                ['external_id' => $item->id],
-                [
-                    'nom' => $item->nom,
-                    'ville_id' => $item->ville_id,
-                    'synced_at' => now(),
-                ]
-            );
+            $model = LieuHabitation::find($item->id);
+            if (!$model) {
+                $model = new LieuHabitation();
+                $model->id = $item->id;
+            }
+            $model->nom = $item->nom;
+            $model->ville_id = $item->ville_id;
+            $model->synced_at = now();
+            $model->save();
         }
 
         Log::info('Lieu habitations synchronized successfully');
@@ -211,14 +228,15 @@ class SyncAejReferentielsJob implements ShouldQueue
         $data = $service->getPays();
         
         foreach ($data as $item) {
-            Pays::updateOrCreate(
-                ['external_id' => $item->id],
-                [
-                    'code_iso' => $item->code_iso,
-                    'nom' => $item->nom,
-                    'synced_at' => now(),
-                ]
-            );
+            $model = Pays::find($item->id);
+            if (!$model) {
+                $model = new Pays();
+                $model->id = $item->id;
+            }
+            $model->code_iso = $item->code_iso;
+            $model->nom = $item->nom;
+            $model->synced_at = now();
+            $model->save();
         }
 
         Log::info('Pays synchronized successfully');
@@ -229,14 +247,15 @@ class SyncAejReferentielsJob implements ShouldQueue
         $data = $service->getSituationsHandicaps();
         
         foreach ($data as $item) {
-            TypeSituationHandicap::updateOrCreate(
-                ['external_id' => $item->id],
-                [
-                    'code' => $item->code,
-                    'libelle' => $item->libelle,
-                    'synced_at' => now(),
-                ]
-            );
+            $model = TypeSituationHandicap::find($item->id);
+            if (!$model) {
+                $model = new TypeSituationHandicap();
+                $model->id = $item->id;
+            }
+            $model->code = $item->code;
+            $model->libelle = $item->libelle;
+            $model->synced_at = now();
+            $model->save();
         }
 
         Log::info('Situations handicaps synchronized successfully');
@@ -247,15 +266,18 @@ class SyncAejReferentielsJob implements ShouldQueue
         $data = $service->getCommunes();
         
         foreach ($data as $item) {
-            Commune::updateOrCreate(
-                ['external_id' => $item->id],
-                [
-                    'nom' => $item->nom,
-                    'ville_id' => $item->ville_id,
-                    'divisionregionaleaej_id' => $item->divisionregionaleaej_id,
-                    'synced_at' => now(),
-                ]
-            );
+            $model = Commune::find($item->id);
+            if (!$model) {
+                $model = new Commune();
+                $model->id = $item->id;
+            }
+            $model->nom = $item->nom;
+            $model->ville_id = $item->ville_id;
+            $model->divisionregionaleaej_id = $item->divisionregionaleaej_id;
+            $model->guichetemploi_id = $item->guichetemploi_id;
+            $model->code = $item->code;
+            $model->synced_at = now();
+            $model->save();
         }
 
         Log::info('Communes synchronized successfully');
@@ -266,14 +288,15 @@ class SyncAejReferentielsJob implements ShouldQueue
         $data = $service->getDivisionRegionale();
         
         foreach ($data as $item) {
-            DivisionRegionale::updateOrCreate(
-                ['external_id' => $item->id],
-                [
-                    'code' => $item->code,
-                    'nom' => $item->nom,
-                    'synced_at' => now(),
-                ]
-            );
+            $model = DivisionRegionale::find($item->id);
+            if (!$model) {
+                $model = new DivisionRegionale();
+                $model->id = $item->id;
+            }
+            $model->code = $item->code;
+            $model->nom = $item->nom;
+            $model->synced_at = now();
+            $model->save();
         }
 
         Log::info('Division regionale synchronized successfully');
@@ -284,15 +307,16 @@ class SyncAejReferentielsJob implements ShouldQueue
         $data = $service->getVilles();
         
         foreach ($data as $item) {
-            Ville::updateOrCreate(
-                ['external_id' => $item->id],
-                [
-                    'departement_id' => $item->departement_id,
-                    'code' => $item->code,
-                    'nom' => $item->nom,
-                    'synced_at' => now(),
-                ]
-            );
+            $model = Ville::find($item->id);
+            if (!$model) {
+                $model = new Ville();
+                $model->id = $item->id;
+            }
+            $model->departement_id = $item->departement_id;
+            $model->code = $item->code;
+            $model->nom = $item->nom;
+            $model->synced_at = now();
+            $model->save();
         }
 
         Log::info('Villes synchronized successfully');
@@ -300,19 +324,22 @@ class SyncAejReferentielsJob implements ShouldQueue
 
     protected function syncAll(AejApiService $service): void
     {
+        // Sync parent tables first
         $this->syncTypesPiecesIdentites($service);
         $this->syncSituationsMatrimoniale($service);
         $this->syncSituationsHandicaps($service);
         $this->syncSecteurs($service);
-        $this->syncSousSecteurs($service);
         $this->syncNiveauxEtudes($service);
         $this->syncAgencesRegionales($service);
         $this->syncSexes($service);
-        $this->syncLieuHabitations($service);
         $this->syncPays($service);
         $this->syncDivisionRegionale($service);
         $this->syncVilles($service);
+        
+        // Sync dependent tables after parents
+        $this->syncSousSecteurs($service);
         $this->syncCommunes($service);
+        $this->syncLieuHabitations($service);
 
         Log::info('All AEJ referentiels synchronized successfully');
     }

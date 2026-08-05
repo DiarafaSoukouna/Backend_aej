@@ -9,11 +9,11 @@ class Budget extends Model
     protected $fillable = [
         'micro_projet_id',
         'intitule',
-        'montant_alloue',
-        'annee_financement',
-        'devise',
+        'montant_accorde',
+        'date_accord',
+        'source',
         'statut',
-        'date_octroye',
+        'devise',
         'deblocage',
         'date_deblocage',
         'signature_convention',
@@ -25,8 +25,12 @@ class Budget extends Model
     ];
 
     protected $casts = [
-        'montant_alloue' => 'decimal:2',
+        'montant_accorde' => 'decimal:2',
         'deblocage' => 'boolean',
+        'date_accord' => 'date',
+        'date_deblocage' => 'date',
+        'date_signature' => 'date',
+        'date_reception' => 'date',
     ];
 
     public function microProjet()
