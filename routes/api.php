@@ -43,6 +43,8 @@ use App\Http\Controllers\DecaissementController;
 use App\Http\Controllers\RemboursementsDeclarationController;
 use App\Http\Controllers\DecaissementsDeclarationController;
 use App\Http\Controllers\MicroProjetController;  
+use App\Http\Controllers\FormulaireEvaluationController;
+use App\Http\Controllers\EvaluationController;
 
 
 Route::apiResource('directions', DirectionController::class);
@@ -58,6 +60,7 @@ Route::apiResource('type-emplois', TypeEmploiController::class);
 Route::apiResource('personnels', PersonnelController::class);
 Route::put('personnels/updatePassword/{id}', [PersonnelController::class, 'updatePassword']);
 Route::get('promoteurs', [PromoteurController::class, 'index']);
+Route::get('/promoteurs/export', [PromoteurController::class, 'exportCsv']);
 Route::get('promoteurs/{id}', [PromoteurController::class, 'show']);
 Route::get('projets', [MicroProjetController::class, 'index']);
 Route::get('projets/{id}', [MicroProjetController::class, 'show']);
@@ -78,6 +81,11 @@ Route::get('promoteurs', [PromoteurController::class, 'index']);
 Route::get('promoteurs/{id}', [PromoteurController::class, 'show']);
 Route::post('promoteurs/filter', [PromoteurController::class, 'filter']);
 Route::post('promoteurs/filter-with-projects', [PromoteurController::class, 'filterWithProjects']);
+Route::apiResource('formulaires-evaluation', FormulaireEvaluationController::class);
+Route::get('/formulaires-evaluation/{formulaireEvaluation}',[FormulaireEvaluationController::class, 'show']);
+Route::apiResource('evaluations', EvaluationController::class);
+Route::post('evaluations/{evaluation}/responses', [EvaluationController::class, 'addResponse']);
+Route::get('evaluations/{evaluation}/responses', [EvaluationController::class, 'responses']);
 
 // Workflow routes
 Route::prefix('workflow')->group(function () {
