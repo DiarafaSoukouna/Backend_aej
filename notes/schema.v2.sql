@@ -465,6 +465,7 @@ CREATE TABLE
         latitude DECIMAL(10, 8),
         longitude DECIMAL(11, 8),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         FOREIGN KEY (projet_id) REFERENCES projets (id) ON DELETE CASCADE,
         FOREIGN KEY (departement_id) REFERENCES departements (id)
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
@@ -993,7 +994,7 @@ CREATE TABLE
     IF NOT EXISTS workflow_instance (
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
         micro_projet_id BIGINT UNSIGNED,
-        version VARCHAR(20) NOT NULL,
+        workflow_version VARCHAR(50) NOT NULL,
         current_etape_code VARCHAR(50),
         status VARCHAR(20) NOT NULL DEFAULT 'EN_COURS' CHECK (
             status IN ('EN_COURS', 'TERMINE', 'REJETE', 'ABANDONNE')
@@ -1001,7 +1002,7 @@ CREATE TABLE
         started_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
         completed_at TIMESTAMP NULL,
         FOREIGN KEY (micro_projet_id) REFERENCES micro_projets (id) ON DELETE CASCADE,
-        FOREIGN KEY (version) REFERENCES workflow_versions (version),
+        FOREIGN KEY (workflow_version) REFERENCES workflow_versions (code),
         FOREIGN KEY (current_etape_code) REFERENCES workflow_etapes (code)
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
@@ -1022,15 +1023,18 @@ CREATE TABLE
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
 CREATE TABLE
-    IF NOT EXISTS workflow_instance_document (
+    IF NOT EXISTS workflow_instance_deliverable (
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
         workflow_instance_id BIGINT UNSIGNED,
-        deliverable_id BIGINT UNSIGNED,
-        file_reference VARCHAR(500),
+        deliverable_code VARCHAR(50) NOT NULL,
+        file_path TEXT,
+        file_name VARCHAR(255),
+        file_size BIGINT,
+        file_type VARCHAR(100),
         produced_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
         produced_by_id BIGINT UNSIGNED,
         FOREIGN KEY (workflow_instance_id) REFERENCES workflow_instance (id) ON DELETE CASCADE,
-        FOREIGN KEY (deliverable_id) REFERENCES workflow_etapes_deliverable (id),
+        FOREIGN KEY (deliverable_code) REFERENCES workflow_deliverables (code),
         FOREIGN KEY (produced_by_id) REFERENCES personnels (id)
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 

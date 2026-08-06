@@ -243,7 +243,7 @@ Réponses détaillées apportées à chaque `question_evaluation` dans le cadre 
 ### `workflow_instance_history`
 Journal d'audit complet du parcours d'une `workflow_instance` : chaque passage par une étape (entrée/sortie, rôle et personne ayant traité l'étape, décision prise le cas échéant, commentaires).
 
-### `workflow_instance_document`
+### `workflow_instance_deliverable`
 Livrables effectivement produits (fichiers) pour une `workflow_instance`, rattachés au modèle de livrable attendu (`workflow_etapes_deliverable`).
 
 ### `workflow_instance_comment`

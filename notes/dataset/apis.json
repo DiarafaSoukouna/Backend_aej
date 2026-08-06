@@ -132,5 +132,113 @@
             "date": "2025-01-01",
             "saisi_par": 1
         }
-    ]
+    ],
+
+
+    "mega_projets": {
+        "secteur_id": 1,
+        "titre": "Projet de développement agricole"
+    },
+    "zones_intervention": {
+        "projet_id": 1,
+        "departement_id": 1,
+        "adresse": "Zone industrielle Nord",
+        "latitude": 5.345,
+        "longitude": -4.024
+    },
+    "dispositifs": {
+        "code": "DISP-001",
+        "projet_id": 1,
+        "intitule": "Dispositif de financement agricole",
+        "budget_alloue": 50000000,
+        "nbre_emplois_prevu": 100,
+        "nbre_beneficiaire_prevu": 500,
+        "nbre_micro_projet_prevu": 50
+    },
+    "guichets": {
+        "code": "GUICH-001",
+        "libelle": "Guichet AGR Classique",
+        "description": "Guichet pour les activités génératrices de revenus classiques",
+        "couleur": "#FF5733",
+        "montant_min": 100000,
+        "montant_max": 5000000,
+        "is_active": true,
+        "is_form_active": true
+    },
+    "workflow_instances": {
+        "micro_projet_id": 1,
+        "workflow_version": "AGR_CLASSIQUE_2026",
+        "current_etape_code": "AGRC_PRCO_1",
+        "status": "EN_COURS",
+        "started_at": "2025-01-01",
+        "completed_at": null
+    },
+    "workflow_instance_history": {
+        "workflow_instance_id": 1,
+        "etape_code": "AGRC_PRCO_1",
+        "role_code": "CIP",
+        "performed_by_id": 1,
+        "entered_at": "2025-01-01",
+        "exited_at": "2025-01-15",
+        "comments": "Étape terminée avec succès"
+    },
+    "workflow_instance_deliverables": {
+        "workflow_instance_id": 1,
+        "deliverable_code": "PLAN_AFFAIRES",
+        "file_path": "/storage/documents/plan_affaires.pdf",
+        "file_name": "plan_affaires.pdf",
+        "file_size": 2048576,
+        "file_type": "application/pdf",
+        "produced_at": "2025-01-10",
+        "produced_by_id": 1
+    },
+    "workflow_instance_comments": {
+        "workflow_instance_id": 1,
+        "etape_code": "AGRC_PRCO_2",
+        "commented_by_id": 1,
+        "comment": "Le plan d'affaires nécessite des révisions",
+        "created_at": "2025-01-12"
+    },
+    "exploitations": {
+        "micro_projet_id": 1,
+        "etat_installation": "ACHEVE",
+        "etat_activite": "EN_BONNE_MARCHE",
+        "realisation_vide": "NON",
+        "nbre_visites": 5,
+        "date_debut_visite": "2025-02-01",
+        "date_fin_visite": "2025-06-30",
+        "difficultes": "Accès difficile pendant saison des pluies",
+        "recommandations": "Améliorer l'accès routier",
+        "latitude": 5.345,
+        "longitude": -4.024,
+        "observations": "Projet en bonne santé",
+        "agent_id": 1
+    },
+    "visite_photos": {
+        "exploitation_id": 1,
+        "photo_url": "/storage/photos/visite_001.jpg",
+        "description": "Photo du site d'exploitation",
+        "prise_le": "2025-03-15",
+        "prise_par_id": 1
+    },
+    "entreprises": {
+        "numero": "ENT-001",
+        "raison_sociale": "Entreprise Agricole SA",
+        "sigle": "EASA",
+        "rccm": "CI-ABJ-2025-B-12345",
+        "ninea": "1234567890",
+        "type_entreprise_id": 1,
+        "adresse": "Zone industrielle, Abidjan",
+        "contact": "+2250707070707",
+        "email": "contact@easa.ci",
+        "region_id": 1,
+        "commune_id": 1
+    },
+    "embauches": {
+        "promoteur_id": 1,
+        "entreprise_id": 1,
+        "micro_projet_id": 1,
+        "type_emploi_id": 1,
+        "poste": "Gestionnaire de projet"
+    }
 }
