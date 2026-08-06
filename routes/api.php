@@ -43,17 +43,30 @@ use App\Http\Controllers\DecaissementsDeclarationController;
 use App\Http\Controllers\MicroProjetController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OrganismeFinancementController;
+use App\Http\Controllers\WorkflowInstanceController;
+use App\Http\Controllers\WorkflowInstanceHistoryController;
+use App\Http\Controllers\WorkflowInstanceDeliverableController;
+use App\Http\Controllers\WorkflowInstanceCommentController;
+use App\Http\Controllers\EntrepriseController;
+use App\Http\Controllers\ProjetController;
+use App\Http\Controllers\ZoneInterventionController;
+use App\Http\Controllers\GuichetController;
+use App\Http\Controllers\DispositifController;
+use App\Http\Controllers\ExploitationController;
+use App\Http\Controllers\VisitePhotoController;
+use App\Http\Controllers\EmbaucheController;
 
 // Paramètres
 Route::apiResource('configurations', ConfigurationController::class);
 Route::patch('/configurations', [ConfigurationController::class, 'patch']);
-Route::get('localites/niveau/{niveauId}', [LocaliteController::class, 'getLocalitesByNiveau']);
-Route::apiResource('localites', LocaliteController::class);
+// Route::apiResource('niveau-localites', NiveauLocaliteController::class); 
+// Route::get('localites/niveau/{niveauId}', [LocaliteController::class, 'getLocalitesByNiveau']); 
+// Route::apiResource('localites', LocaliteController::class); 
 Route::apiResource('directions', DirectionController::class);
 Route::apiResource('services', ServiceController::class);
 Route::apiResource('fonctions', FonctionController::class);
-Route::apiResource('niveau-localites', NiveauLocaliteController::class);
 Route::apiResource('type-entreprises', TypeEntrepriseController::class);
+Route::apiResource('type-organismes', TypeOrganismeController::class);
 Route::apiResource('type-emplois', TypeEmploiController::class);
 
 // Gestion des utilisateurs
@@ -72,6 +85,12 @@ Route::middleware('web')->group(function () {
     Route::post('auth/refresh', [PersonnelController::class, 'refresh']);
     Route::get('/personnel/me', [PersonnelController::class, 'me']);
 });
+
+// Entreprises & Projets
+Route::apiResource('mega-projets', ProjetController::class);
+Route::apiResource('zones-intervention', ZoneInterventionController::class);
+Route::apiResource('dispositifs', DispositifController::class);
+Route::apiResource('guichets', GuichetController::class);
 
 // Promoteurs
 Route::get('promoteurs', [PromoteurController::class, 'index']);
@@ -96,15 +115,26 @@ Route::prefix('workflow')->group(function () {
     Route::apiResource('etape-decisions', WorkflowEtapeDecisionController::class);
 });
 
+// Workflow Instances
+Route::prefix('workflow-instances')->group(function () {
+    Route::apiResource('instances', WorkflowInstanceController::class);
+    Route::apiResource('histories', WorkflowInstanceHistoryController::class);
+    Route::apiResource('deliverables', WorkflowInstanceDeliverableController::class);
+    Route::apiResource('comments', WorkflowInstanceCommentController::class);
+});
+
 // Suivis & Indicateurs
 Route::apiResource('suivis', SuiviController::class);
 Route::apiResource('indicateurs', IndicateurController::class);
 Route::apiResource('indicateur-suivis', IndicateurSuiviController::class);
+Route::apiResource('exploitations', ExploitationController::class);
+Route::apiResource('visite-photos', VisitePhotoController::class);
+Route::apiResource('entreprises', EntrepriseController::class);
+Route::apiResource('embauches', EmbaucheController::class);
 Route::apiResource('observations', ObservationController::class);
 Route::apiResource('documents', DocumentController::class);
 
 // Finances
-Route::apiResource('type-organismes', TypeOrganismeController::class);
 Route::apiResource('organismes', OrganismeFinancementController::class);
 Route::get('organismes/region/{regionId}', [OrganismeFinancementController::class, 'getByRegion']);
 Route::get('organismes/type/{typeId}', [OrganismeFinancementController::class, 'getByType']);
