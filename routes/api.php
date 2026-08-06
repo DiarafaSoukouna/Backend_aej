@@ -55,6 +55,9 @@ use App\Http\Controllers\DispositifController;
 use App\Http\Controllers\ExploitationController;
 use App\Http\Controllers\VisitePhotoController;
 use App\Http\Controllers\EmbaucheController;
+use App\Http\Controllers\FormulaireEvaluationController;
+use App\Http\Controllers\EvaluationController;
+
 
 // Paramètres
 Route::apiResource('configurations', ConfigurationController::class);
@@ -79,6 +82,12 @@ Route::put('notifications/{id}/mark-read', [NotificationController::class, 'mark
 Route::get('notifications/personnel/{personnelId}', [NotificationController::class, 'getByPersonnel']);
 
 // Authentification
+Route::get('promoteurs', [PromoteurController::class, 'index']);
+Route::get('/promoteurs/export', [PromoteurController::class, 'exportCsv']);
+Route::get('promoteurs/{id}', [PromoteurController::class, 'show']);
+Route::get('projets', [MicroProjetController::class, 'index']);
+Route::get('projets/{id}', [MicroProjetController::class, 'show']);
+Route::post('projets/filter', [MicroProjetController::class, 'filter']);
 Route::middleware('web')->group(function () {
     Route::post('personnels/login', [PersonnelController::class, 'auth']);
     Route::post('personnels/logout', [PersonnelController::class, 'logout']);
@@ -100,6 +109,11 @@ Route::post('promoteurs/filter-with-projects', [PromoteurController::class, 'fil
 Route::get('projets', [MicroProjetController::class, 'index']);
 Route::get('projets/{id}', [MicroProjetController::class, 'show']);
 Route::post('projets/filter', [MicroProjetController::class, 'filter']);
+Route::apiResource('formulaires-evaluation', FormulaireEvaluationController::class);
+Route::get('/formulaires-evaluation/{formulaireEvaluation}',[FormulaireEvaluationController::class, 'show']);
+Route::apiResource('evaluations', EvaluationController::class);
+Route::post('evaluations/{evaluation}/responses', [EvaluationController::class, 'addResponse']);
+Route::get('evaluations/{evaluation}/responses', [EvaluationController::class, 'responses']);
 
 // Workflow
 Route::prefix('workflow')->group(function () {
