@@ -31,12 +31,11 @@ return new class extends Migration
             $table->date('date_transmission_partenaire')->nullable();
             $table->timestamps();
             
-            // Foreign keys - only for existing tables
-            // $table->foreign('dispositif_id')->references('id')->on('dispositifs')->onDelete('cascade');
-            // $table->foreign('organisme_id')->references('id')->on('organisme_financements')->onDelete('cascade');
-            // $table->foreign('guichet_id')->references('id')->on('guichets')->onDelete('cascade');
-            // $table->foreign('secteur_id')->references('id')->on('secteurs_activites')->onDelete('cascade');
-            // $table->foreign('commune_id')->references('id')->on('communes')->onDelete('cascade');
+            $table->foreign('dispositif_id')->references('id')->on('dispositifs')->onDelete('cascade');
+            $table->foreign('organisme_id')->references('id')->on('organisme_financements')->onDelete('cascade');
+            $table->foreign('guichet_id')->references('id')->on('guichets')->onDelete('cascade');
+            $table->foreign('secteur_id')->references('id')->on('secteurs')->onDelete('cascade');
+            $table->foreign('commune_id')->references('id')->on('communes')->onDelete('cascade');
             $table->foreign('agence_id')->references('id')->on('agences_regionales')->onDelete('cascade');
             $table->foreign('promoteur_id')->references('id')->on('promoteurs')->onDelete('cascade');
         });

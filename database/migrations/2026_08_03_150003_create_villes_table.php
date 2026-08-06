@@ -9,13 +9,14 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('villes', function (Blueprint $table) {
-            $table->id();
-            $table->unsignedBigInteger('departement_id');
-            $table->string('code', 50)->unique();
+            $table->unsignedBigInteger('id')->primary();
+            $table->unsignedBigInteger('departement_id')->nullable();
+            $table->string('code', 10)->nullable();
             $table->string('nom', 100);
-            $table->timestamp('created_at')->useCurrent();
+            $table->timestamp('synced_at')->nullable();
+            $table->timestamps();
             
-            $table->foreign('departement_id')->references('id')->on('departements')->onDelete('cascade');
+            $table->foreign('departement_id')->references('id')->on('departements');
         });
     }
 

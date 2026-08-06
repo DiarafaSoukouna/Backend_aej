@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Localite;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Validator;
-
+ 
 class LocaliteController extends Controller
 {
     public function index(): JsonResponse

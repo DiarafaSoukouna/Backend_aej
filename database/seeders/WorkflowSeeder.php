@@ -10,13 +10,12 @@ use App\Models\WorkflowVersion;
 use App\Models\WorkflowEtape;
 use App\Models\WorkflowEtapeSla;
 use App\Models\WorkflowEtapeRole;
-use App\Models\WorkflowEtapeTransition;
 use App\Models\WorkflowEtapeDeliverable;
 use App\Models\WorkflowEtapeDecision;
 use App\Models\WorkflowDecisionOutcome;
 use App\Models\WorkflowRole;
 use App\Models\WorkflowDeliverable;
-use App\Constants\Workflow;
+use Database\Factories\WorkflowFactory;
 
 
 
@@ -31,7 +30,7 @@ class WorkflowSeeder extends Seeder
     public function run(): void
     {
         // Seed Roles first (required for workflow_etapes_roles foreign key)
-        foreach (Workflow::WorkflowRoles as $code => $data) {
+        foreach (WorkflowFactory::getWorkflowRoles() as $code => $data) {
             \App\Models\Role::updateOrCreate(
                 ['code' => $code],
                 [
@@ -42,7 +41,7 @@ class WorkflowSeeder extends Seeder
         }
 
         // Seed Workflow Roles
-        foreach (Workflow::WorkflowRoles as $code => $data) {
+        foreach (WorkflowFactory::getWorkflowRoles() as $code => $data) {
             WorkflowRole::updateOrCreate(
                 ['code' => $code],
                 [
@@ -54,7 +53,7 @@ class WorkflowSeeder extends Seeder
         }
 
         // Seed Workflow Decision Outcomes
-        foreach (Workflow::WorkflowDecisionOutcome as $code => $label) {
+        foreach (WorkflowFactory::getWorkflowDecisionOutcomes() as $code => $label) {
             WorkflowDecisionOutcome::updateOrCreate(
                 ['code' => $code],
                 ['label' => $label]
@@ -62,7 +61,7 @@ class WorkflowSeeder extends Seeder
         }
 
         // Seed Workflow Deliverables
-        foreach (Workflow::WorkflowDeliverables as $code => $data) {
+        foreach (WorkflowFactory::getWorkflowDeliverables() as $code => $data) {
             WorkflowDeliverable::updateOrCreate(
                 ['code' => $code],
                 [
@@ -74,7 +73,7 @@ class WorkflowSeeder extends Seeder
         }
 
         // Seed Workflows and Versions
-        foreach (Workflow::WorkflowModels as $code => $data) {
+        foreach (WorkflowFactory::getWorkflowModels() as $code => $data) {
             $workflow = WorkflowModel::updateOrCreate(
                 ['code' => $code],
                 [
@@ -84,8 +83,9 @@ class WorkflowSeeder extends Seeder
                 ]
             );
 
-            if (isset(Workflow::WorkflowVersion[$code])) {
-                $versionData = Workflow::WorkflowVersion[$code];
+            $versions = WorkflowFactory::getWorkflowVersions();
+            if (isset($versions[$code])) {
+                $versionData = $versions[$code];
                 $versionCode = $versionData['workflow_code'] . '_' . $versionData['version'];
                 WorkflowVersion::updateOrCreate(
                     ['code' => $versionCode],
@@ -102,7 +102,7 @@ class WorkflowSeeder extends Seeder
         }
 
         // Seed Workflow Etapes
-        foreach (Workflow::WorkflowEtapes as $workflowCode => $etapes) {
+        foreach (WorkflowFactory::getWorkflowEtapes() as $workflowCode => $etapes) {
             foreach ($etapes as $etapeData) {
                 $versionCode = $workflowCode . '_' . $etapeData['version'];
                 WorkflowEtape::updateOrCreate(
@@ -124,7 +124,7 @@ class WorkflowSeeder extends Seeder
         }
 
         // Seed Workflow Etapes SLA
-        foreach (Workflow::WorkflowEtapesSla as $workflowCode => $slas) {
+        foreach (WorkflowFactory::getWorkflowEtapesSla() as $workflowCode => $slas) {
             foreach ($slas as $slaData) {
                 if (WorkflowEtape::where('code', $slaData['etape_code'])->exists()) {
                     WorkflowEtapeSla::updateOrCreate(
@@ -142,7 +142,7 @@ class WorkflowSeeder extends Seeder
         }
 
         // Seed Workflow Etapes Roles
-        foreach (Workflow::WorkflowEtapesRoles as $workflowCode => $roles) {
+        foreach (WorkflowFactory::getWorkflowEtapesRoles() as $workflowCode => $roles) {
             foreach ($roles as $roleData) {
                 if (WorkflowEtape::where('code', $roleData['etape_code'])->exists()) {
                     WorkflowEtapeRole::updateOrCreate(
@@ -159,7 +159,7 @@ class WorkflowSeeder extends Seeder
         }
 
         // Seed Workflow Etapes Decisions
-        foreach (Workflow::WorkflowEtapesDecision as $workflowCode => $decisions) {
+        foreach (WorkflowFactory::getWorkflowEtapesDecision() as $workflowCode => $decisions) {
             foreach ($decisions as $decisionData) {
                 if (WorkflowEtape::where('code', $decisionData['etape_code'])->exists()) {
                     WorkflowEtapeDecision::updateOrCreate(
@@ -178,7 +178,7 @@ class WorkflowSeeder extends Seeder
         }
 
         // Seed Workflow Etapes Deliverables
-        foreach (Workflow::WorkflowEtapesDeliverable as $workflowCode => $deliverables) {
+        foreach (WorkflowFactory::getWorkflowEtapesDeliverable() as $workflowCode => $deliverables) {
             foreach ($deliverables as $deliverableData) {
                 if (WorkflowEtape::where('code', $deliverableData['etape_code'])->exists()) {
                     WorkflowEtapeDeliverable::updateOrCreate(

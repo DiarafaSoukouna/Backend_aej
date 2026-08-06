@@ -6,8 +6,9 @@ use Illuminate\Database\Eloquent\Model;
 
 class TypeSituationHandicap extends Model
 {
+    protected $table = 'types_situation_handicap';
+
     protected $fillable = [
-        'external_id',
         'code',
         'libelle',
         'synced_at',
@@ -16,4 +17,7 @@ class TypeSituationHandicap extends Model
     protected $casts = [
         'synced_at' => 'datetime',
     ];
+
+    public $incrementing = false;
+    protected $keyType = 'int';
 }

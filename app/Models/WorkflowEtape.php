@@ -60,15 +60,4 @@ class WorkflowEtape extends Model
     {
         return $this->hasOne(WorkflowEtapeDecision::class, 'etape_code', 'code');
     }
-
-    // Transitions table is commented out in schema
-    // public function transitionsFrom()
-    // {
-    //     return $this->hasMany(WorkflowEtapeTransition::class, 'from_etape_code');
-    // }
-
-    // public function transitionsTo()
-    // {
-    //     return $this->hasMany(WorkflowEtapeTransition::class, 'to_etape_code');
-    // }
 }

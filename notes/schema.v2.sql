@@ -25,8 +25,8 @@ CREATE TABLE
         taux_devise_principale DECIMAL(10, 2) NOT NULL,
         mise_en_maintenance TINYINT (1) NOT NULL DEFAULT 0,
         delai_inactivite_minutes INT NOT NULL,
-        nbre_session_possible INT NOT NULL,
-        nbre_tentatives_connexion INT NOT NULL,
+        nombre_session_possible INT NOT NULL,
+        nombre_tentatives_connexion INT NOT NULL,
         delai_code_tp_minutes INT NOT NULL,
         delai_changement_mdp_mois INT NOT NULL,
         delai_suppression_secondes INT NOT NULL,
@@ -67,11 +67,8 @@ CREATE TABLE
 CREATE TABLE
     IF NOT EXISTS villes (
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-        departement_id BIGINT UNSIGNED,
-        code VARCHAR(50) UNIQUE,
         nom VARCHAR(100) NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (departement_id) REFERENCES departements (id) ON DELETE CASCADE
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
 -- Via https://agenceemploijeunes.ci/api/v1.0/communes-old
@@ -103,7 +100,7 @@ CREATE TABLE
 CREATE TABLE
     IF NOT EXISTS secteurs_activites (
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-        code VARCHAR(50) UNIQUE,
+        nom VARCHAR(50) UNIQUE,
         libelle VARCHAR(100) NOT NULL
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
@@ -112,7 +109,6 @@ CREATE TABLE
     IF NOT EXISTS sous_secteurs_activites (
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
         secteur_activite_id BIGINT UNSIGNED,
-        code VARCHAR(50) UNIQUE,
         libelle VARCHAR(150) NOT NULL,
         FOREIGN KEY (secteur_activite_id) REFERENCES secteurs_activites (id) ON DELETE CASCADE
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
@@ -293,9 +289,9 @@ CREATE TABLE
 CREATE TABLE
     IF NOT EXISTS type_pieces_identite (
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-        code VARCHAR(50) UNIQUE,
         libelle VARCHAR(100) NOT NULL,
-        description TEXT
+        description TEXT,
+        actif TINYINT(1) NOT NULL DEFAULT 1
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
 -- Via https://agenceemploijeunes.ci/api/v1.0/niveaux-etudes
@@ -317,7 +313,6 @@ CREATE TABLE
 CREATE TABLE
     IF NOT EXISTS types_situation_handicap (
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-        code VARCHAR(50) UNIQUE,
         libelle VARCHAR(100) NOT NULL
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
@@ -325,7 +320,6 @@ CREATE TABLE
 CREATE TABLE
     IF NOT EXISTS situation_matrimoniale (
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-        code VARCHAR(50) UNIQUE,
         libelle VARCHAR(100) NOT NULL
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
@@ -448,32 +442,6 @@ CREATE TABLE
         FOREIGN KEY (deliverable_code) REFERENCES workflow_deliverables (code) ON DELETE CASCADE
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
--- CREATE TABLE
---     IF NOT EXISTS workflow_etapes_transition (
---         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
---         version VARCHAR(20) NOT NULL,
---         from_etape_code VARCHAR(50) NOT NULL,
---         to_etape_code VARCHAR(50) NOT NULL,
---         transition_type VARCHAR(20) NOT NULL DEFAULT 'NEXT',
---         order INTEGER NOT NULL DEFAULT 1,
---         is_active BOOLEAN NOT NULL DEFAULT TRUE,
---         CHECK (from_etape_code <> to_etape_code),
---         CHECK (
---             transition_type IN (
---                 'NEXT',
---                 'RETURN',
---                 'PARALLEL',
---                 'MERGE',
---                 'CANCEL',
---                 'END'
---             )
---         ),
---         FOREIGN KEY (version) REFERENCES workflow_versions (version) ON DELETE CASCADE,
---         FOREIGN KEY (from_etape_code) REFERENCES workflow_etapes (code) ON DELETE CASCADE,
---         FOREIGN KEY (to_etape_code) REFERENCES workflow_etapes (code) ON DELETE CASCADE,
---         UNIQUE (version, from_etape_code, to_etape_code)
---     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
-
 -- ##############################################################
 -- 9. PROJETS
 -- ##############################################################
@@ -497,6 +465,7 @@ CREATE TABLE
         latitude DECIMAL(10, 8),
         longitude DECIMAL(11, 8),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         FOREIGN KEY (projet_id) REFERENCES projets (id) ON DELETE CASCADE,
         FOREIGN KEY (departement_id) REFERENCES departements (id)
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
@@ -743,8 +712,8 @@ CREATE TABLE
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
         promoteur_id BIGINT UNSIGNED,
         budget_id BIGINT UNSIGNED,
-        montant_paye DECIMAL(18,2),
-        date_paiement DATE,
+        montant_declare DECIMAL(18,2),
+        date_declaree DATE,
         reference_banque VARCHAR(100),
         justificatif_path TEXT,
         observations TEXT,
@@ -788,7 +757,7 @@ CREATE TABLE
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
         plan_id BIGINT UNSIGNED NOT NULL,
         promoteur_id BIGINT UNSIGNED NOT NULL,
-        montant DECIMAL(18,2) NOT NULL,
+        montant_declare DECIMAL(18,2) NOT NULL,
         date_declaree DATE,
         reference_banque VARCHAR(100),
         justificatif_path TEXT,
@@ -1025,7 +994,7 @@ CREATE TABLE
     IF NOT EXISTS workflow_instance (
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
         micro_projet_id BIGINT UNSIGNED,
-        version VARCHAR(20) NOT NULL,
+        workflow_version VARCHAR(50) NOT NULL,
         current_etape_code VARCHAR(50),
         status VARCHAR(20) NOT NULL DEFAULT 'EN_COURS' CHECK (
             status IN ('EN_COURS', 'TERMINE', 'REJETE', 'ABANDONNE')
@@ -1033,7 +1002,7 @@ CREATE TABLE
         started_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
         completed_at TIMESTAMP NULL,
         FOREIGN KEY (micro_projet_id) REFERENCES micro_projets (id) ON DELETE CASCADE,
-        FOREIGN KEY (version) REFERENCES workflow_versions (version),
+        FOREIGN KEY (workflow_version) REFERENCES workflow_versions (code),
         FOREIGN KEY (current_etape_code) REFERENCES workflow_etapes (code)
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
@@ -1054,15 +1023,18 @@ CREATE TABLE
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
 CREATE TABLE
-    IF NOT EXISTS workflow_instance_document (
+    IF NOT EXISTS workflow_instance_deliverable (
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
         workflow_instance_id BIGINT UNSIGNED,
-        deliverable_id BIGINT UNSIGNED,
-        file_reference VARCHAR(500),
+        deliverable_code VARCHAR(50) NOT NULL,
+        file_path TEXT,
+        file_name VARCHAR(255),
+        file_size BIGINT,
+        file_type VARCHAR(100),
         produced_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
         produced_by_id BIGINT UNSIGNED,
         FOREIGN KEY (workflow_instance_id) REFERENCES workflow_instance (id) ON DELETE CASCADE,
-        FOREIGN KEY (deliverable_id) REFERENCES workflow_etapes_deliverable (id),
+        FOREIGN KEY (deliverable_code) REFERENCES workflow_deliverables (code),
         FOREIGN KEY (produced_by_id) REFERENCES personnels (id)
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 

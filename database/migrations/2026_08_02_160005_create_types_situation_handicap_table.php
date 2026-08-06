@@ -9,8 +9,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('types_situation_handicap', function (Blueprint $table) {
-            $table->id();
-            $table->unsignedBigInteger('external_id')->unique();
+            $table->unsignedBigInteger('id')->primary();
             $table->string('code', 10)->nullable();
             $table->string('libelle', 100);
             $table->timestamp('synced_at')->nullable();

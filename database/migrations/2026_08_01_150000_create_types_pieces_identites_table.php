@@ -9,8 +9,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('types_pieces_identites', function (Blueprint $table) {
-            $table->id();
-            $table->unsignedBigInteger('external_id')->unique();
+            $table->unsignedBigInteger('id')->primary();
             $table->string('libelle');
             $table->text('description')->nullable();
             $table->boolean('actif')->default(true);

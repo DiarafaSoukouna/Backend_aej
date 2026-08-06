@@ -6,8 +6,9 @@ use Illuminate\Database\Eloquent\Model;
 
 class Pays extends Model
 {
+    protected $table = 'pays';
+
     protected $fillable = [
-        'external_id',
         'code_iso',
         'nom',
         'synced_at',
@@ -16,4 +17,7 @@ class Pays extends Model
     protected $casts = [
         'synced_at' => 'datetime',
     ];
+
+    public $incrementing = false;
+    protected $keyType = 'int';
 }

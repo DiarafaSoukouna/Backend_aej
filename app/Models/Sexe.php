@@ -6,8 +6,9 @@ use Illuminate\Database\Eloquent\Model;
 
 class Sexe extends Model
 {
+    protected $table = 'sexes';
+
     protected $fillable = [
-        'external_id',
         'libelle',
         'synced_at',
     ];
@@ -15,4 +16,7 @@ class Sexe extends Model
     protected $casts = [
         'synced_at' => 'datetime',
     ];
+
+    public $incrementing = false;
+    protected $keyType = 'int';
 }

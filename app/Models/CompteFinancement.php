@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class CompteFinancement extends Model
 {
+    public $timestamps = false;
+
     protected $fillable = [
         'organisme_id',
         'micro_projet_id',
@@ -22,7 +24,7 @@ class CompteFinancement extends Model
 
     public function organisme()
     {
-        return $this->belongsTo(Organisme::class, 'organisme_id');
+        return $this->belongsTo(OrganismeFinancement::class, 'organisme_id');
     }
 
     public function microProjet()

@@ -12,8 +12,8 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('promoteur_id')->nullable();
             $table->unsignedBigInteger('budget_id')->nullable();
-            $table->decimal('montant_paye', 18, 2)->nullable();
-            $table->date('date_paiement')->nullable();
+            $table->decimal('montant_declare', 18, 2)->nullable();
+            $table->date('date_declaree')->nullable();
             $table->string('reference_banque', 100)->nullable();
             $table->text('justificatif_path')->nullable();
             $table->text('observations')->nullable();

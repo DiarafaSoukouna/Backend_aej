@@ -9,7 +9,7 @@ class DecaissementsDeclaration extends Model
     protected $fillable = [
         'plan_id',
         'promoteur_id',
-        'montant',
+        'montant_declare',
         'date_declaree',
         'reference_banque',
         'justificatif_path',

@@ -1,9 +1,23 @@
 <?php
 
-namespace App\Constants;
+namespace Database\Factories;
 
-class Workflow
+use Illuminate\Database\Eloquent\Factories\Factory;
+
+class WorkflowFactory extends Factory
 {
+    protected $model = \App\Models\Workflow::class;
+
+    public function definition()
+    {
+        return [
+            'code' => $this->faker->unique()->randomElement(['AGR_CLASSIQUE', 'AGR_PLUS', 'MPE', 'MEPS', 'CAPITAL_INVEST', 'MENTORAT', 'PERMIS', 'STARTUP_BOOST']),
+            'name' => $this->faker->sentence(),
+            'description' => $this->faker->paragraph(),
+            'is_active' => true,
+        ];
+    }
+
     // Modèles de workflow disponibles
     const WorkflowModels = [
         'AGR_CLASSIQUE' => [
@@ -1335,45 +1349,54 @@ class Workflow
         ],
     ];
 
-    // const WorkflowEtapesTransition = [
-    //     'AGR_CLASSIQUE' => [
-    //         ['from' => "DOSSIER_RECUPERE", 'to' => "PLAN_AFFAIRES_AJOUTE"],
-    //         ['from' => "PLAN_AFFAIRES_AJOUTE", 'to' => "TRANSMIS_PARTENAIRE"],
-    //         ['from' => "TRANSMIS_PARTENAIRE", 'to' => "EN_ANALYSE_PARTENAIRE"],
-    //         ['from' => "EN_ANALYSE_PARTENAIRE", 'to' => "EN_DECAISSEMENT"],
-    //         ['from' => "EN_DECAISSEMENT", 'to' => "EN_REMBOURSEMENT"],
-    //         ['from' => "EN_REMBOURSEMENT", 'to' => "EN_SUIVI"],
-    //     ],
-    //     'MPE' => [
-    //         ['from' => "DOSSIER_RECUPERE", 'to' => "TRANSMIS_PARTENAIRE"],
-    //         ['from' => "TRANSMIS_PARTENAIRE", 'to' => "IMPUTE_AGENCE"],
-    //         ['from' => "IMPUTE_AGENCE", 'to' => "PLAN_DECAISSEMENT_SAISI"],
-    //         ['from' => "PLAN_DECAISSEMENT_SAISI", 'to' => "EN_VALIDATION_INTERNE"],
-    //         ['from' => "EN_VALIDATION_INTERNE", 'to' => "EN_ANALYSE_PARTENAIRE"],
-    //         ['from' => "EN_ANALYSE_PARTENAIRE", 'to' => "EN_DECAISSEMENT"],
-    //         ['from' => "EN_DECAISSEMENT", 'to' => "EN_REMBOURSEMENT"],
-    //         ['from' => "EN_REMBOURSEMENT", 'to' => "EN_SUIVI"],
-    //     ],
-    //     'MEPS' => [
-    //         ['from' => "DOSSIER_RECUPERE", 'to' => "TRANSMIS_PARTENAIRE"],
-    //         ['from' => "TRANSMIS_PARTENAIRE", 'to' => "IMPUTE_AGENCE"],
-    //         ['from' => "IMPUTE_AGENCE", 'to' => "PLAN_DECAISSEMENT_SAISI"],
-    //         ['from' => "PLAN_DECAISSEMENT_SAISI", 'to' => "EN_VALIDATION_INTERNE"],
-    //         ['from' => "EN_VALIDATION_INTERNE", 'to' => "EN_ANALYSE_PARTENAIRE"],
-    //         ['from' => "EN_ANALYSE_PARTENAIRE", 'to' => "EN_DECAISSEMENT"],
-    //         ['from' => "EN_DECAISSEMENT", 'to' => "EN_REMBOURSEMENT"],
-    //         ['from' => "EN_REMBOURSEMENT", 'to' => "EN_SUIVI"],
-    //     ],
-    //     'STARTUP_BOOST' => [
-    //         ['from' => "DOSSIER_RECUPERE", 'to' => "TRANSMIS_PARTENAIRE"],
-    //         ['from' => "TRANSMIS_PARTENAIRE", 'to' => "PLAN_DECAISSEMENT_SAISI"],
-    //         ['from' => "PLAN_DECAISSEMENT_SAISI", 'to' => "CONVENTION_PRET_AJOUTEE"],
-    //         ['from' => "CONVENTION_PRET_AJOUTEE", 'to' => "EN_VALIDATION_INTERNE"],
-    //         ['from' => "EN_VALIDATION_INTERNE", 'to' => "EN_ANALYSE_PARTENAIRE"],
-    //         ['from' => "EN_ANALYSE_PARTENAIRE", 'to' => "EN_DECAISSEMENT"],
-    //         ['from' => "EN_DECAISSEMENT", 'to' => "EN_REMBOURSEMENT"],
-    //         ['from' => "EN_REMBOURSEMENT", 'to' => "EN_SUIVI"],
-    //     ],
-    //     // AGR_PLUS, CAPITAL_INVEST, MENTORAT, PERMIS : non détaillés dans le document source.
-    // ];
+    // Méthodes pour créer les données
+    public static function getWorkflowRoles(): array
+    {
+        return self::WorkflowRoles;
+    }
+
+    public static function getWorkflowDecisionOutcomes(): array
+    {
+        return self::WorkflowDecisionOutcome;
+    }
+
+    public static function getWorkflowDeliverables(): array
+    {
+        return self::WorkflowDeliverables;
+    }
+
+    public static function getWorkflowModels(): array
+    {
+        return self::WorkflowModels;
+    }
+
+    public static function getWorkflowVersions(): array
+    {
+        return self::WorkflowVersion;
+    }
+
+    public static function getWorkflowEtapes(): array
+    {
+        return self::WorkflowEtapes;
+    }
+
+    public static function getWorkflowEtapesSla(): array
+    {
+        return self::WorkflowEtapesSla;
+    }
+
+    public static function getWorkflowEtapesRoles(): array
+    {
+        return self::WorkflowEtapesRoles;
+    }
+
+    public static function getWorkflowEtapesDecision(): array
+    {
+        return self::WorkflowEtapesDecision;
+    }
+
+    public static function getWorkflowEtapesDeliverable(): array
+    {
+        return self::WorkflowEtapesDeliverable;
+    }
 }

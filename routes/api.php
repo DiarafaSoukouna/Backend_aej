@@ -12,7 +12,6 @@ use App\Http\Controllers\PersonnelController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\TypeOrganismeController;
-use App\Http\Controllers\OrganismeController;
 use App\Http\Controllers\IndicateurController;
 use App\Http\Controllers\PromoteurController;
 use App\Http\Controllers\WorkflowController;
@@ -21,7 +20,6 @@ use App\Http\Controllers\WorkflowEtapeController;
 use App\Http\Controllers\WorkflowEtapeSlaController;
 use App\Http\Controllers\WorkflowEtapeDeliverableController;
 use App\Http\Controllers\WorkflowEtapeRoleController;
-use App\Http\Controllers\WorkflowEtapeTransitionController;
 use App\Http\Controllers\WorkflowEtapeDecisionController;
 use App\Http\Controllers\WorkflowDecisionOutcomeController;
 use App\Http\Controllers\WorkflowRoleController;
@@ -41,22 +39,42 @@ use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\PlanDecaissementController;
 use App\Http\Controllers\DecaissementController;
 use App\Http\Controllers\RemboursementsDeclarationController;
-use App\Http\Controllers\DecaissementsDeclarationController;
-use App\Http\Controllers\MicroProjetController;  
+use App\Http\Controllers\DecaissementsDeclarationController; 
 use App\Http\Controllers\FormulaireEvaluationController;
 use App\Http\Controllers\EvaluationController;
 
+use App\Http\Controllers\MicroProjetController;
+use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\OrganismeFinancementController;
+use App\Http\Controllers\WorkflowInstanceController;
+use App\Http\Controllers\WorkflowInstanceHistoryController;
+use App\Http\Controllers\WorkflowInstanceDeliverableController;
+use App\Http\Controllers\WorkflowInstanceCommentController;
+use App\Http\Controllers\EntrepriseController;
+use App\Http\Controllers\ProjetController;
+use App\Http\Controllers\ZoneInterventionController;
+use App\Http\Controllers\GuichetController;
+use App\Http\Controllers\DispositifController;
+use App\Http\Controllers\ExploitationController;
+use App\Http\Controllers\VisitePhotoController;
+use App\Http\Controllers\EmbaucheController;
 
+// Paramètres
+Route::apiResource('configurations', ConfigurationController::class);
+Route::patch('/configurations', [ConfigurationController::class, 'patch']);
+// Route::apiResource('niveau-localites', NiveauLocaliteController::class); 
+// Route::get('localites/niveau/{niveauId}', [LocaliteController::class, 'getLocalitesByNiveau']); 
+// Route::apiResource('localites', LocaliteController::class); 
 Route::apiResource('directions', DirectionController::class);
 Route::apiResource('services', ServiceController::class);
 Route::apiResource('fonctions', FonctionController::class);
-Route::apiResource('niveau-localites', NiveauLocaliteController::class);
 Route::apiResource('type-entreprises', TypeEntrepriseController::class);
-Route::get('localites/niveau/{niveauId}', [LocaliteController::class, 'getLocalitesByNiveau']);
-Route::apiResource('localites', LocaliteController::class);
-Route::apiResource('configurations', ConfigurationController::class);
-Route::patch('/configurations', [ConfigurationController::class, 'patch']);
+Route::apiResource('type-organismes', TypeOrganismeController::class);
 Route::apiResource('type-emplois', TypeEmploiController::class);
+
+// Gestion des utilisateurs
+Route::apiResource('permissions', PermissionController::class);
+Route::apiResource('roles', RoleController::class);
 Route::apiResource('personnels', PersonnelController::class);
 Route::put('personnels/updatePassword/{id}', [PersonnelController::class, 'updatePassword']);
 Route::get('promoteurs', [PromoteurController::class, 'index']);
@@ -65,18 +83,25 @@ Route::get('promoteurs/{id}', [PromoteurController::class, 'show']);
 Route::get('projets', [MicroProjetController::class, 'index']);
 Route::get('projets/{id}', [MicroProjetController::class, 'show']);
 Route::post('projets/filter', [MicroProjetController::class, 'filter']);
+Route::apiResource('notifications', NotificationController::class);
+Route::put('notifications/{id}/mark-read', [NotificationController::class, 'markAsRead']);
+Route::get('notifications/personnel/{personnelId}', [NotificationController::class, 'getByPersonnel']);
+
+// Authentification
 Route::middleware('web')->group(function () {
     Route::post('personnels/login', [PersonnelController::class, 'auth']);
     Route::post('personnels/logout', [PersonnelController::class, 'logout']);
     Route::post('auth/refresh', [PersonnelController::class, 'refresh']);
     Route::get('/personnel/me', [PersonnelController::class, 'me']);
-
 });
 
-Route::apiResource('permissions', PermissionController::class);
-Route::apiResource('roles', RoleController::class);
-Route::apiResource('type-organismes', TypeOrganismeController::class);
-Route::apiResource('organismes', OrganismeController::class);
+// Entreprises & Projets
+Route::apiResource('mega-projets', ProjetController::class);
+Route::apiResource('zones-intervention', ZoneInterventionController::class);
+Route::apiResource('dispositifs', DispositifController::class);
+Route::apiResource('guichets', GuichetController::class);
+
+// Promoteurs
 Route::get('promoteurs', [PromoteurController::class, 'index']);
 Route::get('promoteurs/{id}', [PromoteurController::class, 'show']);
 Route::post('promoteurs/filter', [PromoteurController::class, 'filter']);
@@ -86,8 +111,11 @@ Route::get('/formulaires-evaluation/{formulaireEvaluation}',[FormulaireEvaluatio
 Route::apiResource('evaluations', EvaluationController::class);
 Route::post('evaluations/{evaluation}/responses', [EvaluationController::class, 'addResponse']);
 Route::get('evaluations/{evaluation}/responses', [EvaluationController::class, 'responses']);
+Route::get('projets', [MicroProjetController::class, 'index']);
+Route::get('projets/{id}', [MicroProjetController::class, 'show']);
+Route::post('projets/filter', [MicroProjetController::class, 'filter']);
 
-// Workflow routes
+// Workflow
 Route::prefix('workflow')->group(function () {
     Route::apiResource('models', WorkflowController::class);
     Route::apiResource('versions', WorkflowVersionController::class);
@@ -99,15 +127,31 @@ Route::prefix('workflow')->group(function () {
     Route::apiResource('etape-deliverables', WorkflowEtapeDeliverableController::class);
     Route::apiResource('etape-roles', WorkflowEtapeRoleController::class);
     Route::apiResource('etape-decisions', WorkflowEtapeDecisionController::class);
-    // Route::apiResource('etape-transitions', WorkflowEtapeTransitionController::class);
+});
+
+// Workflow Instances
+Route::prefix('workflow-instances')->group(function () {
+    Route::apiResource('instances', WorkflowInstanceController::class);
+    Route::apiResource('histories', WorkflowInstanceHistoryController::class);
+    Route::apiResource('deliverables', WorkflowInstanceDeliverableController::class);
+    Route::apiResource('comments', WorkflowInstanceCommentController::class);
 });
 
 // Suivis & Indicateurs
 Route::apiResource('suivis', SuiviController::class);
 Route::apiResource('indicateurs', IndicateurController::class);
 Route::apiResource('indicateur-suivis', IndicateurSuiviController::class);
+Route::apiResource('exploitations', ExploitationController::class);
+Route::apiResource('visite-photos', VisitePhotoController::class);
+Route::apiResource('entreprises', EntrepriseController::class);
+Route::apiResource('embauches', EmbaucheController::class);
+Route::apiResource('observations', ObservationController::class);
+Route::apiResource('documents', DocumentController::class);
 
-// Finances routes
+// Finances
+Route::apiResource('organismes', OrganismeFinancementController::class);
+Route::get('organismes/region/{regionId}', [OrganismeFinancementController::class, 'getByRegion']);
+Route::get('organismes/type/{typeId}', [OrganismeFinancementController::class, 'getByType']);
 Route::apiResource('budgets', BudgetController::class);
 Route::apiResource('compte-financements', CompteFinancementController::class);
 Route::apiResource('plan-decaissements', PlanDecaissementController::class);
@@ -120,11 +164,7 @@ Route::apiResource('categories-transactions', CategorieTransactionController::cl
 Route::get('balance-comptable', [BalanceComptableController::class, 'index']);
 Route::get('balance-comptable/micro-projet/{microProjetId}', [BalanceComptableController::class, 'byMicroProjet']);
 
-// Autres routes
-Route::apiResource('observations', ObservationController::class);
-Route::apiResource('documents', DocumentController::class);
-
-// AEJ API Routes
+// AEJ API
 Route::prefix('aej')->group(function () {
     Route::get('types-pieces-identites', [AejApiController::class, 'getTypesPiecesIdentites']);
     Route::get('situations-matrimoniale', [AejApiController::class, 'getSituationsMatrimoniale']);

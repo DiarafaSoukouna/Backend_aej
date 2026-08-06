@@ -12,7 +12,7 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('plan_id');
             $table->unsignedBigInteger('promoteur_id');
-            $table->decimal('montant', 18, 2);
+            $table->decimal('montant_declare', 18, 2);
             $table->date('date_declaree')->nullable();
             $table->string('reference_banque', 100)->nullable();
             $table->text('justificatif_path')->nullable();
