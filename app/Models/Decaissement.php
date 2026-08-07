@@ -8,6 +8,7 @@ class Decaissement extends Model
 {
     protected $fillable = [
         'plan_id',
+        'agence_id',
         'montant_decaisse',
         'date_decaissement',
         'reference_banque',
@@ -23,5 +24,10 @@ class Decaissement extends Model
     public function plan()
     {
         return $this->belongsTo(PlanDecaissement::class, 'plan_id');
+    }
+
+    public function agence()
+    {
+        return $this->belongsTo(AgenceRegionale::class, 'agence_id');
     }
 }

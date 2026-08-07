@@ -9,7 +9,6 @@ class TypeSituationHandicap extends Model
     protected $table = 'types_situation_handicap';
 
     protected $fillable = [
-        'code',
         'libelle',
         'synced_at',
     ];
