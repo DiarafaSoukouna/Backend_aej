@@ -11,7 +11,7 @@ class DecaissementsDeclarationController extends Controller
 {
     public function index(): JsonResponse
     {
-        $declarations = DecaissementsDeclaration::with(['plan', 'promoteur'])->get();
+        $declarations = DecaissementsDeclaration::with(['planDecaissement', 'ligneDecaissement', 'promoteur'])->get();
         return new JsonResponse([
             'message' => 'Déclarations de décaissement retrieved successfully',
             'data' => $declarations
@@ -21,14 +21,15 @@ class DecaissementsDeclarationController extends Controller
     public function store(Request $request): JsonResponse
     {
         $validation = Validator::make($request->all(), [
-            'plan_id' => 'required|exists:plan_decaissements,id',
-            'promoteur_id' => 'required|exists:promoteurs,id',
-            'montant_declare' => 'required|numeric',
-            'date_declaree' => 'required|date',
+            'plan_decaissement_id' => 'nullable|exists:plan_decaissements,id',
+            'ligne_decaissement_id' => 'nullable|exists:ligne_decaissements,id',
+            'promoteur_id' => 'nullable|exists:promoteurs,id',
+            'montant_declare' => 'nullable|numeric',
+            'date_declaree' => 'nullable|date',
             'reference_banque' => 'nullable|string|max:100',
             'justificatif_path' => 'nullable|string',
             'observations' => 'nullable|string',
-            'statut' => 'required|in:BROUILLON,SOUMIS,TRAITE',
+            'statut' => 'nullable|in:BROUILLON,SOUMIS,TRAITE',
         ]);
 
         if ($validation->fails()) {
@@ -54,7 +55,7 @@ class DecaissementsDeclarationController extends Controller
 
     public function show($id): JsonResponse
     {
-        $declaration = DecaissementsDeclaration::with(['plan', 'promoteur'])->find($id);
+        $declaration = DecaissementsDeclaration::with(['planDecaissement', 'ligneDecaissement', 'promoteur'])->find($id);
         if (!$declaration) {
             return new JsonResponse(['Message' => 'Déclaration de décaissement not found'], 404);
         }
@@ -72,14 +73,15 @@ class DecaissementsDeclarationController extends Controller
         }
 
         $validation = Validator::make($request->all(), [
-            'plan_id' => 'sometimes|required|exists:plan_decaissements,id',
-            'promoteur_id' => 'sometimes|required|exists:promoteurs,id',
-            'montant_declare' => 'sometimes|required|numeric',
-            'date_declaree' => 'sometimes|required|date',
+            'plan_decaissement_id' => 'nullable|exists:plan_decaissements,id',
+            'ligne_decaissement_id' => 'nullable|exists:ligne_decaissements,id',
+            'promoteur_id' => 'nullable|exists:promoteurs,id',
+            'montant_declare' => 'nullable|numeric',
+            'date_declaree' => 'nullable|date',
             'reference_banque' => 'nullable|string|max:100',
             'justificatif_path' => 'nullable|string',
             'observations' => 'nullable|string',
-            'statut' => 'sometimes|required|in:BROUILLON,SOUMIS,TRAITE',
+            'statut' => 'nullable|in:BROUILLON,SOUMIS,TRAITE',
         ]);
 
         if ($validation->fails()) {

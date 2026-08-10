@@ -55,6 +55,10 @@ use App\Http\Controllers\DispositifController;
 use App\Http\Controllers\ExploitationController;
 use App\Http\Controllers\VisitePhotoController;
 use App\Http\Controllers\EmbaucheController;
+use App\Http\Controllers\LotTransmissionController;
+use App\Http\Controllers\LigneDecaissementController;
+use App\Http\Controllers\PlanRemboursementController;
+use App\Http\Controllers\RecouvrementController;
 
 // Paramètres
 Route::apiResource('configurations', ConfigurationController::class);
@@ -141,6 +145,10 @@ Route::get('organismes/type/{typeId}', [OrganismeFinancementController::class, '
 Route::apiResource('budgets', BudgetController::class);
 Route::apiResource('compte-financements', CompteFinancementController::class);
 Route::apiResource('plan-decaissements', PlanDecaissementController::class);
+Route::apiResource('plan-remboursements', PlanRemboursementController::class);
+Route::apiResource('lots-transmission', LotTransmissionController::class);
+Route::apiResource('ligne-decaissements', LigneDecaissementController::class);
+Route::apiResource('recouvrements', RecouvrementController::class);
 Route::apiResource('decaissements', DecaissementController::class);
 Route::apiResource('decaissements-declarations', DecaissementsDeclarationController::class);
 Route::apiResource('remboursements', RemboursementController::class);

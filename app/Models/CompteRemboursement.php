@@ -4,8 +4,10 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class BudgetsRemboursement extends Model
+class CompteRemboursement extends Model
 {
+    protected $table = 'compte_remboursements';
+
     protected $fillable = [
         'budget_id',
         'montant_remboursement',

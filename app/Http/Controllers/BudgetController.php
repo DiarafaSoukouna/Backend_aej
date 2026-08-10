@@ -11,13 +11,13 @@ class BudgetController extends Controller
 {
     public function index(): JsonResponse
     {
-        $budgets = Budget::with(['microProjet', 'validePar', 'budgetsRemboursement', 'remboursements', 'planDecaissements'])->get();
+        $budgets = Budget::with(['microProjet', 'validePar', 'planDecaissements', 'compteRemboursement', 'remboursements'])->get();
         return new JsonResponse(['Message' => 'Budget list retrieved successfully', 'data' => $budgets], 200);
     }
 
     public function show($id): JsonResponse
     {
-        $budget = Budget::with(['microProjet', 'validePar', 'budgetsRemboursement', 'remboursements', 'planDecaissements'])->find($id);
+        $budget = Budget::with(['microProjet', 'validePar', 'planDecaissements', 'compteRemboursement', 'remboursements'])->find($id);
         if (!$budget) {
             return new JsonResponse(['Message' => 'Budget not found'], 404);
         }

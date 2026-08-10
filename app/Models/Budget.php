@@ -43,18 +43,23 @@ class Budget extends Model
         return $this->belongsTo(Personnel::class, 'valide_par');
     }
 
-    public function budgetsRemboursement()
+    public function planDecaissements()
     {
-        return $this->hasOne(BudgetsRemboursement::class);
+        return $this->hasMany(PlanDecaissement::class);
+    }
+
+    public function decaissements()
+    {
+        return $this->hasMany(Decaissement::class);
+    }
+
+    public function compteRemboursement()
+    {
+        return $this->hasOne(CompteRemboursement::class);
     }
 
     public function remboursements()
     {
         return $this->hasMany(Remboursement::class);
-    }
-
-    public function planDecaissements()
-    {
-        return $this->hasMany(PlanDecaissement::class);
     }
 }

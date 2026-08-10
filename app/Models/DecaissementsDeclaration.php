@@ -7,7 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 class DecaissementsDeclaration extends Model
 {
     protected $fillable = [
-        'plan_id',
+        'plan_decaissement_id',
+        'ligne_decaissement_id',
         'promoteur_id',
         'montant_declare',
         'date_declaree',
@@ -21,9 +22,14 @@ class DecaissementsDeclaration extends Model
         'date_declaree' => 'date',
     ];
 
-    public function plan()
+    public function planDecaissement()
     {
-        return $this->belongsTo(PlanDecaissement::class, 'plan_id');
+        return $this->belongsTo(PlanDecaissement::class, 'plan_decaissement_id');
+    }
+
+    public function ligneDecaissement()
+    {
+        return $this->belongsTo(LigneDecaissement::class, 'ligne_decaissement_id');
     }
 
     public function promoteur()

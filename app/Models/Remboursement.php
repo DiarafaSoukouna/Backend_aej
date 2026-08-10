@@ -7,13 +7,13 @@ use Illuminate\Database\Eloquent\Model;
 class Remboursement extends Model
 {
     protected $fillable = [
+        'plan_remboursement_id',
         'promoteur_id',
-        'budget_id',
         'montant_echu',
         'montant_paye',
         'montant_impaye',
-        'date_paiement',
         'penalites',
+        'date_paiement',
         'observations',
         'statut',
     ];
@@ -23,15 +23,16 @@ class Remboursement extends Model
         'montant_paye' => 'decimal:2',
         'montant_impaye' => 'decimal:2',
         'penalites' => 'decimal:2',
+        'date_paiement' => 'date',
     ];
+
+    public function planRemboursement()
+    {
+        return $this->belongsTo(PlanRemboursement::class, 'plan_remboursement_id');
+    }
 
     public function promoteur()
     {
-        return $this->belongsTo(Promoteur::class);
-    }
-
-    public function budget()
-    {
-        return $this->belongsTo(Budget::class);
+        return $this->belongsTo(Promoteur::class, 'promoteur_id');
     }
 }

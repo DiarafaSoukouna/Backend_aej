@@ -11,7 +11,7 @@ class RemboursementsDeclarationController extends Controller
 {
     public function index(): JsonResponse
     {
-        $declarations = RemboursementsDeclaration::with(['promoteur', 'budget'])->get();
+        $declarations = RemboursementsDeclaration::with(['planRemboursement', 'promoteur'])->get();
         return new JsonResponse([
             'message' => 'Declarations retrieved successfully',
             'data' => $declarations
@@ -21,14 +21,14 @@ class RemboursementsDeclarationController extends Controller
     public function store(Request $request): JsonResponse
     {
         $validation = Validator::make($request->all(), [
-            'promoteur_id' => 'required|exists:promoteurs,id',
-            'budget_id' => 'nullable|exists:budgets,id',
-            'montant_declare' => 'required|numeric',
-            'date_declaree' => 'required|date',
+            'plan_remboursement_id' => 'nullable|exists:plan_remboursements,id',
+            'promoteur_id' => 'nullable|exists:promoteurs,id',
+            'montant_declare' => 'nullable|numeric',
+            'date_declaree' => 'nullable|date',
             'reference_banque' => 'nullable|string|max:100',
             'justificatif_path' => 'nullable|string',
             'observations' => 'nullable|string',
-            'statut' => 'required|in:BROUILLON,SOUMIS,TRAITE',
+            'statut' => 'nullable|in:BROUILLON,SOUMIS,TRAITE',
         ]);
 
         if ($validation->fails()) {
@@ -54,7 +54,7 @@ class RemboursementsDeclarationController extends Controller
 
     public function show($id): JsonResponse
     {
-        $declaration = RemboursementsDeclaration::with(['promoteur', 'budget'])->find($id);
+        $declaration = RemboursementsDeclaration::with(['planRemboursement', 'promoteur'])->find($id);
         if (!$declaration) {
             return new JsonResponse(['Message' => 'Declaration not found'], 404);
         }
@@ -72,14 +72,14 @@ class RemboursementsDeclarationController extends Controller
         }
 
         $validation = Validator::make($request->all(), [
-            'promoteur_id' => 'sometimes|required|exists:promoteurs,id',
-            'budget_id' => 'nullable|sometimes|exists:budgets,id',
-            'montant_declare' => 'sometimes|required|numeric',
-            'date_declaree' => 'sometimes|required|date',
+            'plan_remboursement_id' => 'nullable|exists:plan_remboursements,id',
+            'promoteur_id' => 'nullable|exists:promoteurs,id',
+            'montant_declare' => 'nullable|numeric',
+            'date_declaree' => 'nullable|date',
             'reference_banque' => 'nullable|string|max:100',
             'justificatif_path' => 'nullable|string',
             'observations' => 'nullable|string',
-            'statut' => 'sometimes|required|in:BROUILLON,SOUMIS,TRAITE',
+            'statut' => 'nullable|in:BROUILLON,SOUMIS,TRAITE',
         ]);
 
         if ($validation->fails()) {

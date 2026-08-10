@@ -10,8 +10,8 @@ return new class extends Migration
     {
         Schema::create('remboursements', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('plan_remboursement_id')->nullable();
             $table->unsignedBigInteger('promoteur_id')->nullable();
-            $table->unsignedBigInteger('budget_id')->nullable();
             $table->decimal('montant_echu', 18, 2)->nullable();
             $table->decimal('montant_paye', 18, 2)->nullable();
             $table->decimal('montant_impaye', 18, 2)->nullable();
@@ -20,9 +20,9 @@ return new class extends Migration
             $table->text('observations')->nullable();
             $table->enum('statut', ['EN_ATTENTE', 'PAYE', 'PARTIEL', 'NON_PAYE'])->default('NON_PAYE');
             $table->timestamps();
-            
+
             $table->foreign('promoteur_id')->references('id')->on('promoteurs')->onDelete('cascade');
-            $table->foreign('budget_id')->references('id')->on('budgets')->onDelete('cascade');
+            $table->foreign('plan_remboursement_id')->references('id')->on('plan_remboursements')->onDelete('cascade');
         });
     }
 
