@@ -9,7 +9,6 @@ use Illuminate\Support\Facades\Validator;
 
 class EvaluationController extends Controller
 {
-  
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -45,17 +44,19 @@ class EvaluationController extends Controller
         return response()->json($evaluations);
     }
 
-
-    public function show(Evaluation $evaluation)
+    public function show($id)
     {
+        $evaluation = Evaluation::findOrFail($id);
+
         return response()->json([
             'data' => $evaluation->load('formulaire'),
         ]);
     }
 
-   
-    public function addResponse(Request $request, Evaluation $evaluation)
+    public function addResponse(Request $request, $id)
     {
+        $evaluation = Evaluation::findOrFail($id);
+
         $validator = Validator::make($request->all(), [
             'reponses' => ['required', 'array', 'min:1'],
             'reponses.*.question_id' => [
@@ -104,8 +105,10 @@ class EvaluationController extends Controller
         ], 201);
     }
 
-    public function responses(Evaluation $evaluation)
+    public function responses($id)
     {
+        $evaluation = Evaluation::findOrFail($id);
+
         return response()->json([
             'data' => $evaluation->reponses()->with('question')->get(),
         ]);

@@ -85,16 +85,18 @@ class FormulaireEvaluationController extends Controller
     }
 
   
-    public function show(FormulaireEvaluation $formulaireEvaluation)
+    public function show($id)
     {
+        $formulaireEvaluation = FormulaireEvaluation::findOrFail($id);
         return response()->json([
             'data' => $formulaireEvaluation->load('questions'),
         ]);
     }
 
-  
-    public function update(Request $request, FormulaireEvaluation $formulaireEvaluation)
+    public function update(Request $request, $id)
     {
+        $formulaireEvaluation = FormulaireEvaluation::findOrFail($id);
+
         $validator = Validator::make($request->all(), [
             'code' => [
                 'sometimes', 'string', 'max:50',
@@ -104,7 +106,11 @@ class FormulaireEvaluationController extends Controller
             'public_cible' => ['sometimes', 'string', 'max:50'],
             'actif' => ['sometimes', 'boolean'],
             'questions' => ['sometimes', 'array', 'min:1'],
-            'questions.*.id' => ['nullable', 'integer', 'exists:questions_evaluation,id'],
+            'questions.*.id' => [
+                'nullable',
+                'integer',
+                Rule::exists('question_evaluations', 'id')->where('formulaire_id', $formulaireEvaluation->id),
+            ],
             'questions.*.code' => ['required_with:questions', 'string', 'max:50', 'distinct'],
             'questions.*.libelle' => ['required_with:questions', 'string'],
             'questions.*.type_question' => ['required_with:questions', 'in:number,select,text,textarea,date,boolean'],
@@ -143,17 +149,15 @@ class FormulaireEvaluationController extends Controller
 
                 foreach ($validated['questions'] as $index => $question) {
                     if (isset($question['id'])) {
-                        $formulaireEvaluation->questions()
-                            ->where('id', $question['id'])
-                            ->update([
-                                'code' => $question['code'],
-                                'libelle' => $question['libelle'],
-                                'type_question' => $question['type_question'],
-                                'options' => $question['options'] ?? null,
-                                'ordre' => $question['ordre'] ?? $index,
-                                'affichage' => $question['affichage'] ?? null,
-                                'obligatoire' => $question['obligatoire'] ?? true,
-                            ]);
+                        $formulaireEvaluation->questions()->findOrFail($question['id'])->update([
+                            'code' => $question['code'],
+                            'libelle' => $question['libelle'],
+                            'type_question' => $question['type_question'],
+                            'options' => $question['options'] ?? null,
+                            'ordre' => $question['ordre'] ?? $index,
+                            'affichage' => $question['affichage'] ?? null,
+                            'obligatoire' => $question['obligatoire'] ?? true,
+                        ]);
                     } else {
                         $formulaireEvaluation->questions()->create([
                             'code' => $question['code'],
@@ -177,8 +181,9 @@ class FormulaireEvaluationController extends Controller
         ]);
     }
 
-    public function destroy(FormulaireEvaluation $formulaireEvaluation)
+    public function destroy($id)
     {
+        $formulaireEvaluation = FormulaireEvaluation::findOrFail($id);
         $formulaireEvaluation->delete();
 
         return response()->json([

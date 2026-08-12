@@ -14,12 +14,12 @@ class ProjetSeeder extends Seeder
 
         // Vérifier qu'il existe bien 10 000 promoteurs
         $promoteurIds = DB::table('promoteurs')
-            ->whereBetween('id', [1, 10000])
+            ->whereBetween('id', [1, 100000])
             ->orderBy('id')
             ->pluck('id')
             ->toArray();
 
-        if (count($promoteurIds) < 10000) {
+        if (count($promoteurIds) < 100000) {
             throw new \Exception(
                 'Il faut au moins 10 000 promoteurs dans la table promoteurs.'
             );
@@ -119,7 +119,7 @@ class ProjetSeeder extends Seeder
 
         $projets = [];
 
-        for ($i = 0; $i < 10000; $i++) {
+        for ($i = 0; $i < 100000; $i++) {
 
             // Un promoteur différent pour chaque projet
             $promoteurId = $promoteurIds[$i];

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Promoteur;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Http;
 
 class PromoteurController extends Controller
 {
@@ -16,6 +17,8 @@ class PromoteurController extends Controller
 
         return response()->json($promoteurs);
     }
+
+
     public function show(Request $request, $id)
     {
         $promoteur = Promoteur::with(['microProjets' => function ($query) use ($request) {
@@ -105,6 +108,7 @@ class PromoteurController extends Controller
         $filters = [
             'tranche_age',
             'sexe_id',
+            'lieuhabitation_id',
             'agenceregionale_id',
             'secteuractivite_id',
             'soussecteuractivite_id',
@@ -113,6 +117,7 @@ class PromoteurController extends Controller
             'typepieceidentite_id',
             'paysnationalite_id',
             'situationmatrimoniale_id',
+            'typesituationhandicap_id',
             'handicap'
         ];
 
@@ -122,9 +127,104 @@ class PromoteurController extends Controller
             }
         }
 
-        $perPage = $request->get('per_page', 15);
+        $promoteurs = $query->paginate($request->get('per_page', 15));
 
-        return response()->json($query->paginate($perPage));
+        // Les référentiels ne sont pas dans ce projet : on les récupère via leurs APIs.
+        $apiBase = 'https://apis.aej-ci.net/public/api/aej/';
+
+        $references = [
+            'sexe' => [
+                'url' => $apiBase . 'sexes',
+                'field' => 'libelle'
+            ],
+            'lieuhabitation' => [
+                'url' => $apiBase . 'lieu-habitations',
+                'field' => 'nom'
+            ],
+            'typepieceidentite' => [
+                'url' => $apiBase . 'types-pieces-identites',
+                'field' => 'libelle'
+            ],
+            'niveauetude' => [
+                'url' => $apiBase . 'niveaux-etudes',
+                'field' => 'libelle'
+            ],
+            'paysnationalite' => [
+                'url' => $apiBase . 'pays',
+                'field' => 'nom'
+            ],
+            'typesituationhandicap' => [
+                'url' => $apiBase . 'situations-handicaps',
+                'field' => 'libelle'
+            ],
+            'situationmatrimoniale' => [
+                'url' => $apiBase . 'situations-matrimoniales',
+                'field' => 'libelle'
+            ],
+            'secteuractivite' => [
+                'url' => $apiBase . 'secteurs',
+                'field' => 'nom'
+            ],
+            'soussecteuractivite' => [
+                'url' => $apiBase . 'sous-secteurs',
+                'field' => 'nom'
+            ],
+            'agenceregionale' => [
+                'url' => $apiBase . 'agences-regionales',
+                'field' => 'nom'
+            ],
+        ];
+
+        $maps = [];
+
+        foreach ($references as $key => $reference) {
+            $response = Http::timeout(10)->get($reference['url']);
+
+            if ($response->successful()) {
+                $data = $response->json();
+
+                // Gestion d'une réponse paginée ou d'un tableau direct.
+                $items = $data['data'] ?? $data;
+
+                $maps[$key] = collect($items)->mapWithKeys(function ($item) use ($reference) {
+                    return [
+                        $item['id'] => $item[$reference['field']] ?? null
+                    ];
+                })->toArray();
+            } else {
+                $maps[$key] = [];
+            }
+        }
+
+        $promoteurs->getCollection()->transform(function ($promoteur) use ($maps) {
+            $promoteur->sexe = $maps['sexe'][$promoteur->sexe_id] ?? null;
+            $promoteur->lieuhabitation = $maps['lieuhabitation'][$promoteur->lieuhabitation_id] ?? null;
+            $promoteur->typepieceidentite = $maps['typepieceidentite'][$promoteur->typepieceidentite_id] ?? null;
+            $promoteur->niveauetude = $maps['niveauetude'][$promoteur->niveauetude_id] ?? null;
+            $promoteur->paysnationalite = $maps['paysnationalite'][$promoteur->paysnationalite_id] ?? null;
+            $promoteur->typesituationhandicap = $maps['typesituationhandicap'][$promoteur->typesituationhandicap_id] ?? null;
+            $promoteur->situationmatrimoniale = $maps['situationmatrimoniale'][$promoteur->situationmatrimoniale_id] ?? null;
+            $promoteur->secteuractivite = $maps['secteuractivite'][$promoteur->secteuractivite_id] ?? null;
+            $promoteur->soussecteuractivite = $maps['soussecteuractivite'][$promoteur->soussecteuractivite_id] ?? null;
+            $promoteur->agenceregionale = $maps['agenceregionale'][$promoteur->agenceregionale_id] ?? null;
+
+            unset(
+                $promoteur->sexe_id,
+                $promoteur->lieuhabitation_id,
+                $promoteur->typepieceidentite_id,
+                $promoteur->niveauetude_id,
+                $promoteur->paysnationalite_id,
+                $promoteur->typesituationhandicap_id,
+                $promoteur->situationmatrimoniale_id,
+                $promoteur->secteuractivite_id,
+                $promoteur->soussecteuractivite_id,
+                $promoteur->agenceregionale_id
+            );
+
+            return $promoteur;
+        });
+
+        return response()->json($promoteurs);
     }
     public function exportCsv()
 {

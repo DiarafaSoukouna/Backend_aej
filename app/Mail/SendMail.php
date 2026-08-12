@@ -25,7 +25,7 @@ class SendMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            from: new Address('infos@sim-prix.net', 'Informations SIM'),
+            from: new Address('alerte@aej-ci.net', 'Informations SIM'),
             subject: $this->subjectText,
         );
     }

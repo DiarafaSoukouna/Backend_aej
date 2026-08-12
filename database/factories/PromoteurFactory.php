@@ -83,7 +83,7 @@ class PromoteurFactory extends Factory
         $nomDeLaMere = fake()->randomElement($this->prenomsFemmes) . ' ' . fake()->randomElement($this->noms);
 
         $email = Str::slug($prenom . '.' . $nom)
-            . fake()->unique()->numberBetween(10, 99999)
+            . fake()->unique()->numberBetween(10, 999999)
             . '@gmail.com';
 
         return [

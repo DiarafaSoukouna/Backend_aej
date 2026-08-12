@@ -110,10 +110,9 @@ Route::get('projets', [MicroProjetController::class, 'index']);
 Route::get('projets/{id}', [MicroProjetController::class, 'show']);
 Route::post('projets/filter', [MicroProjetController::class, 'filter']);
 Route::apiResource('formulaires-evaluation', FormulaireEvaluationController::class);
-Route::get('/formulaires-evaluation/{formulaireEvaluation}',[FormulaireEvaluationController::class, 'show']);
 Route::apiResource('evaluations', EvaluationController::class);
-Route::post('evaluations/{evaluation}/responses', [EvaluationController::class, 'addResponse']);
-Route::get('evaluations/{evaluation}/responses', [EvaluationController::class, 'responses']);
+Route::post('evaluations/{id}/responses', [EvaluationController::class, 'addResponse']);
+Route::get('evaluations/{id}/responses', [EvaluationController::class, 'responses']);
 
 // Workflow
 Route::prefix('workflow')->group(function () {

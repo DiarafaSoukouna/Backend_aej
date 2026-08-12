@@ -15,7 +15,7 @@ class PromoteurSeeder extends Seeder
     {
         Promoteur::factory()
 
-        ->count(10000)
+        ->count(100000)
 
         ->create();
     }

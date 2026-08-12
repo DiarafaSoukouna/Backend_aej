@@ -17,6 +17,8 @@ class Personnel extends Authenticatable
         'telephone',
         'adresse',
         'role_id',
+        'organisme_id',
+        'agence_regionale_id',
         'is_active',
         'fonction_id',
         'mot_de_passe',

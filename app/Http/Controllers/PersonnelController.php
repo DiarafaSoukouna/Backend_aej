@@ -40,6 +40,8 @@ class PersonnelController extends Controller
         'role_id' => 'required|exists:roles,id',
         'is_active' => 'boolean',
         'fonction_id' => 'required|exists:fonctions,id',
+        'organisme_id' => 'nullable|exists:organismes,id',
+        'agence_regionale_id' => 'nullable|exists:agences_regionales,id'
     ]);
 
     if ($validation->fails()) {
@@ -83,6 +85,8 @@ class PersonnelController extends Controller
                         C'est bien cet e-mail et ce mot de passe qui vous permettront de vous connecter :<br><br>
                         <strong>Email :</strong> {$personnel->email}<br>
                         <strong>Mot de passe :</strong> {$motDePasseGenere}
+                      
+
                     </p>
                 </div>
 
@@ -135,6 +139,8 @@ public function update(Request $request, $id): JsonResponse
         'role_id' => 'sometimes|required|exists:roles,id',
         'is_active' => 'boolean',
         'fonction_id' => 'sometimes|required|exists:fonctions,id',
+        'organisme_id' => 'nullable|exists:organismes,id',
+        'agence_regionale_id' => 'nullable|exists:agences_regionales,id'
     ]);
 
     if ($validation->fails()) {
