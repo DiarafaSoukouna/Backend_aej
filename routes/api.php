@@ -39,7 +39,10 @@ use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\PlanDecaissementController;
 use App\Http\Controllers\DecaissementController;
 use App\Http\Controllers\RemboursementsDeclarationController;
-use App\Http\Controllers\DecaissementsDeclarationController;
+use App\Http\Controllers\DecaissementsDeclarationController; 
+use App\Http\Controllers\FormulaireEvaluationController;
+use App\Http\Controllers\EvaluationController;
+
 use App\Http\Controllers\MicroProjetController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OrganismeFinancementController;
@@ -55,8 +58,6 @@ use App\Http\Controllers\DispositifController;
 use App\Http\Controllers\ExploitationController;
 use App\Http\Controllers\VisitePhotoController;
 use App\Http\Controllers\EmbaucheController;
-use App\Http\Controllers\FormulaireEvaluationController;
-use App\Http\Controllers\EvaluationController;
 
 
 // Paramètres
@@ -77,6 +78,12 @@ Route::apiResource('permissions', PermissionController::class);
 Route::apiResource('roles', RoleController::class);
 Route::apiResource('personnels', PersonnelController::class);
 Route::put('personnels/updatePassword/{id}', [PersonnelController::class, 'updatePassword']);
+Route::get('promoteurs', [PromoteurController::class, 'index']);
+Route::get('/promoteurs/export', [PromoteurController::class, 'exportCsv']);
+Route::get('promoteurs/{id}', [PromoteurController::class, 'show']);
+Route::get('projets', [MicroProjetController::class, 'index']);
+Route::get('projets/{id}', [MicroProjetController::class, 'show']);
+Route::post('projets/filter', [MicroProjetController::class, 'filter']);
 Route::apiResource('notifications', NotificationController::class);
 Route::put('notifications/{id}/mark-read', [NotificationController::class, 'markAsRead']);
 Route::get('notifications/personnel/{personnelId}', [NotificationController::class, 'getByPersonnel']);
@@ -106,6 +113,11 @@ Route::get('promoteurs', [PromoteurController::class, 'index']);
 Route::get('promoteurs/{id}', [PromoteurController::class, 'show']);
 Route::post('promoteurs/filter', [PromoteurController::class, 'filter']);
 Route::post('promoteurs/filter-with-projects', [PromoteurController::class, 'filterWithProjects']);
+Route::apiResource('formulaires-evaluation', FormulaireEvaluationController::class);
+Route::get('/formulaires-evaluation/{formulaireEvaluation}',[FormulaireEvaluationController::class, 'show']);
+Route::apiResource('evaluations', EvaluationController::class);
+Route::post('evaluations/{evaluation}/responses', [EvaluationController::class, 'addResponse']);
+Route::get('evaluations/{evaluation}/responses', [EvaluationController::class, 'responses']);
 Route::get('projets', [MicroProjetController::class, 'index']);
 Route::get('projets/{id}', [MicroProjetController::class, 'show']);
 Route::post('projets/filter', [MicroProjetController::class, 'filter']);
