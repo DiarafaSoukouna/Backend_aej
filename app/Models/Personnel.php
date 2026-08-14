@@ -18,7 +18,9 @@ class Personnel extends Authenticatable
         'adresse',
         'role_id',
         'is_active',
+        'agence_id',
         'fonction_id',
+        'organisme_id',
         'mot_de_passe',
         'remember_token'
         
@@ -34,5 +36,25 @@ class Personnel extends Authenticatable
     public function getAuthPassword(): string
     {
         return $this->mot_de_passe;
+    }
+
+    public function role()
+    {
+        return $this->belongsTo(Role::class);
+    }
+    
+    public function agence()
+    {
+        return $this->belongsTo(AgenceRegionale::class);
+    }
+    
+    public function fonction()
+    {
+        return $this->belongsTo(Fonction::class);
+    }
+    
+    public function organisme()
+    {
+        return $this->belongsTo(Organisme::class);
     }
 }

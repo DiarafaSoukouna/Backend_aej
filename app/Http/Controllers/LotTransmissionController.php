@@ -11,17 +11,27 @@ class LotTransmissionController extends Controller
 {
     public function index(): JsonResponse
     {
-        $lots = LotTransmission::with(['organisme'])->get();
-        return new JsonResponse(['message' => 'Lots transmission retrieved successfully', 'data' => $lots], 200);
+        $lots = LotTransmission::with('organisme')->get();
+        $lots->each(function ($lot) {
+            $lot->micro_projets;
+        });
+
+        return new JsonResponse([
+            'message' => 'Lots transmission retrieved successfully',
+            'data' => $lots
+        ], 200);
     }
 
     public function show($id): JsonResponse
     {
-        $lot = LotTransmission::with(['organisme'])->find($id);
-        if (!$lot) {
-            return new JsonResponse(['message' => 'Lot transmission not found'], 404);
-        }
-        return new JsonResponse(['message' => 'Lot transmission retrieved successfully', 'data' => $lot], 200);
+        $lot = LotTransmission::with('organisme')->find($id);
+        if (!$lot) return new JsonResponse(['message' => 'Lot transmission not found'], 404);
+        $lot->micro_projets;
+
+        return new JsonResponse([
+            'message' => 'Lot transmission retrieved successfully',
+            'data' => $lot
+        ], 200);
     }
 
     public function store(Request $request): JsonResponse
@@ -30,8 +40,8 @@ class LotTransmissionController extends Controller
             'organisme_id' => 'nullable|exists:organisme_financements,id',
             'code' => 'nullable|string|max:50',
             'titre' => 'nullable|string|max:255',
-            'fichier_repartition' => 'nullable|string|max:255',
-            'fichier_courrier' => 'nullable|string|max:255',
+            'fichier_repartition' => 'nullable|string',
+            'fichier_courrier' => 'nullable|string',
             'reference_courrier' => 'nullable|string|max:100',
             'reference_convention' => 'nullable|string|max:100',
             'date_transmission' => 'nullable|date',
@@ -64,8 +74,8 @@ class LotTransmissionController extends Controller
             'organisme_id' => 'nullable|exists:organisme_financements,id',
             'code' => 'nullable|string|max:50',
             'titre' => 'nullable|string|max:255',
-            'fichier_repartition' => 'nullable|string|max:255',
-            'fichier_courrier' => 'nullable|string|max:255',
+            'fichier_repartition' => 'nullable|string',
+            'fichier_courrier' => 'nullable|string',
             'reference_courrier' => 'nullable|string|max:100',
             'reference_convention' => 'nullable|string|max:100',
             'date_transmission' => 'nullable|date',

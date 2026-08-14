@@ -15,54 +15,56 @@ use App\Http\Controllers\MessageController;
 
 class PersonnelController extends Controller
 {
-    public function index() : JsonResponse
+    public function index(): JsonResponse
     {
-        $personnels = Personnel::all();
+        $personnels = Personnel::with('role', 'fonction', 'agence', 'organisme')->get();
         return new JsonResponse(['Message' => 'Personnel list retrieved successfully', 'data' => $personnels], 200);
     }
-    public function show($id) : JsonResponse
+
+    public function show($id): JsonResponse
     {
-        $personnel = Personnel::find($id);
+        $personnel = Personnel::with('role', 'agence', 'fonction', 'organisme')->find($id);
         if (!$personnel) {
             return new JsonResponse(['Message' => 'Personnel not found'], 404);
         }
         return new JsonResponse(['Message' => 'Personnel retrieved successfully', 'data' => $personnel], 200);
     }
-  public function store(Request $request): JsonResponse
-{
-    $validation = Validator::make($request->all(), [
-        'nom' => 'required|string|max:255',
-        'prenom' => 'required|string|max:255',
-        'email' => 'required|string|email|max:255|unique:personnels',
-        'telephone' => 'nullable|string|max:20',
-        'adresse' => 'nullable|string|max:255',
-        'mot_de_passe' => 'nullable|string|min:8',
-        'role_id' => 'required|exists:roles,id',
-        'is_active' => 'boolean',
-        'fonction_id' => 'required|exists:fonctions,id',
-    ]);
 
-    if ($validation->fails()) {
-        return new JsonResponse([
-            'message' => 'Validation failed',
-            'errors' => $validation->errors()
-        ], 422);
-    }
+    public function store(Request $request): JsonResponse
+    {
+        $validation = Validator::make($request->all(), [
+            'nom' => 'required|string|max:255',
+            'prenom' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:personnels',
+            'telephone' => 'nullable|string|max:20',
+            'adresse' => 'nullable|string|max:255',
+            'mot_de_passe' => 'nullable|string|min:8',
+            'role_id' => 'required|exists:roles,id',
+            'is_active' => 'boolean',
+            'fonction_id' => 'required|exists:fonctions,id',
+        ]);
 
-    try {
-        $data = $request->except('mot_de_passe');
+        if ($validation->fails()) {
+            return new JsonResponse([
+                'message' => 'Validation failed',
+                'errors' => $validation->errors()
+            ], 422);
+        }
 
-        $motDePasseGenere = $request->mot_de_passe ?? 'AEJ' . now()->format('YmdHis');
+        try {
+            $data = $request->except('mot_de_passe');
 
-        $personnel = Personnel::create(array_merge($data, [
-            'mot_de_passe' => Hash::make($motDePasseGenere)
-        ]));
+            $motDePasseGenere = $request->mot_de_passe ?? 'AEJ' . now()->format('YmdHis');
 
-        $sendMessage = new MessageController();
-        $sendMessage->SendMailTo(new Request([
-            'email'   => $personnel->email,
-            'subject' => 'Bienvenue sur AEJ – Votre compte a été créé',
-            'message' => "
+            $personnel = Personnel::create(array_merge($data, [
+                'mot_de_passe' => Hash::make($motDePasseGenere)
+            ]));
+
+            $sendMessage = new MessageController();
+            $sendMessage->SendMailTo(new Request([
+                'email'   => $personnel->email,
+                'subject' => 'Bienvenue sur AEJ – Votre compte a été créé',
+                'message' => "
             <div style='font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;'>
                 <h2 style='color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px;'>
                     Bienvenue sur AEJ 🎉
@@ -104,177 +106,178 @@ class PersonnelController extends Controller
 
             </div>
             "
-        ]));
+            ]));
 
-        return new JsonResponse([
-            'message' => 'Personnel created successfully',
-            'data' => $personnel
-        ], 201);
-
-    } catch (\Exception $e) {
-        return new JsonResponse([
-            'message' => 'Error creating personnel',
-            'error' => $e->getMessage()
-        ], 500);
-    }
-}
-
-public function update(Request $request, $id): JsonResponse
-{
-    $personnel = Personnel::find($id);
-    if (!$personnel) {
-        return new JsonResponse(['Message' => 'Personnel not found'], 404);
+            return new JsonResponse([
+                'message' => 'Personnel created successfully',
+                'data' => $personnel
+            ], 201);
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'message' => 'Error creating personnel',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
-    $validation = Validator::make($request->all(), [
-        'nom' => 'sometimes|required|string|max:255',
-        'prenom' => 'sometimes|required|string|max:255',
-        'email' => 'sometimes|required|string|email|max:255|unique:personnels,email,' . $id,
-        'telephone' => 'nullable|string|max:20',
-        'adresse' => 'nullable|string|max:255',
-        'role_id' => 'sometimes|required|exists:roles,id',
-        'is_active' => 'boolean',
-        'fonction_id' => 'sometimes|required|exists:fonctions,id',
-    ]);
+    public function update(Request $request, $id): JsonResponse
+    {
+        $personnel = Personnel::find($id);
+        if (!$personnel) {
+            return new JsonResponse(['Message' => 'Personnel not found'], 404);
+        }
 
-    if ($validation->fails()) {
-        return new JsonResponse([
-            'message' => 'Validation failed',
-            'errors' => $validation->errors()
-        ], 422);
-    }
-
-    try {
-        $personnel->update($validation->validated());
-
-        return new JsonResponse([
-            'message' => 'Personnel updated successfully',
-            'data' => $personnel
-        ], 200);
-
-    } catch (\Exception $e) {
-        return new JsonResponse([
-            'message' => 'Error updating personnel',
-            'error' => $e->getMessage()
-        ], 500);
-    }
-}
-public function updatePassword(Request $request, $id) : JsonResponse
-{
-    $personnel = Personnel::find($id);
-    if (!$personnel) {
-        return new JsonResponse(['Message' => 'Personnel not found'], 404);
-    }
-
-    $validation = Validator::make($request->all(), [
-        'mot_de_passe' => 'required|string|min:8|confirmed',
-    ]);
-
-    if ($validation->fails()) {
-        return new JsonResponse([
-            'message' => 'Validation failed',
-            'errors' => $validation->errors()
-        ], 422);
-    }
-
-    try {
-        $personnel->update([
-            'mot_de_passe' => Hash::make($request->mot_de_passe)
+        $validation = Validator::make($request->all(), [
+            'nom' => 'sometimes|required|string|max:255',
+            'prenom' => 'sometimes|required|string|max:255',
+            'email' => 'sometimes|required|string|email|max:255|unique:personnels,email,' . $id,
+            'telephone' => 'nullable|string|max:20',
+            'adresse' => 'nullable|string|max:255',
+            'role_id' => 'sometimes|required|exists:roles,id',
+            'is_active' => 'boolean',
+            'fonction_id' => 'sometimes|required|exists:fonctions,id',
         ]);
 
-        return new JsonResponse([
-            'message' => 'Password updated successfully',
-            'data' => $personnel
+        if ($validation->fails()) {
+            return new JsonResponse([
+                'message' => 'Validation failed',
+                'errors' => $validation->errors()
+            ], 422);
+        }
+
+        try {
+            $personnel->update($validation->validated());
+
+            return new JsonResponse([
+                'message' => 'Personnel updated successfully',
+                'data' => $personnel
+            ], 200);
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'message' => 'Error updating personnel',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function updatePassword(Request $request, $id): JsonResponse
+    {
+        $personnel = Personnel::find($id);
+        if (!$personnel) {
+            return new JsonResponse(['Message' => 'Personnel not found'], 404);
+        }
+
+        $validation = Validator::make($request->all(), [
+            'mot_de_passe' => 'required|string|min:8|confirmed',
+        ]);
+
+        if ($validation->fails()) {
+            return new JsonResponse([
+                'message' => 'Validation failed',
+                'errors' => $validation->errors()
+            ], 422);
+        }
+
+        try {
+            $personnel->update([
+                'mot_de_passe' => Hash::make($request->mot_de_passe)
+            ]);
+
+            return new JsonResponse([
+                'message' => 'Password updated successfully',
+                'data' => $personnel
+            ], 200);
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'message' => 'Error updating password',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function auth(Request $request): JsonResponse
+    {
+        $validation = Validator::make($request->all(), [
+            'email' => 'required|string|email',
+            'mot_de_passe' => 'required|string',
+        ]);
+
+        if ($validation->fails()) {
+            return new JsonResponse([
+                'message' => 'Validation failed',
+                'errors' => $validation->errors()
+            ], 422);
+        }
+
+        $personnel = Personnel::where('email', $request->input('email'))->first();
+
+        if (!$personnel || !Hash::check($request->mot_de_passe, $personnel->mot_de_passe)) {
+            return new JsonResponse([
+                'message' => 'Identifiants invalides'
+            ], 401);
+        }
+
+        try {
+            Auth::guard('web')->login($personnel);
+            $request->session()->regenerate();
+            $userId = $personnel->id;
+            return new JsonResponse([
+                'message' => 'Authentification réussie',
+                'user_id' => $userId,
+            ], 200);
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'message' => 'Erreur lors de l\'authentification',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function logout(Request $request): JsonResponse
+    {
+        Auth::guard('web')->logout();
+
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return response()->json([
+            'Message' => 'Logout successful'
         ], 200);
-
-    } catch (\Exception $e) {
-        return new JsonResponse([
-            'message' => 'Error updating password',
-            'error' => $e->getMessage()
-        ], 500);
-    }
-}
-public function auth(Request $request): JsonResponse
-{
-    $validation = Validator::make($request->all(), [
-        'email' => 'required|string|email',
-        'mot_de_passe' => 'required|string',
-    ]);
-
-    if ($validation->fails()) {
-        return new JsonResponse([
-            'message' => 'Validation failed',
-            'errors' => $validation->errors()
-        ], 422);
     }
 
-    $personnel = Personnel::where('email', $request->input('email'))->first();
-
-    if (!$personnel || !Hash::check($request->mot_de_passe, $personnel->mot_de_passe)) {
-        return new JsonResponse([
-            'message' => 'Identifiants invalides'
-        ], 401);
-    }
-
-    try {
-        Auth::guard('web')->login($personnel);
+    public function refresh(Request $request): JsonResponse
+    {
         $request->session()->regenerate();
-        $userId = $personnel->id;
+
         return new JsonResponse([
-            'message' => 'Authentification réussie',
-            'user_id' => $userId,
+            'message' => 'Session refreshed',
+            'data' => $request->user(),
         ], 200);
+    }
 
-    } catch (\Exception $e) {
+    public function me(Request $request): JsonResponse
+    {
         return new JsonResponse([
-            'message' => 'Erreur lors de l\'authentification',
-            'error' => $e->getMessage()
-        ], 500);
-    }
-}
-public function logout(Request $request): JsonResponse
-{
-    Auth::guard('web')->logout();
-
-    $request->session()->invalidate();
-    $request->session()->regenerateToken();
-
-    return response()->json([
-        'Message' => 'Logout successful'
-    ], 200);
-}
-
-public function refresh(Request $request): JsonResponse
-{
-    $request->session()->regenerate();
-
-    return new JsonResponse([
-        'message' => 'Session refreshed',
-        'data' => $request->user(),
-    ], 200);
-}
-public function me(Request $request): JsonResponse
-{
-    return new JsonResponse([
-        'message' => 'Utilisateur récupéré avec succès',
-        'data' => $request->user(),
-    ], 200);
-}
-public function destroy($id) : JsonResponse
-{
-    $personnel = Personnel::find($id);
-    if (!$personnel) {
-        return new JsonResponse(['Message' => 'Personnel not found'], 404);
+            'message' => 'Utilisateur récupéré avec succès',
+            'data' => $request->user(),
+        ], 200);
     }
 
-    try {
-        $personnel->delete();
-        return new JsonResponse(['Message' => 'Personnel deleted successfully'], 200);
-    } catch (\Exception $e) {
-        return new JsonResponse([
-            'message' => 'Error deleting personnel',
-            'error' => $e->getMessage()
-        ], 500);
+    public function destroy($id): JsonResponse
+    {
+        $personnel = Personnel::find($id);
+        if (!$personnel) {
+            return new JsonResponse(['Message' => 'Personnel not found'], 404);
+        }
+
+        try {
+            $personnel->delete();
+            return new JsonResponse(['Message' => 'Personnel deleted successfully'], 200);
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'message' => 'Error deleting personnel',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
-}
 }

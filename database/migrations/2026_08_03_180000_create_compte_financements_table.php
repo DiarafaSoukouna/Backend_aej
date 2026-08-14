@@ -13,7 +13,7 @@ return new class extends Migration
             $table->unsignedBigInteger('micro_projet_id')->nullable();
             $table->unsignedBigInteger('organisme_id')->nullable();
             $table->unsignedBigInteger('budget_id')->nullable()->unique();
-            $table->enum('etat_compte', ['OUVERT', 'FERME', 'NON_OUVERT'])->default('NON_OUVERT');
+            $table->enum('etat_ouverture', ['OUVERT', 'FERME', 'NON_OUVERT'])->default('NON_OUVERT');
             $table->enum('avis_partenaire', ['ACCORDE', 'AJOURNE', 'REJETE'])->nullable();
             $table->decimal('montant_accorde', 15, 2)->nullable();
             $table->integer('duree_pret')->nullable();

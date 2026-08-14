@@ -21,7 +21,6 @@ class WorkflowInstanceHistory extends Model
         'comment',
         'acted_by',
         'acted_at',
-        'observation',
     ];
 
     protected $casts = [

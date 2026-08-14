@@ -77,12 +77,6 @@ Route::apiResource('permissions', PermissionController::class);
 Route::apiResource('roles', RoleController::class);
 Route::apiResource('personnels', PersonnelController::class);
 Route::put('personnels/updatePassword/{id}', [PersonnelController::class, 'updatePassword']);
-Route::get('promoteurs', [PromoteurController::class, 'index']);
-Route::get('/promoteurs/export', [PromoteurController::class, 'exportCsv']);
-Route::get('promoteurs/{id}', [PromoteurController::class, 'show']);
-Route::get('projets', [MicroProjetController::class, 'index']);
-Route::get('projets/{id}', [MicroProjetController::class, 'show']);
-Route::post('projets/filter', [MicroProjetController::class, 'filter']);
 Route::apiResource('notifications', NotificationController::class);
 Route::put('notifications/{id}/mark-read', [NotificationController::class, 'markAsRead']);
 Route::get('notifications/personnel/{personnelId}', [NotificationController::class, 'getByPersonnel']);
@@ -106,14 +100,17 @@ Route::get('promoteurs', [PromoteurController::class, 'index']);
 Route::get('promoteurs/{id}', [PromoteurController::class, 'show']);
 Route::post('promoteurs/filter', [PromoteurController::class, 'filter']);
 Route::post('promoteurs/filter-with-projects', [PromoteurController::class, 'filterWithProjects']);
+Route::get('/promoteurs/export', [PromoteurController::class, 'exportCsv']);
+Route::get('projets', [MicroProjetController::class, 'index']);
+Route::get('projets/{id}', [MicroProjetController::class, 'show']);
+Route::post('projets/filter', [MicroProjetController::class, 'filter']);
+
+// Formulaires d'évaluation
 Route::apiResource('formulaires-evaluation', FormulaireEvaluationController::class);
 Route::get('/formulaires-evaluation/{formulaireEvaluation}',[FormulaireEvaluationController::class, 'show']);
 Route::apiResource('evaluations', EvaluationController::class);
 Route::post('evaluations/{evaluation}/responses', [EvaluationController::class, 'addResponse']);
 Route::get('evaluations/{evaluation}/responses', [EvaluationController::class, 'responses']);
-Route::get('projets', [MicroProjetController::class, 'index']);
-Route::get('projets/{id}', [MicroProjetController::class, 'show']);
-Route::post('projets/filter', [MicroProjetController::class, 'filter']);
 
 // Workflow
 Route::prefix('workflow')->group(function () {
@@ -138,7 +135,7 @@ Route::prefix('workflow-instances')->group(function () {
 });
 
 // Workflow-exécution
-Route::prefix('workflow-instances/{workflowInstanceId}')->group(function () {
+Route::prefix('workflow-executes/{workflowInstanceId}')->group(function () {
     // Workflow state transitions
     Route::post('transition', [WorkflowExecutionController::class, 'transition']);
     

@@ -10,7 +10,7 @@ class PlanDecaissementController extends Controller
 {
     public function index()
     {
-        $plans = PlanDecaissement::with(['microProjet', 'budget', 'compteFinancement'])->get();
+        $plans = PlanDecaissement::with(['microProjet', 'budget', 'compteFinancement', 'ligneDecaissements'])->get();
         return new JsonResponse([
             'message' => 'Plans de décaissement retrieved successfully',
             'data' => $plans
@@ -19,7 +19,7 @@ class PlanDecaissementController extends Controller
 
     public function show($id)
     {
-        $plan = PlanDecaissement::with(['microProjet', 'budget', 'compteFinancement'])->findOrFail($id);
+        $plan = PlanDecaissement::with(['microProjet', 'budget', 'compteFinancement', 'ligneDecaissements'])->findOrFail($id);
         return new JsonResponse([
             'message' => 'Plan de décaissement retrieved successfully',
             'data' => $plan

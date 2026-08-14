@@ -11,13 +11,13 @@ class WorkflowController extends Controller
 {
     public function index(): JsonResponse
     {
-        $workflows = Workflow::with('versions')->get();
+        $workflows = Workflow::with('versions', 'guichets')->get();
         return new JsonResponse(['Message' => 'Workflow list retrieved successfully', 'data' => $workflows], 200);
     }
 
     public function show($id): JsonResponse
     {
-        $workflow = Workflow::with('versions')->find($id);
+        $workflow = Workflow::with('versions', 'guichets')->find($id);
         if (!$workflow) {
             return new JsonResponse(['Message' => 'Workflow not found'], 404);
         }

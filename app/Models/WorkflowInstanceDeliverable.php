@@ -20,6 +20,7 @@ class WorkflowInstanceDeliverable extends Model
         'file_name',
         'file_size',
         'file_type',
+        'observations',
         'produced_at',
         'produced_by_id',
     ];

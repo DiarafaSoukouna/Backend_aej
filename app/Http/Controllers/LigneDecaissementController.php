@@ -37,7 +37,7 @@ class LigneDecaissementController extends Controller
             'numero_compte' => 'nullable|string|max:100',
             'contact' => 'nullable|string|max:100',
             'statut' => 'nullable|in:VALIDE,NON_VALIDE',
-            'observation' => 'nullable|string',
+            'observations' => 'nullable|string',
         ]);
 
         if ($validation->fails()) {
@@ -70,7 +70,7 @@ class LigneDecaissementController extends Controller
             'numero_compte' => 'nullable|string|max:100',
             'contact' => 'nullable|string|max:100',
             'statut' => 'nullable|in:VALIDE,NON_VALIDE',
-            'observation' => 'nullable|string',
+            'observations' => 'nullable|string',
         ]);
 
         if ($validation->fails()) {
