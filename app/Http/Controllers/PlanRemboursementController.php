@@ -11,13 +11,13 @@ class PlanRemboursementController extends Controller
 {
     public function index(): JsonResponse
     {
-        $plans = PlanRemboursement::with(['microProjet', 'budget', 'compteRemboursement'])->get();
+        $plans = PlanRemboursement::with(['microProjet', 'budget'])->get();
         return new JsonResponse(['message' => 'Plans remboursement retrieved successfully', 'data' => $plans], 200);
     }
 
     public function show($id): JsonResponse
     {
-        $plan = PlanRemboursement::with(['microProjet', 'budget', 'compteRemboursement'])->find($id);
+        $plan = PlanRemboursement::with(['microProjet', 'budget'])->find($id);
         if (!$plan) {
             return new JsonResponse(['message' => 'Plan remboursement not found'], 404);
         }
@@ -29,7 +29,6 @@ class PlanRemboursementController extends Controller
         $validation = Validator::make($request->all(), [
             'micro_projet_id' => 'nullable|exists:micro_projets,id',
             'budget_id' => 'nullable|exists:budgets,id',
-            'compte_remboursement_id' => 'nullable|exists:compte_remboursements,budget_id',
             'echeance_mensuelle' => 'nullable|date',
             'montant_echeance' => 'nullable|numeric',
             'periode' => 'nullable|integer',
@@ -62,7 +61,6 @@ class PlanRemboursementController extends Controller
         $validation = Validator::make($request->all(), [
             'micro_projet_id' => 'nullable|exists:micro_projets,id',
             'budget_id' => 'nullable|exists:budgets,id',
-            'compte_remboursement_id' => 'nullable|exists:compte_remboursements,budget_id',
             'echeance_mensuelle' => 'nullable|date',
             'montant_echeance' => 'nullable|numeric',
             'periode' => 'nullable|integer',

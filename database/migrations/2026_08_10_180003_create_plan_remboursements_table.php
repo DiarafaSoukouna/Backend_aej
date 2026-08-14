@@ -12,7 +12,6 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('micro_projet_id')->nullable();
             $table->unsignedBigInteger('budget_id')->nullable();
-            $table->unsignedBigInteger('compte_remboursement_id')->nullable();
             $table->date('echeance_mensuelle')->nullable();
             $table->decimal('montant_echeance', 18, 2)->nullable();
             $table->text('justificatif_path')->nullable();
@@ -20,7 +19,6 @@ return new class extends Migration
 
             $table->foreign('micro_projet_id')->references('id')->on('micro_projets')->onDelete('cascade');
             $table->foreign('budget_id')->references('id')->on('budgets')->onDelete('cascade');
-            $table->foreign('compte_remboursement_id')->references('budget_id')->on('compte_remboursements')->onDelete('cascade');
         });
     }
 

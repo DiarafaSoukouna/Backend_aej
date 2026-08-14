@@ -21,4 +21,9 @@ class Workflow extends Model
     {
         return $this->hasMany(WorkflowVersion::class, 'workflow_code', 'code');
     }
+
+    public function guichets()
+    {
+        return $this->hasMany(Guichet::class, 'workflow_code', 'code');
+    }
 }

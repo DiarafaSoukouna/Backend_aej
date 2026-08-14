@@ -256,7 +256,6 @@ CREATE TABLE
 -- ##############################################################
 -- 6. PERSONNELS
 -- ##############################################################
--- Modifier
 CREATE TABLE
     IF NOT EXISTS personnels (
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -362,7 +361,6 @@ CREATE TABLE
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
--- Modifier
 CREATE TABLE
     IF NOT EXISTS workflow_versions (
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -500,7 +498,6 @@ CREATE TABLE
 -- 10. GUICHETS FINANCEMENTS & AGENCES REGIONALES
 -- ##############################################################
 -- Via API Indisponible
--- Modifier
 CREATE TABLE
     IF NOT EXISTS guichets (
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -590,7 +587,6 @@ CREATE TABLE
 -- 13. MICRO PROJETS
 -- ##############################################################
 -- Via API Indisponible
--- Modifier
 CREATE TABLE
     IF NOT EXISTS micro_projets (
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -644,15 +640,14 @@ CREATE TABLE
 -- ##############################################################
 -- 14. LOTS, OBSERVATIONS, DOCUMENTS
 -- ##############################################################
--- Modifier
 CREATE TABLE
     IF NOT EXISTS lots_transmission (
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
         organisme_id BIGINT UNSIGNED,
         code VARCHAR(50),
         titre VARCHAR(255),
-        fichier_repartition VARCHAR(255),
-        fichier_courrier VARCHAR(255),
+        fichier_repartition TEXT,
+        fichier_courrier TEXT,
         reference_courrier VARCHAR(100),
         reference_convention VARCHAR(100),
         date_transmission DATE,
@@ -670,7 +665,7 @@ CREATE TABLE
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
         micro_projet_id BIGINT UNSIGNED,
         auteur_id BIGINT UNSIGNED,
-        observation TEXT,
+        content TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (micro_projet_id) REFERENCES micro_projets (id) ON DELETE CASCADE,
         FOREIGN KEY (auteur_id) REFERENCES personnels (id)
@@ -689,7 +684,6 @@ CREATE TABLE
 -- ##############################################################
 -- 15. FINANCEMENTS, DECAISSEMENTS, REMBOURSEMENTS
 -- ##############################################################
--- Modifier
 CREATE TABLE
     IF NOT EXISTS budgets (
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -714,14 +708,13 @@ CREATE TABLE
         FOREIGN KEY (valide_par) REFERENCES personnels (id)
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
--- Modifier
 CREATE TABLE
     IF NOT EXISTS compte_financements (
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
         micro_projet_id BIGINT UNSIGNED,
         organisme_id BIGINT UNSIGNED,
         budget_id BIGINT UNSIGNED UNIQUE,
-        etat_compte ENUM ('OUVERT', 'FERME', 'NON_OUVERT') DEFAULT 'NON_OUVERT',
+        etat_ouverture ENUM ('OUVERT', 'FERME', 'NON_OUVERT') DEFAULT 'NON_OUVERT',
         avis_partenaire ENUM ('ACCORDE', 'AJOURNE', 'REJETE'),
         montant_accorde DECIMAL(15, 2),
         duree_pret INT,
@@ -729,7 +722,7 @@ CREATE TABLE
         taux_interet DECIMAL(5, 2),
         date_ouverture DATE,
         lieu_ouverture VARCHAR(100),
-        observation TEXT,
+        observations TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         FOREIGN KEY (micro_projet_id) REFERENCES micro_projets (id) ON DELETE CASCADE,
@@ -755,7 +748,6 @@ CREATE TABLE
 --         FOREIGN KEY (budget_id) REFERENCES budgets (id) ON DELETE CASCADE
 --     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
--- Modifier
 CREATE TABLE
     IF NOT EXISTS plan_decaissements (
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -772,9 +764,8 @@ CREATE TABLE
         FOREIGN KEY (compte_financement_id) REFERENCES compte_financements (id) ON DELETE CASCADE
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
--- Modifier
 CREATE TABLE
-    IF NOT EXISTS ligne_decaissememts (
+    IF NOT EXISTS ligne_decaissements (
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
         plan_decaissement_id BIGINT UNSIGNED,
         numero_ligne INT NOT NULL,
@@ -786,13 +777,12 @@ CREATE TABLE
         numero_compte VARCHAR(100),
         contact VARCHAR(100),
         statut ENUM ('VALIDE', 'NON_VALIDE'),
-        observation TEXT,
+        observations TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         FOREIGN KEY (plan_decaissement_id) REFERENCES plan_decaissements (id) ON DELETE CASCADE
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
--- Modifier
 CREATE TABLE 
     IF NOT EXISTS decaissements_declarations (
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -812,7 +802,6 @@ CREATE TABLE
         FOREIGN KEY(promoteur_id) REFERENCES promoteurs(id)
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
--- Modifier
 CREATE TABLE
     IF NOT EXISTS decaissements (
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -831,13 +820,11 @@ CREATE TABLE
         FOREIGN KEY (agence_id) REFERENCES agences_regionales (id)
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
--- Modifier
 CREATE TABLE 
     IF NOT EXISTS plan_remboursements (
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
         micro_projet_id BIGINT UNSIGNED,
         budget_id BIGINT UNSIGNED,
-        compte_remboursement_id BIGINT UNSIGNED,
         echeance_mensuelle DATE,
         montant_echeance DECIMAL(18, 2),
         periode INT, -- Année
@@ -850,10 +837,8 @@ CREATE TABLE
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         FOREIGN KEY (micro_projet_id) REFERENCES micro_projets (id) ON DELETE CASCADE,
         FOREIGN KEY (budget_id) REFERENCES budgets (id) ON DELETE CASCADE,
-        FOREIGN KEY (compte_remboursement_id) REFERENCES compte_remboursements (budget_id) ON DELETE CASCADE
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
--- Modifier
 CREATE TABLE 
     IF NOT EXISTS remboursements_declarations (
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -871,7 +856,6 @@ CREATE TABLE
         FOREIGN KEY (promoteur_id) REFERENCES promoteurs (id)
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
--- Modifier
 CREATE TABLE
     IF NOT EXISTS remboursements (
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -890,7 +874,6 @@ CREATE TABLE
         FOREIGN KEY (plan_remboursement_id) REFERENCES plan_remboursements (id) ON DELETE CASCADE
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
--- Modifier
 CREATE TABLE 
     IF NOT EXISTS recouvrements (
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -899,7 +882,7 @@ CREATE TABLE
         agent_id BIGINT UNSIGNED,
         montant_recouvre DECIMAL(18, 2),
         date_recouvrement DATE,
-        type_action ENUM ('APPEL', 'COURRIER', 'DECHARGE', 'MISE_EN_DEMEURE', 'CONTENTIEUX')
+        type_action ENUM ('APPEL', 'COURRIER', 'DECHARGE', 'MISE_EN_DEMEURE', 'CONTENTIEUX'),
         observations TEXT,
         justificatif_path TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -1113,11 +1096,10 @@ CREATE TABLE
 -- ##############################################################
 -- 18. INSTANCES DE WORKFLOW & HISTORIQUE
 -- ##############################################################
--- Modifier
 CREATE TABLE
     IF NOT EXISTS workflow_instance (
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-        micro_projet_id BIGINT UNSIGNED,
+        micro_projet_id BIGINT UNSIGNED UNIQUE,
         workflow_version VARCHAR(50) NOT NULL,
         current_etape_code VARCHAR(50),
         next_etape_code VARCHAR(50),
@@ -1132,25 +1114,22 @@ CREATE TABLE
         FOREIGN KEY (next_etape_code) REFERENCES workflow_etapes (code)
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
--- Modifier
 CREATE TABLE
     IF NOT EXISTS workflow_instance_history (
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
         workflow_instance_id BIGINT UNSIGNED,
         etape_code VARCHAR(50) NOT NULL,
         role_code VARCHAR(50),
-        action TEXT,
-        comment TEXT,
         acted_by BIGINT UNSIGNED,
         acted_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        observation TEXT,
+        action TEXT,
+        comment TEXT,
         FOREIGN KEY (workflow_instance_id) REFERENCES workflow_instance (id) ON DELETE CASCADE,
         FOREIGN KEY (etape_code) REFERENCES workflow_etapes (code),
         FOREIGN KEY (role_code) REFERENCES roles (code),
-        FOREIGN KEY (performed_by_id) REFERENCES personnels (id)
+        FOREIGN KEY (acted_by) REFERENCES personnels (id)
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
--- Modifier
 CREATE TABLE
     IF NOT EXISTS workflow_instance_deliverable (
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -1160,7 +1139,7 @@ CREATE TABLE
         file_name VARCHAR(255),
         file_size BIGINT,
         file_type VARCHAR(100),
-        observation TEXT,
+        observations TEXT,
         produced_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
         produced_by_id BIGINT UNSIGNED,
         FOREIGN KEY (workflow_instance_id) REFERENCES workflow_instance (id) ON DELETE CASCADE,

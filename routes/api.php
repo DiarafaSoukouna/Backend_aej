@@ -61,6 +61,9 @@ use App\Http\Controllers\LotTransmissionController;
 use App\Http\Controllers\LigneDecaissementController;
 use App\Http\Controllers\PlanRemboursementController;
 use App\Http\Controllers\RecouvrementController;
+use App\Http\Controllers\DashboardAgencesController;
+use App\Http\Controllers\DashboardPartenairesController;
+use App\Http\Controllers\DashboardEntreprisesController;
 
 // Paramètres
 Route::apiResource('configurations', ConfigurationController::class);
@@ -77,12 +80,6 @@ Route::apiResource('permissions', PermissionController::class);
 Route::apiResource('roles', RoleController::class);
 Route::apiResource('personnels', PersonnelController::class);
 Route::put('personnels/updatePassword/{id}', [PersonnelController::class, 'updatePassword']);
-Route::get('promoteurs', [PromoteurController::class, 'index']);
-Route::get('/promoteurs/export', [PromoteurController::class, 'exportCsv']);
-Route::get('promoteurs/{id}', [PromoteurController::class, 'show']);
-Route::get('projets', [MicroProjetController::class, 'index']);
-Route::get('projets/{id}', [MicroProjetController::class, 'show']);
-Route::post('projets/filter', [MicroProjetController::class, 'filter']);
 Route::apiResource('notifications', NotificationController::class);
 Route::put('notifications/{id}/mark-read', [NotificationController::class, 'markAsRead']);
 Route::get('notifications/personnel/{personnelId}', [NotificationController::class, 'getByPersonnel']);
@@ -106,14 +103,17 @@ Route::get('promoteurs', [PromoteurController::class, 'index']);
 Route::get('promoteurs/{id}', [PromoteurController::class, 'show']);
 Route::post('promoteurs/filter', [PromoteurController::class, 'filter']);
 Route::post('promoteurs/filter-with-projects', [PromoteurController::class, 'filterWithProjects']);
+Route::get('/promoteurs/export', [PromoteurController::class, 'exportCsv']);
+Route::get('projets', [MicroProjetController::class, 'index']);
+Route::get('projets/{id}', [MicroProjetController::class, 'show']);
+Route::post('projets/filter', [MicroProjetController::class, 'filter']);
+
+// Formulaires d'évaluation
 Route::apiResource('formulaires-evaluation', FormulaireEvaluationController::class);
 Route::get('/formulaires-evaluation/{formulaireEvaluation}',[FormulaireEvaluationController::class, 'show']);
 Route::apiResource('evaluations', EvaluationController::class);
 Route::post('evaluations/{evaluation}/responses', [EvaluationController::class, 'addResponse']);
 Route::get('evaluations/{evaluation}/responses', [EvaluationController::class, 'responses']);
-Route::get('projets', [MicroProjetController::class, 'index']);
-Route::get('projets/{id}', [MicroProjetController::class, 'show']);
-Route::post('projets/filter', [MicroProjetController::class, 'filter']);
 
 // Workflow
 Route::prefix('workflow')->group(function () {
@@ -138,7 +138,7 @@ Route::prefix('workflow-instances')->group(function () {
 });
 
 // Workflow-exécution
-Route::prefix('workflow-instances/{workflowInstanceId}')->group(function () {
+Route::prefix('workflow-executes/{workflowInstanceId}')->group(function () {
     // Workflow state transitions
     Route::post('transition', [WorkflowExecutionController::class, 'transition']);
     
@@ -239,4 +239,37 @@ Route::prefix('aej')->group(function () {
     Route::post('clear-cache', [AejApiController::class, 'clearCache']);
     Route::post('sync', [SyncAejController::class, 'sync']);
     Route::post('sync-all', [SyncAejController::class, 'syncAll']);
+});
+
+// Dashboards
+Route::prefix('dashboard')->group(function () {
+    Route::prefix('agences')->group(function () {
+        Route::get('kpis', [DashboardAgencesController::class, 'getKPIs']);
+        Route::get('projets-agence', [DashboardAgencesController::class, 'getProjetsParAgence']);
+        Route::get('projets-statut', [DashboardAgencesController::class, 'getProjetsParStatut']);
+        Route::get('financement-agence', [DashboardAgencesController::class, 'getFinancementParAgence']);
+        Route::get('classement', [DashboardAgencesController::class, 'getClassementAgences']);
+        Route::get('alertes', [DashboardAgencesController::class, 'getAlertes']);
+    });
+
+    Route::prefix('partenaires')->group(function () {
+        Route::get('kpis', [DashboardPartenairesController::class, 'getKPIs']);
+        Route::get('portefeuille-partenaire', [DashboardPartenairesController::class, 'getPortefeuilleParPartenaire']);
+        Route::get('accorde-vs-decaisse', [DashboardPartenairesController::class, 'getAccordeVsDecaisse']);
+        Route::get('etat-financements', [DashboardPartenairesController::class, 'getEtatFinancements']);
+        Route::get('evolution-remboursements', [DashboardPartenairesController::class, 'getEvolutionRemboursements']);
+        Route::get('classement', [DashboardPartenairesController::class, 'getClassementPartenaires']);
+        Route::get('alertes', [DashboardPartenairesController::class, 'getAlertes']);
+    });
+
+    Route::prefix('entreprises')->group(function () {
+        Route::get('kpis', [DashboardEntreprisesController::class, 'getKPIs']);
+        Route::get('region', [DashboardEntreprisesController::class, 'getEntreprisesParRegion']);
+        Route::get('emplois-secteur', [DashboardEntreprisesController::class, 'getEmploisParSecteur']);
+        Route::get('types-emplois', [DashboardEntreprisesController::class, 'getTypesEmplois']);
+        Route::get('top-recruteuses', [DashboardEntreprisesController::class, 'getTopEntreprisesRecruteuses']);
+        Route::get('secteur', [DashboardEntreprisesController::class, 'getEntreprisesParSecteur']);
+        Route::get('classement', [DashboardEntreprisesController::class, 'getClassementEntreprises']);
+        Route::get('alertes', [DashboardEntreprisesController::class, 'getAlertes']);
+    });
 });

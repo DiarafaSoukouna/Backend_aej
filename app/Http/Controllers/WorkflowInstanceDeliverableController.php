@@ -29,6 +29,7 @@ class WorkflowInstanceDeliverableController extends Controller
             'file_name' => 'required|string|max:255',
             'file_size' => 'required|integer',
             'file_type' => 'nullable|string|max:100',
+            'observations' => 'nullable|string',
             'produced_at' => 'nullable|date',
             'produced_by_id' => 'nullable|exists:personnels,id',
         ]);
@@ -48,6 +49,7 @@ class WorkflowInstanceDeliverableController extends Controller
             'file_name' => 'nullable|string|max:255',
             'file_size' => 'nullable|integer',
             'file_type' => 'nullable|string|max:100',
+            'observations' => 'nullable|string',
             'produced_at' => 'nullable|date',
             'produced_by_id' => 'nullable|exists:personnels,id',
         ]);

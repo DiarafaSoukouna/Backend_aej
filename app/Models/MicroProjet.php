@@ -42,7 +42,7 @@ class MicroProjet extends Model
 
     public function organisme()
     {
-        return $this->belongsTo(Organisme::class, 'organisme_id');
+        return $this->belongsTo(OrganismeFinancement::class, 'organisme_id');
     }
 
     public function guichet()
@@ -75,8 +75,33 @@ class MicroProjet extends Model
         return $this->belongsTo(Promoteur::class, 'promoteur_id');
     }
 
-    public function workflowInstances()
+    public function workflowInstance()
     {
-        return $this->hasMany(WorkflowInstance::class, 'micro_projet_id');
+        return $this->hasOne(WorkflowInstance::class, 'micro_projet_id');
+    }
+
+    public function embauches()
+    {
+        return $this->hasMany(Embauche::class, 'micro_projet_id');
+    }
+
+    public function ligneDecaissements()
+    {
+        return $this->hasManyThrough(LigneDecaissement::class, PlanDecaissement::class, 'micro_projet_id', 'plan_decaissement_id');
+    }
+
+    public function recouvrements()
+    {
+        return $this->hasMany(Recouvrement::class, 'micro_projet_id');
+    }
+
+    public function planDecaissement()
+    {
+        return $this->hasOne(PlanDecaissement::class, 'micro_projet_id');
+    }
+
+    public function planRemboursement()
+    {
+        return $this->hasOne(PlanRemboursement::class, 'micro_projet_id');
     }
 }

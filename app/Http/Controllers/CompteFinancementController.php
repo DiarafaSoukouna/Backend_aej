@@ -28,7 +28,7 @@ class CompteFinancementController extends Controller
             'micro_projet_id' => 'nullable|exists:micro_projets,id',
             'organisme_id' => 'nullable|exists:organisme_financements,id',
             'budget_id' => 'nullable|exists:budgets,id|unique:compte_financements,budget_id',
-            'etat_compte' => 'nullable|in:OUVERT,FERME,NON_OUVERT',
+            'etat_ouverture' => 'nullable|in:OUVERT,FERME,NON_OUVERT',
             'avis_partenaire' => 'nullable|in:ACCORDE,AJOURNE,REJETE',
             'montant_accorde' => 'nullable|numeric',
             'duree_pret' => 'nullable|integer',
@@ -36,7 +36,7 @@ class CompteFinancementController extends Controller
             'taux_interet' => 'nullable|numeric',
             'date_ouverture' => 'nullable|date',
             'lieu_ouverture' => 'nullable|string|max:100',
-            'observation' => 'nullable|string',
+            'observations' => 'nullable|string',
         ]);
 
         if ($validator->fails()) {
@@ -61,7 +61,7 @@ class CompteFinancementController extends Controller
             'micro_projet_id' => 'nullable|exists:micro_projets,id',
             'organisme_id' => 'nullable|exists:organisme_financements,id',
             'budget_id' => 'nullable|exists:budgets,id|unique:compte_financements,budget_id,' . $id,
-            'etat_compte' => 'nullable|in:OUVERT,FERME,NON_OUVERT',
+            'etat_ouverture' => 'nullable|in:OUVERT,FERME,NON_OUVERT',
             'avis_partenaire' => 'nullable|in:ACCORDE,AJOURNE,REJETE',
             'montant_accorde' => 'nullable|numeric',
             'duree_pret' => 'nullable|integer',
@@ -69,7 +69,7 @@ class CompteFinancementController extends Controller
             'taux_interet' => 'nullable|numeric',
             'date_ouverture' => 'nullable|date',
             'lieu_ouverture' => 'nullable|string|max:100',
-            'observation' => 'nullable|string',
+            'observations' => 'nullable|string',
         ]);
 
         $compte->update($validated);

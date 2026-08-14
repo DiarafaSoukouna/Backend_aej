@@ -53,11 +53,6 @@ class Budget extends Model
         return $this->hasMany(Decaissement::class);
     }
 
-    public function compteRemboursement()
-    {
-        return $this->hasOne(CompteRemboursement::class);
-    }
-
     public function remboursements()
     {
         return $this->hasMany(Remboursement::class);

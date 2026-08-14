@@ -12,7 +12,6 @@ class PlanRemboursement extends Model
     protected $fillable = [
         'micro_projet_id',
         'budget_id',
-        'compte_remboursement_id',
         'echeance_mensuelle',
         'montant_echeance',
         'periode',
@@ -40,11 +39,6 @@ class PlanRemboursement extends Model
     public function budget()
     {
         return $this->belongsTo(Budget::class, 'budget_id');
-    }
-
-    public function compteRemboursement()
-    {
-        return $this->belongsTo(CompteRemboursement::class, 'compte_remboursement_id');
     }
 
     public function remboursements()

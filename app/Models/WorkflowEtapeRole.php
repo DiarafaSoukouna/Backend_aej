@@ -18,7 +18,7 @@ class WorkflowEtapeRole extends Model
 
     public function etape()
     {
-        return $this->belongsTo(WorkflowEtape::class);
+        return $this->belongsTo(WorkflowEtape::class, 'etape_code', 'code');
     }
 
     public function role()

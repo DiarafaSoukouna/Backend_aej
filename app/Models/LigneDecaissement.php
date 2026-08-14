@@ -22,7 +22,7 @@ class LigneDecaissement extends Model
         'numero_compte',
         'contact',
         'statut',
-        'observation',
+        'observations',
     ];
 
     protected $casts = [

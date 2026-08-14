@@ -13,8 +13,8 @@ return new class extends Migration
             $table->unsignedBigInteger('organisme_id')->nullable();
             $table->string('code', 50)->nullable();
             $table->string('titre', 255)->nullable();
-            $table->string('fichier_repartition', 255)->nullable();
-            $table->string('fichier_courrier', 255)->nullable();
+            $table->text('fichier_repartition')->nullable();
+            $table->text('fichier_courrier')->nullable();
             $table->string('reference_courrier', 100)->nullable();
             $table->string('reference_convention', 100)->nullable();
             $table->date('date_transmission')->nullable();

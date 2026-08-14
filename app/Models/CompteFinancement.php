@@ -10,7 +10,7 @@ class CompteFinancement extends Model
         'micro_projet_id',
         'organisme_id',
         'budget_id',
-        'etat_compte',
+        'etat_ouverture',
         'avis_partenaire',
         'montant_accorde',
         'duree_pret',
@@ -18,7 +18,7 @@ class CompteFinancement extends Model
         'taux_interet',
         'date_ouverture',
         'lieu_ouverture',
-        'observation',
+        'observations',
     ];
 
     protected $casts = [

@@ -11,21 +11,14 @@ class ProjetSeeder extends Seeder
     public function run(): void
     {
         $faker = Faker::create('fr_FR');
+        $promoteurIds = DB::table('promoteurs')->orderBy('id')->pluck('id')->toArray();
+        $promoteurCount = count($promoteurIds);
+        $nbProjets = min($promoteurCount, 100000);
 
-        // Vérifier qu'il existe bien 10 000 promoteurs
-        $promoteurIds = DB::table('promoteurs')
-            ->whereBetween('id', [1, 10000])
-            ->orderBy('id')
-            ->pluck('id')
-            ->toArray();
-
-        if (count($promoteurIds) < 10000) {
-            throw new \Exception(
-                'Il faut au moins 10 000 promoteurs dans la table promoteurs.'
-            );
+        if ($promoteurCount === 0) {
+            throw new \Exception('Il faut au moins 1 promoteur dans la table promoteurs.');
         }
 
-        // Villes réalistes de Côte d'Ivoire
         $villes = [
             'Abidjan',
             'Bouaké',
@@ -75,7 +68,6 @@ class ProjetSeeder extends Seeder
             'Toulepleu',
         ];
 
-        // Intitulés réalistes
         $intitules = [
             'Création d’une unité de transformation de manioc',
             'Création d’une ferme avicole',
@@ -118,12 +110,10 @@ class ProjetSeeder extends Seeder
         ];
 
         $projets = [];
+        $chunks = 2000;
 
-        for ($i = 0; $i < 10000; $i++) {
-
-            // Un promoteur différent pour chaque projet
-            $promoteurId = $promoteurIds[$i];
-
+        for ($i = 0; $i < $nbProjets; $i++) {
+            $promoteurId = $promoteurIds[$i % $promoteurCount];
             $ville = $faker->randomElement($villes);
             $secteur = $faker->randomElement($secteurs);
             $intitule = $faker->randomElement($intitules);
@@ -132,7 +122,7 @@ class ProjetSeeder extends Seeder
 
                 'code' => 'PROJ-' . str_pad(
                     $i + 1,
-                    6,
+                    9,
                     '0',
                     STR_PAD_LEFT
                 ),
@@ -141,7 +131,7 @@ class ProjetSeeder extends Seeder
 
                 'matricule' => 'MAT-' . str_pad(
                     $i + 1,
-                    8,
+                    11,
                     '0',
                     STR_PAD_LEFT
                 ),
@@ -211,20 +201,17 @@ class ProjetSeeder extends Seeder
                     ->dateTimeBetween('-3 years', 'now')
                     ?->format('Y-m-d'),
 
-                'created_at' => now(),
-                'updated_at' => now(),
+                'created_at' => now()->format('Y-m-d H:i:s'),
+                'updated_at' => now()->format('Y-m-d H:i:s'),
             ];
 
-            // Insertion par lots de 500
-            if (count($projets) === 500) {
-                DB::table('micro_projets')->insert($projets);
+            if (count($projets) === $chunks) {
+                DB::table('micro_projets')->insertOrIgnore($projets);
                 $projets = [];
+                echo "Projets créés: " . min(($i + 1), $nbProjets) . "/{$nbProjets}\n";
             }
         }
 
-        // Dernier lot
-        if (!empty($projets)) {
-            DB::table('micro_projets')->insert($projets);
-        }
+        if (!empty($projets)) DB::table('micro_projets')->insertOrIgnore($projets);
     }
 }
