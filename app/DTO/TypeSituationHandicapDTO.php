@@ -6,7 +6,6 @@ class TypeSituationHandicapDTO
 {
     public function __construct(
         public readonly int $id,
-        public readonly ?string $code,
         public readonly string $libelle,
     ) {}
 
@@ -14,7 +13,6 @@ class TypeSituationHandicapDTO
     {
         return new self(
             id: $data['id'],
-            code: $data['code'] ?? null,
             libelle: $data['libelle'],
         );
     }

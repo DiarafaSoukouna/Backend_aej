@@ -10,13 +10,13 @@ class WorkflowInstanceController extends Controller
 {
     public function index(): JsonResponse
     {
-        $instances = WorkflowInstance::with(['microProjet', 'currentEtape', 'history', 'deliverables', 'comments'])->get();
+        $instances = WorkflowInstance::with(['microProjet', 'currentEtape', 'nextEtape', 'history', 'deliverables', 'comments'])->get();
         return response()->json(['message' => 'Instances retrieved successfully', 'data' => $instances]);
     }
 
     public function show($id): JsonResponse
     {
-        $instance = WorkflowInstance::with(['microProjet', 'currentEtape', 'history', 'deliverables', 'comments'])->findOrFail($id);
+        $instance = WorkflowInstance::with(['microProjet', 'currentEtape', 'nextEtape', 'history', 'deliverables', 'comments'])->findOrFail($id);
         return response()->json(['message' => 'Instance retrieved successfully', 'data' => $instance]);
     }
 
@@ -26,6 +26,7 @@ class WorkflowInstanceController extends Controller
             'micro_projet_id' => 'required|exists:micro_projets,id',
             'workflow_version' => 'required|string|max:20',
             'current_etape_code' => 'nullable|string|max:50|exists:workflow_etapes,code',
+            'next_etape_code' => 'nullable|string|max:50|exists:workflow_etapes,code',
             'status' => 'required|in:EN_COURS,TERMINE,REJETE,ABANDONNE',
             'started_at' => 'nullable|date',
             'completed_at' => 'nullable|date|after:started_at',
@@ -43,6 +44,7 @@ class WorkflowInstanceController extends Controller
             'micro_projet_id' => 'nullable|exists:micro_projets,id',
             'workflow_version' => 'nullable|exists:workflow_versions,code',
             'current_etape_code' => 'nullable|string|max:50|exists:workflow_etapes,code',
+            'next_etape_code' => 'nullable|string|max:50|exists:workflow_etapes,code',
             'status' => 'nullable|in:EN_COURS,TERMINE,REJETE,ABANDONNE',
             'started_at' => 'nullable|date',
             'completed_at' => 'nullable|date|after:started_at',

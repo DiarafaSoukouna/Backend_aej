@@ -11,7 +11,7 @@ class DecaissementController extends Controller
 {
     public function index(): JsonResponse
     {
-        $decaissements = Decaissement::with(['plan', 'agence'])->get();
+        $decaissements = Decaissement::with(['planDecaissement', 'ligneDecaissement', 'agence'])->get();
         return new JsonResponse([
             'message' => 'Decaissements retrieved successfully',
             'data' => $decaissements
@@ -20,7 +20,7 @@ class DecaissementController extends Controller
 
     public function show($id): JsonResponse
     {
-        $decaissement = Decaissement::with(['plan', 'agence'])->find($id);
+        $decaissement = Decaissement::with(['planDecaissement', 'ligneDecaissement', 'agence'])->find($id);
         if (!$decaissement) {
             return new JsonResponse(['Message' => 'Decaissement not found'], 404);
         }
@@ -33,12 +33,13 @@ class DecaissementController extends Controller
     public function store(Request $request): JsonResponse
     {
         $validation = Validator::make($request->all(), [
-            'plan_id' => 'required|exists:plan_decaissements,id',
-            'agence_id' => 'nullable|integer',
-            'montant_decaisse' => 'required|numeric',
+            'plan_decaissement_id' => 'nullable|exists:plan_decaissements,id',
+            'ligne_decaissement_id' => 'nullable|exists:ligne_decaissements,id',
+            'agence_id' => 'nullable|exists:agences_regionales,id',
+            'montant_decaisse' => 'nullable|numeric',
             'date_decaissement' => 'nullable|date',
             'reference_banque' => 'nullable|string',
-            'statut' => 'required|in:EN_ATTENTE,VALIDE,NON_VALIDE',
+            'statut' => 'nullable|in:EN_ATTENTE,VALIDE,NON_VALIDE',
             'observations' => 'nullable|string',
         ]);
 
@@ -71,12 +72,13 @@ class DecaissementController extends Controller
         }
 
         $validation = Validator::make($request->all(), [
-            'plan_id' => 'sometimes|required|exists:plan_decaissements,id',
-            'agence_id' => 'nullable|integer',
-            'montant_decaisse' => 'sometimes|required|numeric',
+            'plan_decaissement_id' => 'nullable|exists:plan_decaissements,id',
+            'ligne_decaissement_id' => 'nullable|exists:ligne_decaissements,id',
+            'agence_id' => 'nullable|exists:agences_regionales,id',
+            'montant_decaisse' => 'nullable|numeric',
             'date_decaissement' => 'nullable|date',
             'reference_banque' => 'nullable|string',
-            'statut' => 'sometimes|required|in:EN_ATTENTE,VALIDE,NON_VALIDE',
+            'statut' => 'nullable|in:EN_ATTENTE,VALIDE,NON_VALIDE',
             'observations' => 'nullable|string',
         ]);
 

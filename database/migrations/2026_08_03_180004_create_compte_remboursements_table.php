@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('budgets_remboursements', function (Blueprint $table) {
+        Schema::create('compte_remboursements', function (Blueprint $table) {
             $table->unsignedBigInteger('budget_id')->primary();
             $table->decimal('montant_remboursement', 18, 2)->nullable();
             $table->decimal('montant_garantie', 18, 2)->nullable();
@@ -21,13 +21,13 @@ return new class extends Migration
             $table->enum('restructuration_pret', ['OUI', 'NON'])->default('NON');
             $table->decimal('capital_amorti', 18, 2)->default(0);
             $table->decimal('interets', 18, 2)->default(0);
-            
+
             $table->foreign('budget_id')->references('id')->on('budgets')->onDelete('cascade');
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('budgets_remboursements');
+        Schema::dropIfExists('compte_remboursements');
     }
 };

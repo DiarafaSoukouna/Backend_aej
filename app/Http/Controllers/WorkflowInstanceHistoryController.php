@@ -10,13 +10,13 @@ class WorkflowInstanceHistoryController extends Controller
 {
     public function index(): JsonResponse
     {
-        $history = WorkflowInstanceHistory::with(['workflowInstance', 'etape', 'performedBy'])->get();
+        $history = WorkflowInstanceHistory::with(['workflowInstance', 'etape', 'actedBy'])->get();
         return response()->json(['message' => 'History retrieved successfully', 'data' => $history]);
     }
 
     public function show($id): JsonResponse
     {
-        $history = WorkflowInstanceHistory::with(['workflowInstance', 'etape', 'performedBy'])->findOrFail($id);
+        $history = WorkflowInstanceHistory::with(['workflowInstance', 'etape', 'actedBy'])->findOrFail($id);
         return response()->json(['message' => 'History retrieved successfully', 'data' => $history]);
     }
 
@@ -26,9 +26,10 @@ class WorkflowInstanceHistoryController extends Controller
             'workflow_instance_id' => 'required|exists:workflow_instance,id',
             'etape_code' => 'required|string|max:50|exists:workflow_etapes,code',
             'role_code' => 'nullable|string|max:50|exists:roles,code',
-            'performed_by_id' => 'nullable|exists:personnels,id',
-            'entered_at' => 'nullable|date',
-            'exited_at' => 'nullable|date|after:entered_at',
+            'action' => 'required|string|max:50',
+            'comment' => 'nullable|string',
+            'acted_by' => 'nullable|exists:personnels,id',
+            'acted_at' => 'nullable|date',
             'comments' => 'nullable|string',
         ]);
 
@@ -46,10 +47,10 @@ class WorkflowInstanceHistoryController extends Controller
             'workflow_instance_id' => 'nullable|exists:workflow_instance,id',
             'etape_code' => 'nullable|string|max:50|exists:workflow_etapes,code',
             'role_code' => 'nullable|string|max:50|exists:roles,code',
-            'performed_by_id' => 'nullable|exists:personnels,id',
-            'entered_at' => 'nullable|date',
-            'exited_at' => 'nullable|date|after:entered_at',
-            'comments' => 'nullable|string',
+            'action' => 'nullable|string|max:50',
+            'comment' => 'nullable|string',
+            'acted_by' => 'nullable|exists:personnels,id',
+            'acted_at' => 'nullable|date',
         ]);
 
         $history->update($validated);

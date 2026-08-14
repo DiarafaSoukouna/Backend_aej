@@ -11,13 +11,13 @@ class RemboursementController extends Controller
 {
     public function index(): JsonResponse
     {
-        $remboursements = Remboursement::with(['promoteur', 'budget'])->get();
+        $remboursements = Remboursement::with(['planRemboursement', 'promoteur'])->get();
         return new JsonResponse(['Message' => 'Remboursement list retrieved successfully', 'data' => $remboursements], 200);
     }
 
     public function show($id): JsonResponse
     {
-        $remboursement = Remboursement::with(['promoteur', 'budget'])->find($id);
+        $remboursement = Remboursement::with(['planRemboursement', 'promoteur'])->find($id);
         if (!$remboursement) {
             return new JsonResponse(['Message' => 'Remboursement not found'], 404);
         }
@@ -27,15 +27,15 @@ class RemboursementController extends Controller
     public function store(Request $request): JsonResponse
     {
         $validation = Validator::make($request->all(), [
-            'promoteur_id' => 'required|exists:promoteurs,id',
-            'budget_id' => 'required|exists:budgets,id',
-            'montant_echu' => 'required|numeric',
+            'plan_remboursement_id' => 'nullable|exists:plan_remboursements,id',
+            'promoteur_id' => 'nullable|exists:promoteurs,id',
+            'montant_echu' => 'nullable|numeric',
             'montant_paye' => 'nullable|numeric',
             'montant_impaye' => 'nullable|numeric',
-            'date_paiement' => 'nullable|date',
             'penalites' => 'nullable|numeric',
+            'date_paiement' => 'nullable|date',
             'observations' => 'nullable|string',
-            'statut' => 'required|in:EN_ATTENTE,PAYE,PARTIEL,NON_PAYE',
+            'statut' => 'nullable|in:EN_ATTENTE,PAYE,PARTIEL,NON_PAYE',
         ]);
 
         if ($validation->fails()) {
@@ -46,7 +46,7 @@ class RemboursementController extends Controller
         }
 
         try {
-            $remboursement = Remboursement::create($request->all());
+            $remboursement = Remboursement::create($validation->validated());
 
             return new JsonResponse([
                 'message' => 'Remboursement created successfully',
@@ -69,15 +69,15 @@ class RemboursementController extends Controller
         }
 
         $validation = Validator::make($request->all(), [
-            'promoteur_id' => 'sometimes|required|exists:promoteurs,id',
-            'budget_id' => 'sometimes|required|exists:budgets,id',
-            'montant_echu' => 'sometimes|required|numeric',
+            'plan_remboursement_id' => 'nullable|exists:plan_remboursements,id',
+            'promoteur_id' => 'nullable|exists:promoteurs,id',
+            'montant_echu' => 'nullable|numeric',
             'montant_paye' => 'nullable|numeric',
             'montant_impaye' => 'nullable|numeric',
-            'date_paiement' => 'nullable|date',
             'penalites' => 'nullable|numeric',
+            'date_paiement' => 'nullable|date',
             'observations' => 'nullable|string',
-            'statut' => 'sometimes|required|in:EN_ATTENTE,PAYE,PARTIEL,NON_PAYE',
+            'statut' => 'nullable|in:EN_ATTENTE,PAYE,PARTIEL,NON_PAYE',
         ]);
 
         if ($validation->fails()) {
@@ -88,7 +88,7 @@ class RemboursementController extends Controller
         }
 
         try {
-            $remboursement->update($request->all());
+            $remboursement->update($validation->validated());
 
             return new JsonResponse([
                 'message' => 'Remboursement updated successfully',

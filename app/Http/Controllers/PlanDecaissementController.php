@@ -10,7 +10,7 @@ class PlanDecaissementController extends Controller
 {
     public function index()
     {
-        $plans = PlanDecaissement::with(['budget'])->get();
+        $plans = PlanDecaissement::with(['microProjet', 'budget', 'compteFinancement'])->get();
         return new JsonResponse([
             'message' => 'Plans de décaissement retrieved successfully',
             'data' => $plans
@@ -19,7 +19,7 @@ class PlanDecaissementController extends Controller
 
     public function show($id)
     {
-        $plan = PlanDecaissement::with(['budget'])->findOrFail($id);
+        $plan = PlanDecaissement::with(['microProjet', 'budget', 'compteFinancement'])->findOrFail($id);
         return new JsonResponse([
             'message' => 'Plan de décaissement retrieved successfully',
             'data' => $plan
@@ -29,11 +29,12 @@ class PlanDecaissementController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'budget_id' => 'required|exists:budgets,id',
-            'code' => 'required|string|max:50',
-            'intitule' => 'required|string|max:200',
+            'micro_projet_id' => 'nullable|exists:micro_projets,id',
+            'budget_id' => 'nullable|exists:budgets,id',
+            'compte_financement_id' => 'nullable|exists:compte_financements,id',
             'montant_planifie' => 'required|numeric',
             'date_prevue' => 'nullable|date',
+            'justificatif_path' => 'nullable|string',
         ]);
 
         $plan = PlanDecaissement::create($validated);
@@ -46,13 +47,14 @@ class PlanDecaissementController extends Controller
     public function update(Request $request, $id)
     {
         $plan = PlanDecaissement::findOrFail($id);
-        
+
         $validated = $request->validate([
-            'budget_id' => 'required|exists:budgets,id',
-            'code' => 'required|string|max:50',
-            'intitule' => 'required|string|max:200',
+            'micro_projet_id' => 'nullable|exists:micro_projets,id',
+            'budget_id' => 'nullable|exists:budgets,id',
+            'compte_financement_id' => 'nullable|exists:compte_financements,id',
             'montant_planifie' => 'required|numeric',
             'date_prevue' => 'nullable|date',
+            'justificatif_path' => 'nullable|string',
         ]);
 
         $plan->update($validated);
