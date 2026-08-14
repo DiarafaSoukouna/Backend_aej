@@ -63,7 +63,7 @@ class MicroProjetController extends Controller
 
     public function show($id)
     {
-        $microProjet = MicroProjet::findOrFail($id);
+        $microProjet = MicroProjet::with(['dispositif', 'organisme', 'guichet', 'secteur', 'commune', 'agence', 'agenceImputation', 'promoteur'])->findOrFail($id);
         return new JsonResponse([
             'message' => 'Micro Projet retrieved successfully',
             'data' => $microProjet

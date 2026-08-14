@@ -208,6 +208,25 @@ CREATE TABLE
         FOREIGN KEY (region_id) REFERENCES regions (id)
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
+-- Via https://agenceemploijeunes.ci/api/v1.0/list-agence-regionale
+CREATE TABLE
+    IF NOT EXISTS agences_regionales (
+        id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+        code VARCHAR(50) UNIQUE,
+        nom VARCHAR(100) NOT NULL,
+        latitude VARCHAR(100),
+        longitude VARCHAR(100),
+        contact VARCHAR(100),
+        localisation VARCHAR(50),
+        adresse TEXT,
+        telephone VARCHAR(30),
+        email VARCHAR(100),
+        chef_agence_id BIGINT UNSIGNED,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        FOREIGN KEY (chef_agence_id) REFERENCES personnels (id) ON DELETE CASCADE
+    ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
+
 -- ##############################################################
 -- 5. RÔLES & PERMISSIONS
 -- ##############################################################
@@ -237,6 +256,7 @@ CREATE TABLE
 -- ##############################################################
 -- 6. PERSONNELS
 -- ##############################################################
+-- Modifier
 CREATE TABLE
     IF NOT EXISTS personnels (
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -248,11 +268,16 @@ CREATE TABLE
         type_utilisateur ENUM ('interne', 'externe') DEFAULT 'interne',
         role_id BIGINT UNSIGNED,
         fonction_id BIGINT UNSIGNED,
+        agence_id BIGINT UNSIGNED,
+        organisme_id BIGINT UNSIGNED,
         statut TINYINT (1) NOT NULL DEFAULT 1,
         remember_token VARCHAR(100),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        FOREIGN KEY (role_id) REFERENCES roles (id) FOREIGN KEY (fonction_id) REFERENCES fonctions (id)
+        FOREIGN KEY (role_id) REFERENCES roles (id),
+        FOREIGN KEY (fonction_id) REFERENCES fonctions (id),
+        FOREIGN KEY (agence_id) REFERENCES agences_regionales (id),
+        FOREIGN KEY (organisme_id) REFERENCES organisme_financements (id)
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
 CREATE TABLE
@@ -337,12 +362,13 @@ CREATE TABLE
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
+-- Modifier
 CREATE TABLE
     IF NOT EXISTS workflow_versions (
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
         workflow_code VARCHAR(50) NOT NULL,
         version VARCHAR(20) NOT NULL DEFAULT '2026',
-        code VARCHAR(50) NOT NULL UNIQUE,
+        code VARCHAR(50) NOT NULL UNIQUE, -- GENERATE BY [workflow_code + '_' + VERSION] IF NOT EXISTS
         name VARCHAR(150) NOT NULL,
         description TEXT,
         is_active BOOLEAN NOT NULL DEFAULT TRUE,
@@ -474,9 +500,11 @@ CREATE TABLE
 -- 10. GUICHETS FINANCEMENTS & AGENCES REGIONALES
 -- ##############################################################
 -- Via API Indisponible
+-- Modifier
 CREATE TABLE
     IF NOT EXISTS guichets (
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+        workflow_code VARCHAR(50),
         code VARCHAR(50) UNIQUE,
         libelle VARCHAR(100) NOT NULL,
         description TEXT,
@@ -486,26 +514,8 @@ CREATE TABLE
         is_active BOOLEAN DEFAULT TRUE,
         is_form_active BOOLEAN DEFAULT TRUE,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-    ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
-
--- Via https://agenceemploijeunes.ci/api/v1.0/list-agence-regionale
-CREATE TABLE
-    IF NOT EXISTS agences_regionales (
-        id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-        code VARCHAR(50) UNIQUE,
-        nom VARCHAR(100) NOT NULL,
-        latitude VARCHAR(100),
-        longitude VARCHAR(100),
-        contact VARCHAR(100),
-        localisation VARCHAR(50),
-        adresse TEXT,
-        telephone VARCHAR(30),
-        email VARCHAR(100),
-        chef_agence_id BIGINT UNSIGNED,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        FOREIGN KEY (chef_agence_id) REFERENCES personnels (id) ON DELETE CASCADE
+        FOREIGN KEY (workflow_code) REFERENCES workflow_codes (code)
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
 -- ##############################################################
@@ -580,6 +590,7 @@ CREATE TABLE
 -- 13. MICRO PROJETS
 -- ##############################################################
 -- Via API Indisponible
+-- Modifier
 CREATE TABLE
     IF NOT EXISTS micro_projets (
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -603,6 +614,10 @@ CREATE TABLE
             'EN_SOUMISSION',
             'EN_COURS',
             'EN_ANALYSE',
+            'EN_ATTENTE',
+            'ANNULE',
+            'NON_APPROUVE',
+            'APPROUVE',
             'EN_FORMATION',
             'EN_FINANCEMENT',
             'EN_DECAISSEMENT',
@@ -613,7 +628,7 @@ CREATE TABLE
         localisation VARCHAR(50),
         geolocalisation TEXT,
         date_certification DATE,
-        -- date_transmission_partenaire DATE,
+        date_transmission_partenaire DATE,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         FOREIGN KEY (dispositif_id) REFERENCES dispositifs (id) ON DELETE CASCADE,
@@ -825,6 +840,11 @@ CREATE TABLE
         compte_remboursement_id BIGINT UNSIGNED,
         echeance_mensuelle DATE,
         montant_echeance DECIMAL(18, 2),
+        periode INT, -- Année
+        capital_rembourse DECIMAL(18, 2),
+        capital_restant DECIMAL(18, 2),
+        interets DECIMAL(18, 2),
+        amortissement_capital DECIMAL(18, 2),
         justificatif_path TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -1093,12 +1113,14 @@ CREATE TABLE
 -- ##############################################################
 -- 18. INSTANCES DE WORKFLOW & HISTORIQUE
 -- ##############################################################
+-- Modifier
 CREATE TABLE
     IF NOT EXISTS workflow_instance (
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
         micro_projet_id BIGINT UNSIGNED,
         workflow_version VARCHAR(50) NOT NULL,
         current_etape_code VARCHAR(50),
+        next_etape_code VARCHAR(50),
         status VARCHAR(20) NOT NULL DEFAULT 'EN_COURS' CHECK (
             status IN ('EN_COURS', 'TERMINE', 'REJETE', 'ABANDONNE')
         ),
@@ -1106,7 +1128,8 @@ CREATE TABLE
         completed_at TIMESTAMP NULL,
         FOREIGN KEY (micro_projet_id) REFERENCES micro_projets (id) ON DELETE CASCADE,
         FOREIGN KEY (workflow_version) REFERENCES workflow_versions (code),
-        FOREIGN KEY (current_etape_code) REFERENCES workflow_etapes (code)
+        FOREIGN KEY (current_etape_code) REFERENCES workflow_etapes (code),
+        FOREIGN KEY (next_etape_code) REFERENCES workflow_etapes (code)
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
 -- Modifier
@@ -1116,9 +1139,10 @@ CREATE TABLE
         workflow_instance_id BIGINT UNSIGNED,
         etape_code VARCHAR(50) NOT NULL,
         role_code VARCHAR(50),
-        performed_by_id BIGINT UNSIGNED,
-        entered_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        exited_at TIMESTAMP NULL,
+        action TEXT,
+        comment TEXT,
+        acted_by BIGINT UNSIGNED,
+        acted_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
         observation TEXT,
         FOREIGN KEY (workflow_instance_id) REFERENCES workflow_instance (id) ON DELETE CASCADE,
         FOREIGN KEY (etape_code) REFERENCES workflow_etapes (code),

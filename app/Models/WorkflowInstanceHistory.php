@@ -17,15 +17,15 @@ class WorkflowInstanceHistory extends Model
         'workflow_instance_id',
         'etape_code',
         'role_code',
-        'performed_by_id',
-        'entered_at',
-        'exited_at',
-        'comments',
+        'action',
+        'comment',
+        'acted_by',
+        'acted_at',
+        'observation',
     ];
 
     protected $casts = [
-        'entered_at' => 'datetime',
-        'exited_at' => 'datetime',
+        'acted_at' => 'datetime',
     ];
 
     public function workflowInstance()
@@ -38,8 +38,8 @@ class WorkflowInstanceHistory extends Model
         return $this->belongsTo(WorkflowEtape::class, 'etape_code', 'code');
     }
 
-    public function performedBy()
+    public function actedBy()
     {
-        return $this->belongsTo(Personnel::class, 'performed_by_id');
+        return $this->belongsTo(Personnel::class, 'acted_by');
     }
 }

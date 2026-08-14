@@ -18,6 +18,7 @@ class MicroProjet extends Model
         'secteur_id',
         'commune_id',
         'agence_id',
+        'agence_imputation_id',
         'promoteur_id',
         'stade_projet',
         'type_projet',
@@ -64,8 +65,18 @@ class MicroProjet extends Model
         return $this->belongsTo(AgenceRegionale::class, 'agence_id');
     }
 
+    public function agenceImputation()
+    {
+        return $this->belongsTo(AgenceRegionale::class, 'agence_imputation_id');
+    }
+
     public function promoteur()
     {
         return $this->belongsTo(Promoteur::class, 'promoteur_id');
+    }
+
+    public function workflowInstances()
+    {
+        return $this->hasMany(WorkflowInstance::class, 'micro_projet_id');
     }
 }

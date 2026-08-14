@@ -15,12 +15,21 @@ class PlanRemboursement extends Model
         'compte_remboursement_id',
         'echeance_mensuelle',
         'montant_echeance',
+        'periode',
+        'capital_rembourse',
+        'capital_restant',
+        'interets',
+        'amortissement_capital',
         'justificatif_path',
     ];
 
     protected $casts = [
         'echeance_mensuelle' => 'date',
         'montant_echeance' => 'decimal:2',
+        'capital_rembourse' => 'decimal:2',
+        'capital_restant' => 'decimal:2',
+        'interets' => 'decimal:2',
+        'amortissement_capital' => 'decimal:2',
     ];
 
     public function microProjet()

@@ -32,6 +32,11 @@ class PlanRemboursementController extends Controller
             'compte_remboursement_id' => 'nullable|exists:compte_remboursements,budget_id',
             'echeance_mensuelle' => 'nullable|date',
             'montant_echeance' => 'nullable|numeric',
+            'periode' => 'nullable|integer',
+            'capital_rembourse' => 'nullable|numeric',
+            'capital_restant' => 'nullable|numeric',
+            'interets' => 'nullable|numeric',
+            'amortissement_capital' => 'nullable|numeric',
             'justificatif_path' => 'nullable|string',
         ]);
 
@@ -60,6 +65,11 @@ class PlanRemboursementController extends Controller
             'compte_remboursement_id' => 'nullable|exists:compte_remboursements,budget_id',
             'echeance_mensuelle' => 'nullable|date',
             'montant_echeance' => 'nullable|numeric',
+            'periode' => 'nullable|integer',
+            'capital_rembourse' => 'nullable|numeric',
+            'capital_restant' => 'nullable|numeric',
+            'interets' => 'nullable|numeric',
+            'amortissement_capital' => 'nullable|numeric',
             'justificatif_path' => 'nullable|string',
         ]);
 

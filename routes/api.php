@@ -3,8 +3,6 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DirectionController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\FonctionController;
-use App\Http\Controllers\NiveauLocaliteController;
-use App\Http\Controllers\LocaliteController;
 use App\Http\Controllers\ConfigurationController;
 use App\Http\Controllers\TypeEntrepriseController;
 use App\Http\Controllers\TypeEmploiController;
@@ -47,6 +45,7 @@ use App\Http\Controllers\WorkflowInstanceController;
 use App\Http\Controllers\WorkflowInstanceHistoryController;
 use App\Http\Controllers\WorkflowInstanceDeliverableController;
 use App\Http\Controllers\WorkflowInstanceCommentController;
+use App\Http\Controllers\WorkflowExecutionController;
 use App\Http\Controllers\EntrepriseController;
 use App\Http\Controllers\ProjetController;
 use App\Http\Controllers\ZoneInterventionController;
@@ -63,9 +62,6 @@ use App\Http\Controllers\RecouvrementController;
 // Paramètres
 Route::apiResource('configurations', ConfigurationController::class);
 Route::patch('/configurations', [ConfigurationController::class, 'patch']);
-// Route::apiResource('niveau-localites', NiveauLocaliteController::class); 
-// Route::get('localites/niveau/{niveauId}', [LocaliteController::class, 'getLocalitesByNiveau']); 
-// Route::apiResource('localites', LocaliteController::class); 
 Route::apiResource('directions', DirectionController::class);
 Route::apiResource('services', ServiceController::class);
 Route::apiResource('fonctions', FonctionController::class);
@@ -125,6 +121,56 @@ Route::prefix('workflow-instances')->group(function () {
     Route::apiResource('histories', WorkflowInstanceHistoryController::class);
     Route::apiResource('deliverables', WorkflowInstanceDeliverableController::class);
     Route::apiResource('comments', WorkflowInstanceCommentController::class);
+});
+
+// Workflow-exécution
+Route::prefix('workflow-instances/{workflowInstanceId}')->group(function () {
+    // Workflow state transitions
+    Route::post('transition', [WorkflowExecutionController::class, 'transition']);
+    
+    // AGR_CLASSIC-PLUS: ETAPE_02 - Joindre le plan d'affaires
+    Route::post('deliverables/plan-affaires', [WorkflowInstanceDeliverableController::class, 'store']);
+    
+    // AGR_CLASSIC-PLUS: ETAPE_03 - Valider les plans d'affaires
+    Route::post('validate-plan-affaires', [WorkflowExecutionController::class, 'validatePlanAffaires']);
+    
+    // MEPS-MPE: ETAPE_03 - Imputation aux agences régionales
+    Route::post('impute-agence', [WorkflowExecutionController::class, 'imputeAgence']);
+    
+    // MEPS-MPE: ETAPE_04 - Mise en place du plan de décaissement
+    Route::apiResource('plan-decaissements', PlanDecaissementController::class);
+    Route::apiResource('ligne-decaissements', LigneDecaissementController::class);
+    
+    // MEPS-MPE: ETAPE_05_1 to ETAPE_05_5 - Validation du plan de décaissement
+    Route::post('validate-plan-decaissement', [WorkflowExecutionController::class, 'validatePlanDecaissement']);
+    
+    // AGR_CLASSIC-PLUS: ETAPE_04 & MEPS-MPE: ETAPE_02 - Transmission au partenaire financier
+    Route::apiResource('lots-transmission', LotTransmissionController::class);
+    Route::post('transmit-partenaire', [WorkflowExecutionController::class, 'transmitPartenaire']);
+    
+    // AGR_CLASSIC-PLUS: ETAPE_05 - Traitement des dossiers par le partenaire financier
+    Route::apiResource('plan-remboursements', PlanRemboursementController::class);
+    Route::post('analyse-partenaire', [WorkflowExecutionController::class, 'analysePartenaire']);
+    
+    // MEPS-MPE: ETAPE_06 - Traitement des lignes de décaissement
+    Route::post('authorize-ligne-decaissement', [WorkflowExecutionController::class, 'authorizeLigneDecaissement']);
+    
+    // MEPS-MPE: ETAPE_07 & AGR_CLASSIC-PLUS: ETAPE_06_1 - Exécution des lignes de décaissement
+    Route::apiResource('decaissements', DecaissementController::class);
+    Route::post('execute-decaissement', [WorkflowExecutionController::class, 'executeDecaissement']);
+    
+    // MEPS-MPE: ETAPE_08 & AGR_CLASSIC-PLUS: ETAPE_06_2 - Remboursement
+    Route::apiResource('remboursements', RemboursementController::class);
+    Route::post('execute-remboursement', [WorkflowExecutionController::class, 'executeRemboursement']);
+    
+    // MEPS-MPE: ETAPE_09 & AGR_CLASSIC-PLUS: ETAPE_06_3 - Recouvrement
+    Route::apiResource('recouvrements', RecouvrementController::class);
+    Route::post('execute-recouvrement', [WorkflowExecutionController::class, 'executeRecouvrement']);
+
+    // MEPS-MPE: ETAPE_10 & AGR_CLASSIC-PLUS: ETAPE_08 - Suivis & Exploitation
+    Route::apiResource('exploitations', ExploitationController::class);
+    Route::apiResource('visite-photos', VisitePhotoController::class);
+    Route::post('suivi', [WorkflowExecutionController::class, 'suivi']);
 });
 
 // Suivis & Indicateurs
