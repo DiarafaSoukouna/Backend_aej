@@ -18,6 +18,7 @@ class DatabaseSeeder extends Seeder
             PromoteurSeeder::class,
             ProjetSeeder::class,
             WorkflowSeeder::class,
+            GuichetSeeder::class,
         ]);
     }
 }

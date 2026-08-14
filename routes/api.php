@@ -61,6 +61,9 @@ use App\Http\Controllers\LotTransmissionController;
 use App\Http\Controllers\LigneDecaissementController;
 use App\Http\Controllers\PlanRemboursementController;
 use App\Http\Controllers\RecouvrementController;
+use App\Http\Controllers\DashboardAgencesController;
+use App\Http\Controllers\DashboardPartenairesController;
+use App\Http\Controllers\DashboardEntreprisesController;
 
 // Paramètres
 Route::apiResource('configurations', ConfigurationController::class);
@@ -236,4 +239,37 @@ Route::prefix('aej')->group(function () {
     Route::post('clear-cache', [AejApiController::class, 'clearCache']);
     Route::post('sync', [SyncAejController::class, 'sync']);
     Route::post('sync-all', [SyncAejController::class, 'syncAll']);
+});
+
+// Dashboards
+Route::prefix('dashboard')->group(function () {
+    Route::prefix('agences')->group(function () {
+        Route::get('kpis', [DashboardAgencesController::class, 'getKPIs']);
+        Route::get('projets-agence', [DashboardAgencesController::class, 'getProjetsParAgence']);
+        Route::get('projets-statut', [DashboardAgencesController::class, 'getProjetsParStatut']);
+        Route::get('financement-agence', [DashboardAgencesController::class, 'getFinancementParAgence']);
+        Route::get('classement', [DashboardAgencesController::class, 'getClassementAgences']);
+        Route::get('alertes', [DashboardAgencesController::class, 'getAlertes']);
+    });
+
+    Route::prefix('partenaires')->group(function () {
+        Route::get('kpis', [DashboardPartenairesController::class, 'getKPIs']);
+        Route::get('portefeuille-partenaire', [DashboardPartenairesController::class, 'getPortefeuilleParPartenaire']);
+        Route::get('accorde-vs-decaisse', [DashboardPartenairesController::class, 'getAccordeVsDecaisse']);
+        Route::get('etat-financements', [DashboardPartenairesController::class, 'getEtatFinancements']);
+        Route::get('evolution-remboursements', [DashboardPartenairesController::class, 'getEvolutionRemboursements']);
+        Route::get('classement', [DashboardPartenairesController::class, 'getClassementPartenaires']);
+        Route::get('alertes', [DashboardPartenairesController::class, 'getAlertes']);
+    });
+
+    Route::prefix('entreprises')->group(function () {
+        Route::get('kpis', [DashboardEntreprisesController::class, 'getKPIs']);
+        Route::get('region', [DashboardEntreprisesController::class, 'getEntreprisesParRegion']);
+        Route::get('emplois-secteur', [DashboardEntreprisesController::class, 'getEmploisParSecteur']);
+        Route::get('types-emplois', [DashboardEntreprisesController::class, 'getTypesEmplois']);
+        Route::get('top-recruteuses', [DashboardEntreprisesController::class, 'getTopEntreprisesRecruteuses']);
+        Route::get('secteur', [DashboardEntreprisesController::class, 'getEntreprisesParSecteur']);
+        Route::get('classement', [DashboardEntreprisesController::class, 'getClassementEntreprises']);
+        Route::get('alertes', [DashboardEntreprisesController::class, 'getAlertes']);
+    });
 });

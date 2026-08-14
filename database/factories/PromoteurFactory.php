@@ -83,7 +83,7 @@ class PromoteurFactory extends Factory
         $nomDeLaMere = fake()->randomElement($this->prenomsFemmes) . ' ' . fake()->randomElement($this->noms);
 
         $email = Str::slug($prenom . '.' . $nom)
-            . fake()->unique()->numberBetween(10, 99999)
+            . fake()->unique()->numberBetween(100000, 999999999)
             . '@gmail.com';
 
         return [
@@ -95,10 +95,10 @@ class PromoteurFactory extends Factory
             'tranche_age' => $trancheAge,
             'datenaissance' => $dateNaissance,
             'lieunaissance' => fake()->randomElement($this->villes),
-            'matriculeaej' => 'AEJ' . date('Y') . fake()->unique()->numberBetween(100000, 999999),
-            'numerocni' => 'CI' . fake()->unique()->numberBetween(100000000, 999999999),
-            'numerocmu' => 'CMU' . fake()->unique()->numberBetween(100000000, 999999999),
-            'numerocnps' => 'CNPS' . fake()->unique()->numberBetween(100000000, 999999999),
+            'matriculeaej' => 'AEJ' . date('Y') . fake()->unique()->numberBetween(100000000, 999999999),
+            'numerocni' => 'CI' . fake()->unique()->numberBetween(1000000000, 9999999999),
+            'numerocmu' => 'CMU' . fake()->unique()->numberBetween(1000000000, 9999999999),
+            'numerocnps' => 'CNPS' . fake()->unique()->numberBetween(1000000000, 9999999999),
             'raison_sociale' => fake()->optional(0.3)->company(),
             'handicap' => null,
             'nomdupere' => $nomDuPere,
