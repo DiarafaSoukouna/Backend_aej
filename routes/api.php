@@ -1,5 +1,8 @@
 <?php
 use Illuminate\Support\Facades\Route;
+
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\DirectionController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\FonctionController;
@@ -40,7 +43,6 @@ use App\Http\Controllers\RemboursementsDeclarationController;
 use App\Http\Controllers\DecaissementsDeclarationController; 
 use App\Http\Controllers\FormulaireEvaluationController;
 use App\Http\Controllers\EvaluationController;
-
 use App\Http\Controllers\MicroProjetController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OrganismeFinancementController;
@@ -66,79 +68,104 @@ use App\Http\Controllers\DashboardPartenairesController;
 use App\Http\Controllers\DashboardEntreprisesController;
 
 // Paramètres
-Route::apiResource('configurations', ConfigurationController::class);
-Route::patch('/configurations', [ConfigurationController::class, 'patch']);
-Route::apiResource('directions', DirectionController::class);
-Route::apiResource('services', ServiceController::class);
-Route::apiResource('fonctions', FonctionController::class);
-Route::apiResource('type-entreprises', TypeEntrepriseController::class);
-Route::apiResource('type-organismes', TypeOrganismeController::class);
-Route::apiResource('type-emplois', TypeEmploiController::class);
+// Route::middleware('verifyToken')->group(function () {
+    Route::apiResource('configurations', ConfigurationController::class);
+    Route::patch('configurations', [ConfigurationController::class, 'patch']);
+    Route::apiResource('directions', DirectionController::class);
+    Route::apiResource('services', ServiceController::class);
+    Route::apiResource('fonctions', FonctionController::class);
+    Route::apiResource('type-entreprises', TypeEntrepriseController::class);
+    Route::apiResource('type-organismes', TypeOrganismeController::class);
+    Route::apiResource('type-emplois', TypeEmploiController::class);
+// });
 
 // Gestion des utilisateurs
-Route::apiResource('permissions', PermissionController::class);
-Route::apiResource('roles', RoleController::class);
-Route::apiResource('personnels', PersonnelController::class);
-Route::put('personnels/updatePassword/{id}', [PersonnelController::class, 'updatePassword']);
-Route::apiResource('notifications', NotificationController::class);
-Route::put('notifications/{id}/mark-read', [NotificationController::class, 'markAsRead']);
-Route::get('notifications/personnel/{personnelId}', [NotificationController::class, 'getByPersonnel']);
+// Route::middleware('verifyToken')->group(function () {
+    Route::apiResource('permissions', PermissionController::class);
+    Route::apiResource('roles', RoleController::class);
+    Route::apiResource('personnels', PersonnelController::class);
+    Route::apiResource('notifications', NotificationController::class);
+    Route::put('notifications/{id}/mark-read', [NotificationController::class, 'markAsRead']);
+    Route::get('notifications/personnel/{personnelId}', [NotificationController::class, 'getByPersonnel']);
+// });
 
 // Authentification
-Route::middleware('web')->group(function () {
-    Route::post('personnels/login', [PersonnelController::class, 'auth']);
-    Route::post('personnels/logout', [PersonnelController::class, 'logout']);
-    Route::post('auth/refresh', [PersonnelController::class, 'refresh']);
-    Route::get('/personnel/me', [PersonnelController::class, 'me']);
+Route::prefix('auth')->group(function () {
+    Route::post('login', [AuthController::class, 'login']);
+    Route::post('verify', [AuthController::class, 'verifyOtp']);
+    
+    Route::middleware('verifyToken')->group(function () {
+        Route::post('logout', [AuthController::class, 'logout']);
+        Route::get('me', [AuthController::class, 'me']);
+        Route::get('refresh', [AuthController::class, 'refresh']);
+    });
+});
+
+// Gestion des mots de passe et OTP
+Route::prefix('password')->group(function () {
+    Route::post('setup', [PasswordResetController::class, 'setupPassword']);
+    Route::post('forgot', [PasswordResetController::class, 'forgotPassword']);
+    Route::post('reset', [PasswordResetController::class, 'resetPassword']);
 });
 
 // Entreprises & Projets
-Route::apiResource('mega-projets', ProjetController::class);
-Route::apiResource('zones-intervention', ZoneInterventionController::class);
-Route::apiResource('dispositifs', DispositifController::class);
-Route::apiResource('guichets', GuichetController::class);
+// Route::middleware('verifyToken')->group(function () {
+    Route::apiResource('mega-projets', ProjetController::class);
+    Route::apiResource('zones-intervention', ZoneInterventionController::class);
+    Route::apiResource('dispositifs', DispositifController::class);
+    Route::apiResource('guichets', GuichetController::class);
+// });
 
 // Promoteurs
-Route::get('promoteurs', [PromoteurController::class, 'index']);
-Route::get('promoteurs/{id}', [PromoteurController::class, 'show']);
-Route::post('promoteurs/filter', [PromoteurController::class, 'filter']);
-Route::post('promoteurs/filter-with-projects', [PromoteurController::class, 'filterWithProjects']);
-Route::get('/promoteurs/export', [PromoteurController::class, 'exportCsv']);
-Route::get('projets', [MicroProjetController::class, 'index']);
-Route::get('projets/{id}', [MicroProjetController::class, 'show']);
-Route::post('projets/filter', [MicroProjetController::class, 'filter']);
+// Route::middleware('verifyToken')->group(function () {
+    Route::get('promoteurs', [PromoteurController::class, 'index']);
+    Route::get('promoteurs/{id}', [PromoteurController::class, 'show']);
+    Route::post('promoteurs/filter', [PromoteurController::class, 'filter']);
+    Route::post('promoteurs/filter-with-projects', [PromoteurController::class, 'filterWithProjects']);
+    Route::get('promoteurs/export', [PromoteurController::class, 'exportCsv']);
+    Route::get('projets', [MicroProjetController::class, 'index']);
+    Route::get('projets/{id}', [MicroProjetController::class, 'show']);
+    Route::post('projets/filter', [MicroProjetController::class, 'filter']);
+// });
 
 // Formulaires d'évaluation
-Route::apiResource('formulaires-evaluation', FormulaireEvaluationController::class);
-Route::get('/formulaires-evaluation/{formulaireEvaluation}',[FormulaireEvaluationController::class, 'show']);
-Route::apiResource('evaluations', EvaluationController::class);
-Route::post('evaluations/{evaluation}/responses', [EvaluationController::class, 'addResponse']);
-Route::get('evaluations/{evaluation}/responses', [EvaluationController::class, 'responses']);
+// Route::middleware('verifyToken')->group(function () {
+    Route::apiResource('formulaires-evaluation', FormulaireEvaluationController::class);
+    Route::get('formulaires-evaluation/{formulaireEvaluation}',[FormulaireEvaluationController::class, 'show']);
+    Route::apiResource('evaluations', EvaluationController::class);
+    Route::post('evaluations/{evaluation}/responses', [EvaluationController::class, 'addResponse']);
+    Route::get('evaluations/{evaluation}/responses', [EvaluationController::class, 'responses']);
+// });
 
 // Workflow
-Route::prefix('workflow')->group(function () {
-    Route::apiResource('models', WorkflowController::class);
-    Route::apiResource('versions', WorkflowVersionController::class);
-    Route::apiResource('roles', WorkflowRoleController::class);
-    Route::apiResource('deliverables', WorkflowDeliverableController::class);
-    Route::apiResource('decision-outcomes', WorkflowDecisionOutcomeController::class);
-    Route::apiResource('etapes', WorkflowEtapeController::class);
-    Route::apiResource('etape-slas', WorkflowEtapeSlaController::class);
-    Route::apiResource('etape-deliverables', WorkflowEtapeDeliverableController::class);
-    Route::apiResource('etape-roles', WorkflowEtapeRoleController::class);
-    Route::apiResource('etape-decisions', WorkflowEtapeDecisionController::class);
-});
+// Route::middleware('verifyToken')->group(function () {
+    Route::prefix('workflow')->group(function () {
+        Route::apiResource('models', WorkflowController::class);
+        Route::apiResource('versions', WorkflowVersionController::class);
+        Route::apiResource('roles', WorkflowRoleController::class);
+        Route::apiResource('deliverables', WorkflowDeliverableController::class);
+        Route::apiResource('decision-outcomes', WorkflowDecisionOutcomeController::class);
+        Route::apiResource('etapes', WorkflowEtapeController::class);
+        Route::apiResource('etape-slas', WorkflowEtapeSlaController::class);
+        Route::apiResource('etape-deliverables', WorkflowEtapeDeliverableController::class);
+        Route::apiResource('etape-roles', WorkflowEtapeRoleController::class);
+        Route::apiResource('etape-decisions', WorkflowEtapeDecisionController::class);
+    });
+// });
 
 // Workflow Instances
-Route::prefix('workflow-instances')->group(function () {
-    Route::apiResource('instances', WorkflowInstanceController::class);
-    Route::apiResource('histories', WorkflowInstanceHistoryController::class);
-    Route::apiResource('deliverables', WorkflowInstanceDeliverableController::class);
-    Route::apiResource('comments', WorkflowInstanceCommentController::class);
-});
+// Route::middleware('verifyToken')->group(function () {
+    Route::prefix('workflow-instances')->group(function () {
+        Route::apiResource('instances', WorkflowInstanceController::class);
+        Route::patch('instances/{id}', [WorkflowInstanceController::class, 'patch']);
+        Route::apiResource('histories', WorkflowInstanceHistoryController::class);
+        Route::apiResource('deliverables', WorkflowInstanceDeliverableController::class);
+        Route::apiResource('comments', WorkflowInstanceCommentController::class);
+    });
+// });
 
 // Workflow-exécution
-Route::prefix('workflow-executes/{workflowInstanceId}')->group(function () {
+Route::middleware('verifyToken')->prefix('workflow-executes/{workflowInstanceId}')->group(function () {
     // Workflow state transitions
     Route::post('transition', [WorkflowExecutionController::class, 'transition']);
     
@@ -188,35 +215,46 @@ Route::prefix('workflow-executes/{workflowInstanceId}')->group(function () {
 });
 
 // Suivis & Indicateurs
-Route::apiResource('suivis', SuiviController::class);
-Route::apiResource('indicateurs', IndicateurController::class);
-Route::apiResource('indicateur-suivis', IndicateurSuiviController::class);
-Route::apiResource('exploitations', ExploitationController::class);
-Route::apiResource('visite-photos', VisitePhotoController::class);
-Route::apiResource('entreprises', EntrepriseController::class);
-Route::apiResource('embauches', EmbaucheController::class);
-Route::apiResource('observations', ObservationController::class);
-Route::apiResource('documents', DocumentController::class);
+// Route::middleware('verifyToken')->group(function () {
+    Route::apiResource('suivis', SuiviController::class);
+    Route::apiResource('indicateurs', IndicateurController::class);
+    Route::apiResource('indicateur-suivis', IndicateurSuiviController::class);
+    Route::apiResource('exploitations', ExploitationController::class);
+    Route::apiResource('visite-photos', VisitePhotoController::class);
+    Route::apiResource('entreprises', EntrepriseController::class);
+    Route::apiResource('embauches', EmbaucheController::class);
+    Route::apiResource('observations', ObservationController::class);
+    Route::apiResource('documents', DocumentController::class);
+// });
 
 // Finances
-Route::apiResource('organismes', OrganismeFinancementController::class);
-Route::get('organismes/region/{regionId}', [OrganismeFinancementController::class, 'getByRegion']);
-Route::get('organismes/type/{typeId}', [OrganismeFinancementController::class, 'getByType']);
-Route::apiResource('budgets', BudgetController::class);
-Route::apiResource('compte-financements', CompteFinancementController::class);
-Route::apiResource('plan-decaissements', PlanDecaissementController::class);
-Route::apiResource('plan-remboursements', PlanRemboursementController::class);
-Route::apiResource('lots-transmission', LotTransmissionController::class);
-Route::apiResource('ligne-decaissements', LigneDecaissementController::class);
-Route::apiResource('recouvrements', RecouvrementController::class);
-Route::apiResource('decaissements', DecaissementController::class);
-Route::apiResource('decaissements-declarations', DecaissementsDeclarationController::class);
-Route::apiResource('remboursements', RemboursementController::class);
-Route::apiResource('remboursements-declarations', RemboursementsDeclarationController::class);
-Route::apiResource('transactions', TransactionController::class);
-Route::apiResource('categories-transactions', CategorieTransactionController::class);
-Route::get('balance-comptable', [BalanceComptableController::class, 'index']);
-Route::get('balance-comptable/micro-projet/{microProjetId}', [BalanceComptableController::class, 'byMicroProjet']);
+// Route::middleware('verifyToken')->group(function () {
+    Route::apiResource('organismes', OrganismeFinancementController::class);
+    Route::get('organismes/region/{regionId}', [OrganismeFinancementController::class, 'getByRegion']);
+    Route::get('organismes/type/{typeId}', [OrganismeFinancementController::class, 'getByType']);
+    Route::apiResource('budgets', BudgetController::class);
+    Route::patch('budgets/{id}', [BudgetController::class, 'patch']);
+    Route::apiResource('compte-financements', CompteFinancementController::class);
+    Route::apiResource('plan-decaissements', PlanDecaissementController::class);
+    Route::apiResource('plan-remboursements', PlanRemboursementController::class);
+    Route::apiResource('lots-transmission', LotTransmissionController::class);
+    Route::apiResource('ligne-decaissements', LigneDecaissementController::class);
+    Route::patch('ligne-decaissements/{id}', [LigneDecaissementController::class, 'patch']);
+    Route::apiResource('recouvrements', RecouvrementController::class);
+    Route::apiResource('decaissements', DecaissementController::class);
+    Route::patch('decaissements/{id}', [DecaissementController::class, 'patch']);
+    Route::apiResource('decaissements-declarations', DecaissementsDeclarationController::class);
+    Route::patch('decaissements-declarations/{id}', [DecaissementsDeclarationController::class, 'patch']);
+    Route::apiResource('remboursements', RemboursementController::class);
+    Route::patch('remboursements/{id}', [RemboursementController::class, 'patch']);
+    Route::apiResource('remboursements-declarations', RemboursementsDeclarationController::class);
+    Route::patch('remboursements-declarations/{id}', [RemboursementsDeclarationController::class, 'patch']);
+    Route::apiResource('transactions', TransactionController::class);
+    Route::patch('transactions/{id}', [TransactionController::class, 'patch']);
+    Route::apiResource('categories-transactions', CategorieTransactionController::class);
+    Route::get('balance-comptable', [BalanceComptableController::class, 'index']);
+    Route::get('balance-comptable/micro-projet/{microProjetId}', [BalanceComptableController::class, 'byMicroProjet']);
+// });
 
 // AEJ API
 Route::prefix('aej')->group(function () {

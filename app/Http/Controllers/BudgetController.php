@@ -115,6 +115,53 @@ class BudgetController extends Controller
         }
     }
 
+    public function patch(Request $request, $id): JsonResponse
+    {
+        $budget = Budget::find($id);
+        if (!$budget) {
+            return new JsonResponse(['Message' => 'Budget not found'], 404);
+        }
+
+        $validation = Validator::make($request->all(), [
+            'intitule' => 'nullable|string|max:100',
+            'montant_accorde' => 'nullable|numeric',
+            'date_accord' => 'nullable|date',
+            'source' => 'nullable|string|max:100',
+            'devise' => 'nullable|string|max:10',
+            'statut' => 'nullable|in:EN_ATTENTE,APPROUVE,NON_APPROUVE',
+            'deblocage' => 'nullable|in:OUI,NON',
+            'date_deblocage' => 'nullable|date',
+            'signature_convention' => 'nullable|in:SIGNEE,NON_SIGNEE',
+            'date_signature' => 'nullable|date',
+            'reception_acte_credit' => 'nullable|in:OUI,NON,PARTIEL',
+            'date_reception' => 'nullable|date',
+            'observations' => 'nullable|string',
+            'valide_par' => 'nullable|exists:personnels,id',
+        ]);
+
+        if ($validation->fails()) {
+            return new JsonResponse([
+                'message' => 'Validation failed',
+                'errors' => $validation->errors()
+            ], 422);
+        }
+
+        try {
+            $budget->update(array_filter($validation->validated()));
+
+            return new JsonResponse([
+                'message' => 'Budget patched successfully',
+                'data' => $budget
+            ], 200);
+
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'message' => 'Error patching budget',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
     public function destroy($id): JsonResponse
     {
         $budget = Budget::find($id);

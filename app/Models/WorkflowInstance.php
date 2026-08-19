@@ -18,7 +18,7 @@ class WorkflowInstance extends Model
         'workflow_version',
         'current_etape_code',
         'next_etape_code',
-        'status',
+        'statut',
         'started_at',
         'completed_at',
     ];

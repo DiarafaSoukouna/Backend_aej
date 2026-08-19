@@ -27,7 +27,7 @@ class WorkflowInstanceController extends Controller
             'workflow_version' => 'required|string|max:20',
             'current_etape_code' => 'nullable|string|max:50|exists:workflow_etapes,code',
             'next_etape_code' => 'nullable|string|max:50|exists:workflow_etapes,code',
-            'status' => 'required|in:EN_COURS,TERMINE,REJETE,ABANDONNE',
+            'statut' => 'required|in:EN_COURS,TERMINE,REJETE,ABANDONNE',
             'started_at' => 'nullable|date',
             'completed_at' => 'nullable|date|after:started_at',
         ]);
@@ -45,13 +45,28 @@ class WorkflowInstanceController extends Controller
             'workflow_version' => 'nullable|exists:workflow_versions,code',
             'current_etape_code' => 'nullable|string|max:50|exists:workflow_etapes,code',
             'next_etape_code' => 'nullable|string|max:50|exists:workflow_etapes,code',
-            'status' => 'nullable|in:EN_COURS,TERMINE,REJETE,ABANDONNE',
+            'statut' => 'nullable|in:EN_COURS,TERMINE,REJETE,ABANDONNE',
             'started_at' => 'nullable|date',
             'completed_at' => 'nullable|date|after:started_at',
         ]);
 
         $instance->update($validated);
         return response()->json(['message' => 'Instance updated successfully', 'data' => $instance]);
+    }
+
+    public function patch(Request $request, $id): JsonResponse
+    {
+        $instance = WorkflowInstance::findOrFail($id);
+
+        $validated = $request->validate([
+            'current_etape_code' => 'nullable|string|max:50|exists:workflow_etapes,code',
+            'next_etape_code' => 'nullable|string|max:50|exists:workflow_etapes,code',
+            'statut' => 'nullable|in:EN_COURS,TERMINE,REJETE,ABANDONNE',
+            'completed_at' => 'nullable|date|after:started_at',
+        ]);
+
+        $instance->update(array_filter($validated));
+        return response()->json(['message' => 'Instance patched successfully', 'data' => $instance]);
     }
 
     public function destroy($id): JsonResponse
