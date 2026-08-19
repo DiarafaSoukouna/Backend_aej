@@ -94,11 +94,11 @@ Route::prefix('auth')->group(function () {
     Route::post('login', [AuthController::class, 'login']);
     Route::post('send-otp', [AuthController::class, 'sendOtp']);
     Route::post('verify-otp', [AuthController::class, 'verifyOtp']);
-    
+    Route::get('refresh', [AuthController::class, 'refresh']);
+
     Route::middleware('verifyToken')->group(function () {
         Route::post('logout', [AuthController::class, 'logout']);
         Route::get('me', [AuthController::class, 'me']);
-        Route::get('refresh', [AuthController::class, 'refresh']);
     });
 });
 

@@ -40,8 +40,9 @@ class AuthController extends Controller
 
         return new JsonResponse([
             'message' => 'Identifiants valides. Veuillez envoyer le code OTP.',
-            'email' => $personnel->email,
+            'user_id' => $personnel->id,
             'has_phone' => !empty($personnel->telephone),
+            'otp_required' => true,
         ], 200);
     }
 
@@ -96,7 +97,7 @@ class AuthController extends Controller
 
                 return new JsonResponse([
                     'message' => 'Code OTP envoyé via WhatsApp.',
-                    'phone' => $personnel->telephone,
+                    'user_id' => $personnel->id,
                     'mode' => 'WHATSAPP',
                 ], 200);
             }
@@ -105,7 +106,7 @@ class AuthController extends Controller
 
             return new JsonResponse([
                 'message' => 'Code OTP envoyé à votre adresse email.',
-                'email' => $personnel->email,
+                'user_id' => $personnel->id,
                 'mode' => 'MAIL',
             ], 200);
         } catch (\Exception $e) {
@@ -162,14 +163,19 @@ class AuthController extends Controller
             }
 
             $validOtp->markAsUsed();
-            $token = $personnel->createToken('auth-token')->plainTextToken;
-            $cookie = cookie('accessToken', $token, 60 * 24 * 30, '/', null, true, true, false, 'Lax'); // 30 jours, HTTPS, HTTP only, SameSite Lax
+            
+            $accessToken = $personnel->createToken('access-token', ['expires_at' => now()->addMinutes(30)])->plainTextToken;
+            $refreshToken = $personnel->createToken('refresh-token', ['expires_at' => now()->addDays(30)])->plainTextToken;
+            $accessCookie = cookie('accessToken', $accessToken, 30, '/', null, true, true, false, 'Lax');
+            $refreshCookie = cookie('refreshToken', $refreshToken, 60 * 24 * 30, '/', null, true, true, false, 'Lax');
 
             return new JsonResponse([
                 'message' => 'Code OTP validé, utilisateur connecté avec succès.',
-                'user_id' => $personnel->id,
-                'data' => $personnel->load(['role', 'fonction', 'agence', 'organisme']),
-            ], 200)->withCookie($cookie);
+                'user_id' => $personnel->id
+            ], 200)
+            ->withCookie($accessCookie)
+            ->withCookie($refreshCookie);
+
         } catch (\Exception $e) {
             return new JsonResponse([
                 'message' => 'Erreur lors de la vérification du code OTP',
@@ -184,21 +190,22 @@ class AuthController extends Controller
 
         if ($token) {
             $tokenModel = \Laravel\Sanctum\PersonalAccessToken::findToken($token);
-            if ($tokenModel) {
-                $tokenModel->delete();
-            }
+            if ($tokenModel) $tokenModel->delete();
         }
 
-        $cookie = cookie('accessToken', null, -1, '/', null, true, true, false, 'Lax');
+        $accessToken = cookie('accessToken', null, -1, '/', null, true, true, false, 'Lax');
+        $refreshCookie = cookie('refreshToken', null, -1, '/', null, true, true, false, 'Lax');
 
         return response()->json([
             'Message' => 'Logout successful'
-        ], 200)->withCookie($cookie);
+        ], 200)
+        ->withCookie($accessToken)
+        ->withCookie($refreshCookie);
     }
 
     public function refresh(Request $request): JsonResponse
     {
-        $token = $request->bearerToken() ?? $request->cookie('accessToken') ?? $request->query('token');
+        $token = $request->bearerToken() ?? $request->cookie('refreshToken') ?? $request->query('token');
 
         if (!$token) {
             return new JsonResponse([
@@ -214,6 +221,12 @@ class AuthController extends Controller
             ], 401);
         }
 
+        if ($tokenModel->expires_at && $tokenModel->expires_at->isPast()) {
+            return new JsonResponse([
+                'message' => 'Token expiré'
+            ], 401);
+        }
+
         $user = $tokenModel->tokenable;
 
         if (!$user) {
@@ -223,13 +236,17 @@ class AuthController extends Controller
         }
 
         $tokenModel->delete();
-        $newToken = $user->createToken('auth-token')->plainTextToken;
-        $cookie = cookie('accessToken', $newToken, 60 * 24 * 30, '/', null, true, true, false, 'Lax');
+        $newAccessToken = $user->createToken('access-token', ['expires_at' => now()->addMinutes(30)])->plainTextToken;
+        $newRefreshToken = $user->createToken('refresh-token', ['expires_at' => now()->addDays(30)])->plainTextToken;
+        $accessToken = cookie('accessToken', $newAccessToken, 30, '/', null, true, true, false, 'Lax');
+        $refreshToken = cookie('refreshToken', $newRefreshToken, 60 * 24 * 30, '/', null, true, true, false, 'Lax');
 
         return new JsonResponse([
             'message' => 'Token refresh avec succès',
-            'data' => $user->load(['role', 'fonction', 'agence', 'organisme']),
-        ], 200)->withCookie($cookie);
+            'user_id' => $user->id,
+        ], 200)
+        ->withCookie($accessToken)
+        ->withCookie($refreshToken);
     }
 
     public function me(Request $request): JsonResponse
