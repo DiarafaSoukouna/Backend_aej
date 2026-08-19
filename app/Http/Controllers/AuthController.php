@@ -16,11 +16,39 @@ use App\Services\WhatsAppService;
 class AuthController extends Controller
 {
 
-    public function login(Request $request, MailService $mailService, WhatsAppService $whatsappService): JsonResponse
+    public function login(Request $request): JsonResponse
     {
         $validation = Validator::make($request->all(), [
             'email' => 'required|string|email',
             'mot_de_passe' => 'required|string',
+        ]);
+
+        if ($validation->fails()) {
+            return new JsonResponse([
+                'message' => 'Validation failed',
+                'errors' => $validation->errors()
+            ], 422);
+        }
+
+        $personnel = Personnel::where('email', $request->input('email'))->first();
+
+        if (!$personnel || !Hash::check($request->mot_de_passe, $personnel->mot_de_passe)) {
+            return new JsonResponse([
+                'message' => 'Identifiants invalides'
+            ], 401);
+        }
+
+        return new JsonResponse([
+            'message' => 'Identifiants valides. Veuillez envoyer le code OTP.',
+            'email' => $personnel->email,
+            'has_phone' => !empty($personnel->telephone),
+        ], 200);
+    }
+
+    public function sendOtp(Request $request, MailService $mailService, WhatsAppService $whatsappService): JsonResponse
+    {
+        $validation = Validator::make($request->all(), [
+            'email' => 'required|string|email',
             'mode' => 'required|in:MAIL,WHATSAPP',
         ]);
 
@@ -31,12 +59,12 @@ class AuthController extends Controller
             ], 422);
         }
 
-        $personnel = Personnel::with(['role', 'fonction', 'agence', 'organisme'])->where('email', $request->input('email'))->first();
+        $personnel = Personnel::where('email', $request->input('email'))->first();
 
-        if (!$personnel || !Hash::check($request->mot_de_passe, $personnel->mot_de_passe)) {
+        if (!$personnel) {
             return new JsonResponse([
-                'message' => 'Identifiants invalides'
-            ], 401);
+                'message' => 'Utilisateur non trouvé'
+            ], 404);
         }
 
         try {
@@ -73,7 +101,6 @@ class AuthController extends Controller
                 ], 200);
             }
 
-            // Default to MAIL mode
             $mailService->sendOtpEmail($personnel->email, $otpCode);
 
             return new JsonResponse([
@@ -83,7 +110,7 @@ class AuthController extends Controller
             ], 200);
         } catch (\Exception $e) {
             return new JsonResponse([
-                'message' => 'Erreur lors de l\'authentification',
+                'message' => 'Erreur lors de l\'envoi du code OTP',
                 'error' => $e->getMessage()
             ], 500);
         }

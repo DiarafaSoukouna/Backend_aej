@@ -92,7 +92,8 @@ use App\Http\Controllers\DashboardEntreprisesController;
 // Authentification
 Route::prefix('auth')->group(function () {
     Route::post('login', [AuthController::class, 'login']);
-    Route::post('verify', [AuthController::class, 'verifyOtp']);
+    Route::post('send-otp', [AuthController::class, 'sendOtp']);
+    Route::post('verify-otp', [AuthController::class, 'verifyOtp']);
     
     Route::middleware('verifyToken')->group(function () {
         Route::post('logout', [AuthController::class, 'logout']);
