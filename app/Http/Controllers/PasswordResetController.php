@@ -45,7 +45,7 @@ class PasswordResetController extends Controller
                 ->update(['used' => true]);
 
             $token = $this->createToken($personnel->id, 'RESET');
-            $resetUrl = config('mail.url') . '/reset-password?mode=reset&token=' . $token;
+            $resetUrl = config('mail.url') . '/setup-password?mode=reset&token=' . $token;
 
             if ($mode === 'WHATSAPP') {
                 if (!$whatsappService->isConfigured()) {

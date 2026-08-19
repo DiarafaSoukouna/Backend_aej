@@ -16,6 +16,16 @@ use App\Services\WhatsAppService;
 class AuthController extends Controller
 {
 
+    private function initCookies($personnel)
+    {
+        $accessToken = $personnel->createToken('access-token', ['expires_at' => now()->addMinutes(30)])->plainTextToken;
+        $refreshToken = $personnel->createToken('refresh-token', ['expires_at' => now()->addDays(30)])->plainTextToken;
+        $accessCookie = cookie('accessToken', $accessToken, 30, '/', null, true, true, false, 'Lax');
+        $refreshCookie = cookie('refreshToken', $refreshToken, 60 * 24 * 30, '/', null, true, true, false, 'Lax');
+
+        return ['accessToken' => $accessCookie, 'refreshToken' => $refreshCookie];
+    }
+
     public function login(Request $request): JsonResponse
     {
         $validation = Validator::make($request->all(), [
@@ -31,6 +41,7 @@ class AuthController extends Controller
         }
 
         $personnel = Personnel::where('email', $request->input('email'))->first();
+        $configOTP = true;
 
         if (!$personnel || !Hash::check($request->mot_de_passe, $personnel->mot_de_passe)) {
             return new JsonResponse([
@@ -38,18 +49,29 @@ class AuthController extends Controller
             ], 401);
         }
 
+        if (!$configOTP) {
+            $cookies = $this->initCookies($personnel);
+
+            return new JsonResponse([
+                'message' => 'Utilisateur connecté avec succès.',
+                'user_id' => $personnel->id
+            ], 200)
+                ->withCookie($cookies['accessToken'])
+                ->withCookie($cookies['refreshToken']);
+        }
+
         return new JsonResponse([
             'message' => 'Identifiants valides. Veuillez envoyer le code OTP.',
             'user_id' => $personnel->id,
             'has_phone' => !empty($personnel->telephone),
-            'otp_required' => true,
+            'otp_required' => $configOTP,
         ], 200);
     }
 
     public function sendOtp(Request $request, MailService $mailService, WhatsAppService $whatsappService): JsonResponse
     {
         $validation = Validator::make($request->all(), [
-            'email' => 'required|string|email',
+            'user_id' => 'required|numeric',
             'mode' => 'required|in:MAIL,WHATSAPP',
         ]);
 
@@ -60,7 +82,7 @@ class AuthController extends Controller
             ], 422);
         }
 
-        $personnel = Personnel::where('email', $request->input('email'))->first();
+        $personnel = Personnel::where('id', $request->input('user_id'))->first();
 
         if (!$personnel) {
             return new JsonResponse([
@@ -120,7 +142,7 @@ class AuthController extends Controller
     public function verifyOtp(Request $request): JsonResponse
     {
         $validation = Validator::make($request->all(), [
-            'email' => 'required|string|email',
+            'user_id' => 'required|numeric',
             'code' => 'required|string|size:6',
             'mode' => 'required|in:MAIL,WHATSAPP',
         ]);
@@ -133,7 +155,7 @@ class AuthController extends Controller
         }
 
         try {
-            $personnel = Personnel::where('email', $request->email)->first();
+            $personnel = Personnel::where('id', $request->user_id)->first();
 
             if (!$personnel) {
                 return new JsonResponse([
@@ -163,19 +185,14 @@ class AuthController extends Controller
             }
 
             $validOtp->markAsUsed();
-            
-            $accessToken = $personnel->createToken('access-token', ['expires_at' => now()->addMinutes(30)])->plainTextToken;
-            $refreshToken = $personnel->createToken('refresh-token', ['expires_at' => now()->addDays(30)])->plainTextToken;
-            $accessCookie = cookie('accessToken', $accessToken, 30, '/', null, true, true, false, 'Lax');
-            $refreshCookie = cookie('refreshToken', $refreshToken, 60 * 24 * 30, '/', null, true, true, false, 'Lax');
+            $cookies = $this->initCookies($personnel);
 
             return new JsonResponse([
                 'message' => 'Code OTP validé, utilisateur connecté avec succès.',
                 'user_id' => $personnel->id
             ], 200)
-            ->withCookie($accessCookie)
-            ->withCookie($refreshCookie);
-
+                ->withCookie($cookies['accessToken'])
+                ->withCookie($cookies['refreshToken']);
         } catch (\Exception $e) {
             return new JsonResponse([
                 'message' => 'Erreur lors de la vérification du code OTP',
@@ -199,8 +216,8 @@ class AuthController extends Controller
         return response()->json([
             'Message' => 'Logout successful'
         ], 200)
-        ->withCookie($accessToken)
-        ->withCookie($refreshCookie);
+            ->withCookie($accessToken)
+            ->withCookie($refreshCookie);
     }
 
     public function refresh(Request $request): JsonResponse
@@ -227,26 +244,23 @@ class AuthController extends Controller
             ], 401);
         }
 
-        $user = $tokenModel->tokenable;
+        $personnel = $tokenModel->tokenable;
 
-        if (!$user) {
+        if (!$personnel) {
             return new JsonResponse([
                 'message' => 'Utilisateur non trouvé'
             ], 401);
         }
 
         $tokenModel->delete();
-        $newAccessToken = $user->createToken('access-token', ['expires_at' => now()->addMinutes(30)])->plainTextToken;
-        $newRefreshToken = $user->createToken('refresh-token', ['expires_at' => now()->addDays(30)])->plainTextToken;
-        $accessToken = cookie('accessToken', $newAccessToken, 30, '/', null, true, true, false, 'Lax');
-        $refreshToken = cookie('refreshToken', $newRefreshToken, 60 * 24 * 30, '/', null, true, true, false, 'Lax');
+        $cookies = $this->initCookies($personnel);
 
         return new JsonResponse([
             'message' => 'Token refresh avec succès',
-            'user_id' => $user->id,
+            'user_id' => $personnel->id,
         ], 200)
-        ->withCookie($accessToken)
-        ->withCookie($refreshToken);
+            ->withCookie($cookies['accessToken'])
+            ->withCookie($cookies['refreshToken']);
     }
 
     public function me(Request $request): JsonResponse
@@ -267,9 +281,9 @@ class AuthController extends Controller
             ], 401);
         }
 
-        $user = $tokenModel->tokenable;
+        $personnel = $tokenModel->tokenable;
 
-        if (!$user) {
+        if (!$personnel) {
             return new JsonResponse([
                 'message' => 'Utilisateur non trouvé'
             ], 401);
@@ -277,8 +291,8 @@ class AuthController extends Controller
 
         return new JsonResponse([
             'message' => 'Utilisateur récupéré avec succès',
-            'data' => $user->load(['role', 'fonction', 'agence', 'organisme']),
-            'permissions' => $user->getAllPermissions(),
+            'data' => $personnel->load(['role', 'fonction', 'agence', 'organisme']),
+            'permissions' => $personnel->getAllPermissions(),
         ], 200);
     }
 }
