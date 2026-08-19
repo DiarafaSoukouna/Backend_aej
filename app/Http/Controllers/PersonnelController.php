@@ -65,11 +65,11 @@ class PersonnelController extends Controller
                 'personnel_id' => $personnel->id,
                 'token' => $hashedToken,
                 'type' => 'SETUP',
-                'expires_at' => now()->addHours(24), // Valide 24h
+                'expires_at' => now()->addHours(24 * 3), // Valide 3 jours
                 'created_at' => now(),
             ]);
 
-            $setupUrl = config('mail.url') . '/setup-password?token=' . $plainToken;
+            $setupUrl = config('mail.url') . '/setup-password?mode=setup&token=' . $plainToken;
             $mailService->sendSetupEmail($personnel, $setupUrl);
 
             return new JsonResponse([

@@ -309,6 +309,7 @@ CREATE TABLE
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
         personnel_id BIGINT UNSIGNED,
         code VARCHAR(255) NOT NULL, --Hashed
+        mode ENUM ('MAIL', 'WHATSAPP') DEFAULT 'MAIL',
         expires_at DATETIME NOT NULL,
         used TINYINT (1) NOT NULL DEFAULT 0,
         created_at DATETIME NOT NULL,

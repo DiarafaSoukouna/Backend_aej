@@ -6,6 +6,7 @@ use App\Models\Token;
 use App\Models\OtpCode;
 use App\Models\Personnel;
 use App\Services\MailService;
+use App\Services\WhatsAppService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
@@ -13,10 +14,11 @@ use Illuminate\Http\JsonResponse;
 
 class PasswordResetController extends Controller
 {
-    public function forgotPassword(Request $request, MailService $mailService): JsonResponse
+    public function forgotPassword(Request $request, MailService $mailService, WhatsAppService $whatsappService): JsonResponse
     {
         $validation = Validator::make($request->all(), [
             'email' => 'required|string|email',
+            'mode' => 'required|in:MAIL,WHATSAPP',
         ]);
 
         if ($validation->fails()) {
@@ -35,17 +37,42 @@ class PasswordResetController extends Controller
         }
 
         try {
+            $mode = $request->input('mode', 'MAIL');
+            
             Token::where('personnel_id', $personnel->id)
                 ->where('type', 'RESET')
                 ->where('used', false)
                 ->update(['used' => true]);
 
             $token = $this->createToken($personnel->id, 'RESET');
-            $resetUrl = config('app.url') . '/reset-password?token=' . $token;
+            $resetUrl = config('mail.url') . '/reset-password?mode=reset&token=' . $token;
+
+            if ($mode === 'WHATSAPP') {
+                if (!$whatsappService->isConfigured()) {
+                    return new JsonResponse([
+                        'message' => 'Service WhatsApp non configuré. Veuillez contacter l\'administrateur.'
+                    ], 500);
+                }
+
+                if (empty($personnel->telephone)) {
+                    return new JsonResponse([
+                        'message' => 'Numéro de téléphone non configuré pour ce compte.'
+                    ], 400);
+                }
+
+                $whatsappService->sendMessage($personnel->telephone, "Votre lien de réinitialisation de mot de passe: {$resetUrl}\n\nCe lien expire dans 1 heure.");
+
+                return new JsonResponse([
+                    'message' => 'Un lien de réinitialisation a été envoyé via WhatsApp.',
+                    'mode' => 'WHATSAPP',
+                ], 200);
+            }
+
             $mailService->sendPasswordResetEmail($personnel->email, $resetUrl);
 
             return new JsonResponse([
-                'message' => 'Un lien de réinitialisation a été envoyé à votre adresse email.'
+                'message' => 'Un lien de réinitialisation a été envoyé à votre adresse email.',
+                'mode' => 'MAIL',
             ], 200);
         } catch (\Exception $e) {
             return new JsonResponse([

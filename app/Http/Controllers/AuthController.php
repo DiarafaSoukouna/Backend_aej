@@ -10,16 +10,18 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\JsonResponse;
 use App\Services\MailService;
+use App\Services\WhatsAppService;
 
 
 class AuthController extends Controller
 {
 
-    public function login(Request $request, MailService $mailService): JsonResponse
+    public function login(Request $request, MailService $mailService, WhatsAppService $whatsappService): JsonResponse
     {
         $validation = Validator::make($request->all(), [
             'email' => 'required|string|email',
             'mot_de_passe' => 'required|string',
+            'mode' => 'required|in:MAIL,WHATSAPP',
         ]);
 
         if ($validation->fails()) {
@@ -39,19 +41,45 @@ class AuthController extends Controller
 
         try {
             $otpCode = str_pad(rand(0, 999999), 6, '0', STR_PAD_LEFT);
-            OtpCode::where('personnel_id', $personnel->id)->where('used', false)->update(['used' => true]);
+            $mode = $request->input('mode', 'MAIL');
 
+            OtpCode::where('personnel_id', $personnel->id)->where('used', false)->update(['used' => true]);
             OtpCode::create([
                 'personnel_id' => $personnel->id,
                 'code' => Hash::make($otpCode),
+                'mode' => $mode,
                 'expires_at' => now()->addMinutes(15),
             ]);
 
+            if ($mode === 'WHATSAPP') {
+                if (!$whatsappService->isConfigured()) {
+                    return new JsonResponse([
+                        'message' => 'Service WhatsApp non configuré. Veuillez contacter l\'administrateur.'
+                    ], 500);
+                }
+
+                if (empty($personnel->telephone)) {
+                    return new JsonResponse([
+                        'message' => 'Numéro de téléphone non configuré pour ce compte.'
+                    ], 400);
+                }
+
+                $whatsappService->sendOtp($personnel->telephone, $otpCode);
+
+                return new JsonResponse([
+                    'message' => 'Code OTP envoyé via WhatsApp.',
+                    'phone' => $personnel->telephone,
+                    'mode' => 'WHATSAPP',
+                ], 200);
+            }
+
+            // Default to MAIL mode
             $mailService->sendOtpEmail($personnel->email, $otpCode);
 
             return new JsonResponse([
                 'message' => 'Code OTP envoyé à votre adresse email.',
                 'email' => $personnel->email,
+                'mode' => 'MAIL',
             ], 200);
         } catch (\Exception $e) {
             return new JsonResponse([
@@ -66,6 +94,7 @@ class AuthController extends Controller
         $validation = Validator::make($request->all(), [
             'email' => 'required|string|email',
             'code' => 'required|string|size:6',
+            'mode' => 'required|in:MAIL,WHATSAPP',
         ]);
 
         if ($validation->fails()) {
@@ -84,7 +113,12 @@ class AuthController extends Controller
                 ], 401);
             }
 
-            $otpCodes = OtpCode::where('personnel_id', $personnel->id)->where('used', false)->where('expires_at', '>', now())->get();
+            $mode = $request->input('mode');
+            $otpCodes = OtpCode::where('personnel_id', $personnel->id)
+                ->where('used', false)
+                ->where('expires_at', '>', now())
+                ->where('mode', $mode)
+                ->get();
 
             $validOtp = null;
             foreach ($otpCodes as $otp) {
@@ -107,6 +141,7 @@ class AuthController extends Controller
             return new JsonResponse([
                 'message' => 'Code OTP validé, utilisateur connecté avec succès.',
                 'user_id' => $personnel->id,
+                'data' => $personnel->load(['role', 'fonction', 'agence', 'organisme']),
             ], 200)->withCookie($cookie);
         } catch (\Exception $e) {
             return new JsonResponse([
@@ -199,6 +234,7 @@ class AuthController extends Controller
         return new JsonResponse([
             'message' => 'Utilisateur récupéré avec succès',
             'data' => $user->load(['role', 'fonction', 'agence', 'organisme']),
+            'permissions' => $user->getAllPermissions(),
         ], 200);
     }
 }
