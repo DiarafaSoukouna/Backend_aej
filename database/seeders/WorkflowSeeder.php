@@ -13,8 +13,8 @@ use App\Models\WorkflowEtapeRole;
 use App\Models\WorkflowEtapeDeliverable;
 use App\Models\WorkflowEtapeDecision;
 use App\Models\WorkflowDecisionOutcome;
-use App\Models\WorkflowRole;
 use App\Models\WorkflowDeliverable;
+use App\Models\Role;
 use Database\Factories\WorkflowFactory;
 
 
@@ -43,14 +43,22 @@ class WorkflowSeeder extends Seeder
 
         // Seed Workflow Roles
         foreach (WorkflowFactory::getWorkflowRoles() as $code => $data) {
-            WorkflowRole::updateOrCreate(
-                ['code' => $code],
-                [
-                    'name' => $data['name'],
+            $role = Role::where('libelle', $data['name'])->first();
+            if ($role) {
+                // Update existing role (don't change code to avoid FK constraint issues)
+                $role->update([
                     'description' => $data['description'],
                     'is_active' => $data['is_active'],
-                ]
-            );
+                ]);
+            } else {
+                // Create new role
+                Role::create([
+                    'code' => $code,
+                    'libelle' => $data['name'],
+                    'description' => $data['description'],
+                    'is_active' => $data['is_active'],
+                ]);
+            }
         }
 
         // Seed Workflow Decision Outcomes
@@ -153,7 +161,7 @@ class WorkflowSeeder extends Seeder
                             'role_code' => $roleData['role_code'],
                         ],
                         [
-                            'responsibility' => $roleData['action'] ?? null,
+                            'action' => $roleData['action'] ?? null,
                         ]
                     );
                 }

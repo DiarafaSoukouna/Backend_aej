@@ -77,7 +77,7 @@ CREATE TABLE configurations (
  delai_inactivite_minutes INT NOT NULL,
  nombre_session_possible INT NOT NULL,
  nombre_tentatives_connexion INT NOT NULL,
- delai_code_tp_minutes INT NOT NULL,
+ delai_code_otp_minutes INT NOT NULL,
  delai_changement_mdp_mois INT NOT NULL,
  delai_suppression_secondes INT NOT NULL,
  code_instance_whatsapp VARCHAR(255) NULL,

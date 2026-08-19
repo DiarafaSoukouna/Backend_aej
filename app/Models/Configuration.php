@@ -24,7 +24,7 @@ class Configuration extends Model
         'delai_inactivite_minutes',
         'nombre_session_possible',
         'nombre_tentatives_connexion',
-        'delai_code_tp_minutes',
+        'delai_code_otp_minutes',
         'delai_changement_mdp_mois',
         'delai_suppression_secondes',
         'code_instance_whatsapp',

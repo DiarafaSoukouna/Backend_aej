@@ -16,7 +16,7 @@ class WorkflowExecutionController extends Controller
         $validated = $request->validate([
             'current_etape_code' => 'nullable|string|max:50|exists:workflow_etapes,code',
             'next_etape_code' => 'nullable|string|max:50|exists:workflow_etapes,code',
-            'status' => 'nullable|in:EN_COURS,TERMINE,REJETE,ABANDONNE',
+            'statut' => 'nullable|in:EN_COURS,TERMINE,REJETE,ABANDONNE',
             'comment' => 'nullable|string',
         ]);
 
@@ -27,8 +27,8 @@ class WorkflowExecutionController extends Controller
         if (isset($validated['next_etape_code'])) {
             $instance->next_etape_code = $validated['next_etape_code'];
         }
-        if (isset($validated['status'])) {
-            $instance->status = $validated['status'];
+        if (isset($validated['statut'])) {
+            $instance->statut = $validated['statut'];
         }
         $instance->save();
 
@@ -44,7 +44,7 @@ class WorkflowExecutionController extends Controller
             ]);
         }
 
-        // Update micro-projet status if needed
+        // Update micro-projet statut if needed
         if (isset($validated['current_etape_code']) && $instance->microProjet) {
             $instance->microProjet->statut = $validated['current_etape_code'];
             $instance->microProjet->save();
@@ -64,12 +64,12 @@ class WorkflowExecutionController extends Controller
 
         $currentEtape = $validated['approved'] ? 'PLAN_AFFAIRES_VALIDE' : 'PLAN_AFFAIRES_REJETE';
         $nextEtape = $validated['approved'] ? 'TRANSMIS_PARTENAIRE' : null;
-        $status = $validated['approved'] ? 'EN_COURS' : 'REJETE';
+        $statut = $validated['approved'] ? 'EN_COURS' : 'REJETE';
 
         // Update workflow instance
         $instance->current_etape_code = $currentEtape;
         $instance->next_etape_code = $nextEtape;
-        $instance->status = $status;
+        $instance->statut = $statut;
         $instance->save();
 
         // Add to history
@@ -82,7 +82,7 @@ class WorkflowExecutionController extends Controller
             'acted_at' => now(),
         ]);
 
-        // Update micro-projet status
+        // Update micro-projet statut
         if ($instance->microProjet) {
             $instance->microProjet->statut = $currentEtape;
             $instance->microProjet->save();
@@ -140,7 +140,7 @@ class WorkflowExecutionController extends Controller
         // Update workflow instance
         $instance->current_etape_code = $currentEtape;
         $instance->next_etape_code = $validated['approved'] ? 'EN_VALIDATION_INTERNE' : 'PLAN_DECAISSEMENT_SAISI';
-        $instance->status = $validated['approved'] ? 'EN_COURS' : 'EN_COURS';
+        $instance->statut = $validated['approved'] ? 'EN_COURS' : 'EN_COURS';
         $instance->save();
 
         // Add to history
@@ -153,7 +153,7 @@ class WorkflowExecutionController extends Controller
             'acted_at' => now(),
         ]);
 
-        // Update micro-projet status
+        // Update micro-projet statut
         if ($instance->microProjet) {
             $instance->microProjet->statut = $currentEtape;
             $instance->microProjet->save();
@@ -173,12 +173,12 @@ class WorkflowExecutionController extends Controller
 
         $currentEtape = $validated['approved'] ? 'EN_ANALYSE_PARTENAIRE' : 'ANNULE';
         $nextEtape = $validated['approved'] ? 'EN_FINANCEMENT' : null;
-        $status = $validated['approved'] ? 'EN_COURS' : 'REJETE';
+        $statut = $validated['approved'] ? 'EN_COURS' : 'REJETE';
 
         // Update workflow instance
         $instance->current_etape_code = $currentEtape;
         $instance->next_etape_code = $nextEtape;
-        $instance->status = $status;
+        $instance->statut = $statut;
         $instance->save();
 
         // Add to history
@@ -191,7 +191,7 @@ class WorkflowExecutionController extends Controller
             'acted_at' => now(),
         ]);
 
-        // Update micro-projet status
+        // Update micro-projet statut
         if ($instance->microProjet) {
             $instance->microProjet->statut = $currentEtape;
             $instance->microProjet->save();
@@ -210,7 +210,7 @@ class WorkflowExecutionController extends Controller
             'comment' => 'nullable|string',
         ]);
 
-        // Update ligne decaissements status
+        // Update ligne decaissements statut
         foreach ($validated['ligne_ids'] as $ligneId) {
             $ligne = \App\Models\LigneDecaissement::find($ligneId);
             if ($ligne) {
@@ -234,7 +234,7 @@ class WorkflowExecutionController extends Controller
             'acted_at' => now(),
         ]);
 
-        // Update micro-projet status
+        // Update micro-projet statut
         if ($instance->microProjet) {
             $instance->microProjet->statut = 'EN_FINANCEMENT';
             $instance->microProjet->save();
@@ -267,7 +267,7 @@ class WorkflowExecutionController extends Controller
             'acted_at' => now(),
         ]);
 
-        // Update micro-projet status
+        // Update micro-projet statut
         if ($instance->microProjet) {
             $instance->microProjet->statut = 'TRANSMIS_PARTENAIRE';
             $instance->microProjet->save();
@@ -288,12 +288,12 @@ class WorkflowExecutionController extends Controller
 
         $currentEtape = 'EN_ANALYSE_PARTENAIRE';
         $nextEtape = $validated['approved'] ? 'EN_FINANCEMENT' : 'ANNULE';
-        $status = $validated['approved'] ? 'EN_COURS' : 'REJETE';
+        $statut = $validated['approved'] ? 'EN_COURS' : 'REJETE';
 
         // Update workflow instance
         $instance->current_etape_code = $currentEtape;
         $instance->next_etape_code = $nextEtape;
-        $instance->status = $status;
+        $instance->statut = $statut;
         $instance->save();
 
         // Add to history
@@ -306,7 +306,7 @@ class WorkflowExecutionController extends Controller
             'acted_at' => now(),
         ]);
 
-        // Update micro-projet status
+        // Update micro-projet statut
         if ($instance->microProjet) {
             $instance->microProjet->statut = $currentEtape;
             $instance->microProjet->save();
@@ -325,7 +325,7 @@ class WorkflowExecutionController extends Controller
             'comment' => 'nullable|string',
         ]);
 
-        // Update decaissements status
+        // Update decaissements statut
         foreach ($validated['decaissement_ids'] as $decaissementId) {
             $decaissement = \App\Models\Decaissement::find($decaissementId);
             if ($decaissement) {
@@ -349,7 +349,7 @@ class WorkflowExecutionController extends Controller
             'acted_at' => now(),
         ]);
 
-        // Update micro-projet status
+        // Update micro-projet statut
         if ($instance->microProjet) {
             $instance->microProjet->statut = 'EN_DECAISSEMENT';
             $instance->microProjet->save();
@@ -368,7 +368,7 @@ class WorkflowExecutionController extends Controller
             'comment' => 'nullable|string',
         ]);
 
-        // Update remboursements status
+        // Update remboursements statut
         foreach ($validated['remboursement_ids'] as $remboursementId) {
             $remboursement = \App\Models\Remboursement::find($remboursementId);
             if ($remboursement) {
@@ -392,7 +392,7 @@ class WorkflowExecutionController extends Controller
             'acted_at' => now(),
         ]);
 
-        // Update micro-projet status
+        // Update micro-projet statut
         if ($instance->microProjet) {
             $instance->microProjet->statut = 'EN_REMBOURSEMENT';
             $instance->microProjet->save();
@@ -411,7 +411,7 @@ class WorkflowExecutionController extends Controller
             'comment' => 'nullable|string',
         ]);
 
-        // Update recouvrements status
+        // Update recouvrements statut
         foreach ($validated['recouvrement_ids'] as $recouvrementId) {
             $recouvrement = \App\Models\Recouvrement::find($recouvrementId);
             if ($recouvrement) {
@@ -435,7 +435,7 @@ class WorkflowExecutionController extends Controller
             'acted_at' => now(),
         ]);
 
-        // Update micro-projet status
+        // Update micro-projet statut
         if ($instance->microProjet) {
             $instance->microProjet->statut = 'EN_REMBOURSEMENT';
             $instance->microProjet->save();
@@ -470,7 +470,7 @@ class WorkflowExecutionController extends Controller
             'acted_at' => now(),
         ]);
 
-        // Update micro-projet status
+        // Update micro-projet statut
         if ($instance->microProjet) {
             $instance->microProjet->statut = 'EN_SUIVI';
             $instance->microProjet->save();

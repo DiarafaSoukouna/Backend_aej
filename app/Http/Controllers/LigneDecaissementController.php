@@ -85,6 +85,38 @@ class LigneDecaissementController extends Controller
         }
     }
 
+    public function patch(Request $request, $id): JsonResponse
+    {
+        $ligne = LigneDecaissement::find($id);
+        if (!$ligne) {
+            return new JsonResponse(['message' => 'Ligne decaissement not found'], 404);
+        }
+
+        $validation = Validator::make($request->all(), [
+            'numero_ligne' => 'nullable|integer',
+            'object_ligne' => 'nullable|string|max:100',
+            'montant_ligne' => 'nullable|numeric',
+            'mode_decaisse' => 'nullable|in:CHEQUE,VIREMENT',
+            'date_prevue' => 'nullable|date',
+            'intitule_prestataire' => 'nullable|string|max:100',
+            'numero_compte' => 'nullable|string|max:100',
+            'contact' => 'nullable|string|max:100',
+            'statut' => 'nullable|in:VALIDE,NON_VALIDE',
+            'observations' => 'nullable|string',
+        ]);
+
+        if ($validation->fails()) {
+            return new JsonResponse(['message' => 'Validation failed', 'errors' => $validation->errors()], 422);
+        }
+
+        try {
+            $ligne->update(array_filter($validation->validated()));
+            return new JsonResponse(['message' => 'Ligne decaissement patched successfully', 'data' => $ligne], 200);
+        } catch (\Exception $e) {
+            return new JsonResponse(['message' => 'Error patching ligne decaissement', 'error' => $e->getMessage()], 500);
+        }
+    }
+
     public function destroy($id): JsonResponse
     {
         $ligne = LigneDecaissement::find($id);

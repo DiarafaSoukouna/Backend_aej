@@ -236,6 +236,7 @@ CREATE TABLE
         code VARCHAR(50) NOT NULL UNIQUE,
         libelle VARCHAR(100) NOT NULL,
         description TEXT NULL,
+        is_active BOOLEAN DEFAULT TRUE,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
@@ -287,6 +288,31 @@ CREATE TABLE
         message TEXT NOT NULL,
         lue TINYINT (1) NOT NULL DEFAULT 0,
         created_at DATETIME NOT NULL,
+        FOREIGN KEY (personnel_id) REFERENCES personnels (id) ON DELETE CASCADE
+    ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
+
+CREATE TABLE 
+    IF NOT EXISTS tokens (
+        id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+        personnel_id BIGINT UNSIGNED,
+        token VARCHAR(255) NOT NULL, --Hashed
+        type ENUM ('RESET', 'SETUP') NOT NULL,
+        used TINYINT (1) NOT NULL DEFAULT 0, 
+        expires_at DATETIME NOT NULL,
+        created_at DATETIME NOT NULL,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        FOREIGN KEY (personnel_id) REFERENCES personnels (id) ON DELETE CASCADE
+    ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
+
+CREATE TABLE 
+    IF NOT EXISTS otp_codes (
+        id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+        personnel_id BIGINT UNSIGNED,
+        code VARCHAR(255) NOT NULL, --Hashed
+        expires_at DATETIME NOT NULL,
+        used TINYINT (1) NOT NULL DEFAULT 0,
+        created_at DATETIME NOT NULL,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         FOREIGN KEY (personnel_id) REFERENCES personnels (id) ON DELETE CASCADE
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
@@ -1103,8 +1129,8 @@ CREATE TABLE
         workflow_version VARCHAR(50) NOT NULL,
         current_etape_code VARCHAR(50),
         next_etape_code VARCHAR(50),
-        status VARCHAR(20) NOT NULL DEFAULT 'EN_COURS' CHECK (
-            status IN ('EN_COURS', 'TERMINE', 'REJETE', 'ABANDONNE')
+        statut VARCHAR(20) NOT NULL DEFAULT 'EN_COURS' CHECK (
+            statu IN ('EN_COURS', 'TERMINE', 'REJETE', 'ABANDONNE')
         ),
         started_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
         completed_at TIMESTAMP NULL,

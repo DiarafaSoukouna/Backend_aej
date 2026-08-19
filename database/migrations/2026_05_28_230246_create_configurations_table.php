@@ -37,7 +37,7 @@ return new class extends Migration
     $table->integer('nombre_session_possible');
     $table->integer('nombre_tentatives_connexion');
 
-    $table->integer('delai_code_tp_minutes');
+    $table->integer('delai_code_otp_minutes');
     $table->integer('delai_changement_mdp_mois');
     $table->integer('delai_suppression_secondes');
 

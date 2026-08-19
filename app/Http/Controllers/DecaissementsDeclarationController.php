@@ -105,6 +105,43 @@ class DecaissementsDeclarationController extends Controller
         }
     }
 
+    public function patch(Request $request, $id): JsonResponse
+    {
+        $declaration = DecaissementsDeclaration::find($id);
+        if (!$declaration) {
+            return new JsonResponse(['Message' => 'Déclaration de décaissement not found'], 404);
+        }
+
+        $validation = Validator::make($request->all(), [
+            'montant_declare' => 'nullable|numeric',
+            'date_declaree' => 'nullable|date',
+            'reference_banque' => 'nullable|string|max:100',
+            'justificatif_path' => 'nullable|string',
+            'observations' => 'nullable|string',
+            'statut' => 'nullable|in:BROUILLON,SOUMIS,TRAITE',
+        ]);
+
+        if ($validation->fails()) {
+            return new JsonResponse([
+                'message' => 'Validation failed',
+                'errors' => $validation->errors()
+            ], 422);
+        }
+
+        try {
+            $declaration->update(array_filter($validation->validated()));
+            return new JsonResponse([
+                'message' => 'Déclaration de décaissement patched successfully',
+                'data' => $declaration
+            ], 200);
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'message' => 'Error patching déclaration de décaissement',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
     public function destroy($id): JsonResponse
     {
         $declaration = DecaissementsDeclaration::find($id);

@@ -103,6 +103,42 @@ class DecaissementController extends Controller
         }
     }
 
+    public function patch(Request $request, $id): JsonResponse
+    {
+        $decaissement = Decaissement::find($id);
+        if (!$decaissement) {
+            return new JsonResponse(['Message' => 'Decaissement not found'], 404);
+        }
+
+        $validation = Validator::make($request->all(), [
+            'montant_decaisse' => 'nullable|numeric',
+            'date_decaissement' => 'nullable|date',
+            'reference_banque' => 'nullable|string',
+            'statut' => 'nullable|in:EN_ATTENTE,VALIDE,NON_VALIDE',
+            'observations' => 'nullable|string',
+        ]);
+
+        if ($validation->fails()) {
+            return new JsonResponse([
+                'message' => 'Validation failed',
+                'errors' => $validation->errors()
+            ], 422);
+        }
+
+        try {
+            $decaissement->update(array_filter($validation->validated()));
+            return new JsonResponse([
+                'message' => 'Decaissement patched successfully',
+                'data' => $decaissement
+            ], 200);
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'message' => 'Error patching decaissement',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
     public function destroy($id): JsonResponse
     {
         $decaissement = Decaissement::find($id);

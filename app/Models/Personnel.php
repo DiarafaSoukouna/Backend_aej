@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Laravel\Sanctum\HasApiTokens;
 
@@ -55,6 +54,6 @@ class Personnel extends Authenticatable
     
     public function organisme()
     {
-        return $this->belongsTo(Organisme::class);
+        return $this->belongsTo(OrganismeFinancement::class);
     }
 }

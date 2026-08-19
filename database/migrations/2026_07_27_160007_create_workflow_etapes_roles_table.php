@@ -12,7 +12,7 @@ return new class extends Migration
             $table->id();
             $table->string('etape_code');
             $table->string('role_code');
-            $table->text('responsibility')->nullable();
+            $table->text('action')->nullable();
             
             $table->foreign('etape_code')->references('code')->on('workflow_etapes')->onDelete('cascade');
             $table->foreign('role_code')->references('code')->on('roles')->onDelete('cascade');

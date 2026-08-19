@@ -111,6 +111,48 @@ class TransactionController extends Controller
         }
     }
 
+    public function patch(Request $request, $id): JsonResponse
+    {
+        $transaction = Transaction::find($id);
+        if (!$transaction) {
+            return new JsonResponse(['Message' => 'Transaction not found'], 404);
+        }
+
+        $validation = Validator::make($request->all(), [
+            'libelle' => 'nullable|string|max:200',
+            'type' => 'nullable|in:RECETTE,DEPENSE',
+            'montant' => 'nullable|numeric',
+            'statut' => 'nullable|in:BROUILLON,SOUMIS,VALIDE,REJETE,ANNULE',
+            'mode_paiement' => 'nullable|in:ESPECES,BANQUE,MOBILE_MONEY,CHEQUE,AUTRE',
+            'reference' => 'nullable|string|max:50|unique:transactions_financieres,reference,' . $id,
+            'justificatif_path' => 'nullable|string',
+            'observations' => 'nullable|string',
+            'date' => 'nullable|date',
+        ]);
+
+        if ($validation->fails()) {
+            return new JsonResponse([
+                'message' => 'Validation failed',
+                'errors' => $validation->errors()
+            ], 422);
+        }
+
+        try {
+            $transaction->update(array_filter($validation->validated()));
+
+            return new JsonResponse([
+                'message' => 'Transaction patched successfully',
+                'data' => $transaction
+            ], 200);
+
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'message' => 'Error patching transaction',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
     public function destroy($id): JsonResponse
     {
         $transaction = Transaction::find($id);

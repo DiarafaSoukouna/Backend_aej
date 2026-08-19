@@ -28,7 +28,7 @@ class WorkflowEtapeRoleController extends Controller
     {
         $validation = Validator::make($request->all(), [
             'etape_code' => 'required|exists:workflow_etapes,code',
-            'role_code' => 'required|exists:workflow_roles,code',
+            'role_code' => 'required|exists:roles,code',
             'action' => 'required|string|max:50',
         ]);
 
@@ -64,7 +64,7 @@ class WorkflowEtapeRoleController extends Controller
 
         $validation = Validator::make($request->all(), [
             'etape_code' => 'sometimes|required|exists:workflow_etapes,code',
-            'role_code' => 'sometimes|required|exists:workflow_roles,code',
+            'role_code' => 'sometimes|required|exists:roles,code',
             'action' => 'sometimes|required|string|max:50',
         ]);
 
