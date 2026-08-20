@@ -71,7 +71,7 @@ class AuthController extends Controller
     public function sendOtp(Request $request, MailService $mailService, WhatsAppService $whatsappService): JsonResponse
     {
         $validation = Validator::make($request->all(), [
-            'user_id' => 'required|numeric',
+            'email' => 'required|string|email',
             'mode' => 'required|in:MAIL,WHATSAPP',
         ]);
 
@@ -82,7 +82,7 @@ class AuthController extends Controller
             ], 422);
         }
 
-        $personnel = Personnel::where('id', $request->input('user_id'))->first();
+        $personnel = Personnel::where('email', $request->input('email'))->first();
 
         if (!$personnel) {
             return new JsonResponse([
@@ -142,7 +142,7 @@ class AuthController extends Controller
     public function verifyOtp(Request $request): JsonResponse
     {
         $validation = Validator::make($request->all(), [
-            'user_id' => 'required|numeric',
+            'email' => 'required|string|email',
             'code' => 'required|string|size:6',
             'mode' => 'required|in:MAIL,WHATSAPP',
         ]);
@@ -155,7 +155,7 @@ class AuthController extends Controller
         }
 
         try {
-            $personnel = Personnel::where('id', $request->user_id)->first();
+            $personnel = Personnel::where('email', $request->email)->first();
 
             if (!$personnel) {
                 return new JsonResponse([
