@@ -186,6 +186,49 @@ class PasswordResetController extends Controller
         }
     }
 
+    public function changePassword(Request $request): JsonResponse
+    {
+        $validation = Validator::make($request->all(), [
+            'password_old' => 'required|string|min:8',
+            'password_new' => 'required|string|min:8',
+        ]);
+
+        if ($validation->fails()) {
+            return new JsonResponse([
+                'message' => 'Validation failed',
+                'errors' => $validation->errors()
+            ], 422);
+        }
+
+        try {
+            $personnel = Personnel::find($request->user()->id);
+            if (!$personnel) {
+                return new JsonResponse([
+                    'message' => 'Personnel non trouvé'
+                ], 404);
+            }
+
+            if (!Hash::check($request->password_old, $personnel->mot_de_passe)) {
+                return new JsonResponse([
+                    'message' => 'Mot de passe actuel incorrect'
+                ], 400);
+            }
+
+            $personnel->update([
+                'mot_de_passe' => Hash::make($request->password_new)
+            ]);
+
+            return new JsonResponse([
+                'message' => 'Mot de passe modifié avec succès'
+            ], 200);
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'message' => 'Erreur lors de la modification du mot de passe',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
     private function createToken(int $personnelId, string $type): string
     {
         $plainToken = bin2hex(random_bytes(32));

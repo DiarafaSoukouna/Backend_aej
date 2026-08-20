@@ -107,6 +107,7 @@ Route::prefix('password')->group(function () {
     Route::post('setup', [PasswordResetController::class, 'setupPassword']);
     Route::post('forgot', [PasswordResetController::class, 'forgotPassword']);
     Route::post('reset', [PasswordResetController::class, 'resetPassword']);
+    Route::middleware('verifyToken')->post('change', [PasswordResetController::class, 'changePassword']);
 });
 
 // Entreprises & Projets
