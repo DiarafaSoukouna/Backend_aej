@@ -701,11 +701,17 @@ CREATE TABLE
 CREATE TABLE
     IF NOT EXISTS documents (
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(255),
+        path VARCHAR(255),
+        type VARCHAR(50),
+        size INT,
+        url TEXT,
+        created_by BIGINT UNSIGNED,
         micro_projet_id BIGINT UNSIGNED,
-        type_document VARCHAR(100),
-        fichier VARCHAR(255),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (micro_projet_id) REFERENCES micro_projets (id) ON DELETE CASCADE
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        FOREIGN KEY (micro_projet_id) REFERENCES micro_projets (id) ON DELETE CASCADE,
+        FOREIGN KEY (created_by) REFERENCES personnels (id)
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
 -- ##############################################################

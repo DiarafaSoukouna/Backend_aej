@@ -226,7 +226,6 @@ Route::middleware('verifyToken')->prefix('workflow-executes/{workflowInstanceId}
     Route::apiResource('entreprises', EntrepriseController::class);
     Route::apiResource('embauches', EmbaucheController::class);
     Route::apiResource('observations', ObservationController::class);
-    Route::apiResource('documents', DocumentController::class);
 // });
 
 // Finances
@@ -256,6 +255,23 @@ Route::middleware('verifyToken')->prefix('workflow-executes/{workflowInstanceId}
     Route::apiResource('categories-transactions', CategorieTransactionController::class);
     Route::get('balance-comptable', [BalanceComptableController::class, 'index']);
     Route::get('balance-comptable/micro-projet/{microProjetId}', [BalanceComptableController::class, 'byMicroProjet']);
+// });
+
+// Fichiers
+Route::prefix('files')->group(function () {
+    Route::get('{path}', [DocumentController::class, 'serve'])->where('path', '.*');
+    Route::post('upload', [DocumentController::class, 'upload']);
+    Route::delete('delete', [DocumentController::class, 'delete']);
+});
+
+// Documents
+// Route::middleware('verifyToken')->group(function () {
+    Route::prefix('documents')->group(function () {
+        Route::post('upload', [DocumentController::class, 'uploadDocument']);
+        Route::get('/', [DocumentController::class, 'indexDocuments']);
+        Route::get('{id}', [DocumentController::class, 'showDocument']);
+        Route::delete('{id}', [DocumentController::class, 'deleteDocument']);
+    });
 // });
 
 // AEJ API
