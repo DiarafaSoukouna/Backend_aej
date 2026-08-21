@@ -9,9 +9,17 @@ use App\Models\Remboursement;
 
 class RemboursementController extends Controller
 {
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
         $remboursements = Remboursement::with(['planRemboursement', 'promoteur'])->get();
+
+        if ($request->has('plan_remboursement_id') && !empty($request->plan_remboursement_id)) 
+            $remboursements = $remboursements->where('plan_remboursement_id', $request->plan_remboursement_id);
+        if ($request->has('promoteur_id') && !empty($request->promoteur_id)) 
+            $remboursements = $remboursements->where('promoteur_id', $request->promoteur_id);
+        if ($request->has('statut') && !empty($request->statut)) 
+            $remboursements = $remboursements->where('statut', $request->statut);
+
         return new JsonResponse(['Message' => 'Remboursement list retrieved successfully', 'data' => $remboursements], 200);
     }
 

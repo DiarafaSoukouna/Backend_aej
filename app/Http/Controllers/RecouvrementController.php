@@ -9,9 +9,19 @@ use App\Models\Recouvrement;
 
 class RecouvrementController extends Controller
 {
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
         $recouvrements = Recouvrement::with(['microProjet', 'planRemboursement', 'agent'])->get();
+
+        if ($request->has('micro_projet_id') && !empty($request->micro_projet_id)) 
+            $recouvrements = $recouvrements->where('micro_projet_id', $request->micro_projet_id);
+        if ($request->has('plan_remboursement_id') && !empty($request->plan_remboursement_id)) 
+            $recouvrements = $recouvrements->where('plan_remboursement_id', $request->plan_remboursement_id);
+        if ($request->has('agent_id') && !empty($request->agent_id)) 
+            $recouvrements = $recouvrements->where('agent_id', $request->agent_id);
+        if ($request->has('type_action') && !empty($request->type_action)) 
+            $recouvrements = $recouvrements->where('type_action', $request->type_action);
+
         return new JsonResponse(['message' => 'Recouvrements retrieved successfully', 'data' => $recouvrements], 200);
     }
 

@@ -8,9 +8,21 @@ use Illuminate\Http\JsonResponse;
 
 class CompteFinancementController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $comptes = CompteFinancement::with(['organisme', 'microProjet', 'budget'])->get();
+
+        if ($request->has('micro_projet_id') && !empty($request->micro_projet_id))
+            $comptes = $comptes->where('micro_projet_id', $request->micro_projet_id);
+        if ($request->has('organisme_id') && !empty($request->organisme_id))
+            $comptes = $comptes->where('organisme_id', $request->organisme_id);
+        if ($request->has('budget_id') && !empty($request->budget_id))
+            $comptes = $comptes->where('budget_id', $request->budget_id);
+        if ($request->has('etat_ouverture') && !empty($request->etat_ouverture))
+            $comptes = $comptes->where('etat_ouverture', $request->etat_ouverture);
+        if ($request->has('avis_partenaire') && !empty($request->avis_partenaire))
+            $comptes = $comptes->where('avis_partenaire', $request->avis_partenaire);
+
         return new JsonResponse([
             'message' => 'Comptes financement retrieved successfully',
             'data' => $comptes

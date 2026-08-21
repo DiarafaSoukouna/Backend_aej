@@ -9,9 +9,21 @@ use App\Models\Budget;
 
 class BudgetController extends Controller
 {
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
         $budgets = Budget::with(['microProjet', 'validePar', 'planDecaissements', 'remboursements'])->get();
+
+        if ($request->has('micro_projet_id') && !empty($request->micro_projet_id))
+            $budgets = $budgets->where('micro_projet_id', $request->micro_projet_id);
+        if ($request->has('statut') && !empty($request->statut))
+            $budgets = $budgets->where('statut', $request->statut);
+        if ($request->has('deblocage') && !empty($request->deblocage))
+            $budgets = $budgets->where('deblocage', $request->deblocage);
+        if ($request->has('signature_convention') && !empty($request->signature_convention))
+            $budgets = $budgets->where('signature_convention', $request->signature_convention);
+        if ($request->has('reception_acte_credit') && !empty($request->reception_acte_credit))
+            $budgets = $budgets->where('reception_acte_credit', $request->reception_acte_credit);
+
         return new JsonResponse(['Message' => 'Budget list retrieved successfully', 'data' => $budgets], 200);
     }
 
@@ -58,7 +70,6 @@ class BudgetController extends Controller
                 'message' => 'Budget created successfully',
                 'data' => $budget
             ], 201);
-
         } catch (\Exception $e) {
             return new JsonResponse([
                 'message' => 'Error creating budget',
@@ -106,7 +117,6 @@ class BudgetController extends Controller
                 'message' => 'Budget updated successfully',
                 'data' => $budget
             ], 200);
-
         } catch (\Exception $e) {
             return new JsonResponse([
                 'message' => 'Error updating budget',
@@ -153,7 +163,6 @@ class BudgetController extends Controller
                 'message' => 'Budget patched successfully',
                 'data' => $budget
             ], 200);
-
         } catch (\Exception $e) {
             return new JsonResponse([
                 'message' => 'Error patching budget',
@@ -172,7 +181,6 @@ class BudgetController extends Controller
         try {
             $budget->delete();
             return new JsonResponse(['Message' => 'Budget deleted successfully'], 200);
-
         } catch (\Exception $e) {
             return new JsonResponse([
                 'message' => 'Error deleting budget',

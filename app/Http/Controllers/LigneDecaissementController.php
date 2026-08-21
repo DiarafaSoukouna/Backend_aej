@@ -9,9 +9,17 @@ use App\Models\LigneDecaissement;
 
 class LigneDecaissementController extends Controller
 {
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
         $lignes = LigneDecaissement::with(['planDecaissement'])->get();
+        
+        if ($request->has('plan_decaissement_id') && !empty($request->plan_decaissement_id)) 
+            $lignes = $lignes->where('plan_decaissement_id', $request->plan_decaissement_id);
+        if ($request->has('mode_decaisse') && !empty($request->mode_decaisse)) 
+            $lignes = $lignes->where('mode_decaisse', $request->mode_decaisse);
+        if ($request->has('statut') && !empty($request->statut)) 
+            $lignes = $lignes->where('statut', $request->statut);
+
         return new JsonResponse(['message' => 'Lignes decaissement retrieved successfully', 'data' => $lignes], 200);
     }
 

@@ -8,9 +8,17 @@ use Illuminate\Http\JsonResponse;
 
 class PlanDecaissementController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $plans = PlanDecaissement::with(['microProjet', 'budget', 'compteFinancement', 'ligneDecaissements'])->get();
+        
+        if ($request->has('micro_projet_id') && !empty($request->micro_projet_id)) 
+            $plans = $plans->where('micro_projet_id', $request->micro_projet_id);
+        if ($request->has('compte_financement_id') && !empty($request->compte_financement_id)) 
+            $plans = $plans->where('compte_financement_id', $request->compte_financement_id);
+        if ($request->has('budget_id') && !empty($request->budget_id)) 
+            $plans = $plans->where('budget_id', $request->budget_id);
+
         return new JsonResponse([
             'message' => 'Plans de décaissement retrieved successfully',
             'data' => $plans

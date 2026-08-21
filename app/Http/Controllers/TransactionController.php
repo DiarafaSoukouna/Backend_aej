@@ -9,9 +9,23 @@ use App\Models\Transaction;
 
 class TransactionController extends Controller
 {
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
         $transactions = Transaction::with(['microProjet', 'promoteur', 'categorie', 'saisiPar'])->get();
+        
+        if ($request->has('micro_projet_id') && !empty($request->micro_projet_id)) 
+            $transactions = $transactions->where('micro_projet_id', $request->micro_projet_id);
+        if ($request->has('promoteur_id') && !empty($request->promoteur_id)) 
+            $transactions = $transactions->where('promoteur_id', $request->promoteur_id);
+        if ($request->has('categorie_id') && !empty($request->categorie_id)) 
+            $transactions = $transactions->where('categorie_id', $request->categorie_id);
+        if ($request->has('mode_paiement') && !empty($request->mode_paiement)) 
+            $transactions = $transactions->where('mode_paiement', $request->mode_paiement);
+        if ($request->has('type') && !empty($request->type)) 
+            $transactions = $transactions->where('type', $request->type);
+        if ($request->has('statut') && !empty($request->statut)) 
+            $transactions = $transactions->where('statut', $request->statut);
+
         return new JsonResponse(['Message' => 'Transaction list retrieved successfully', 'data' => $transactions], 200);
     }
 

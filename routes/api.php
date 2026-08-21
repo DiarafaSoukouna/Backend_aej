@@ -110,24 +110,16 @@ Route::prefix('password')->group(function () {
     Route::middleware('verifyToken')->post('change', [PasswordResetController::class, 'changePassword']);
 });
 
-// Entreprises & Projets
+// Entreprises & Projets & Promoteurs
 // Route::middleware('verifyToken')->group(function () {
     Route::apiResource('mega-projets', ProjetController::class);
     Route::apiResource('zones-intervention', ZoneInterventionController::class);
     Route::apiResource('dispositifs', DispositifController::class);
     Route::apiResource('guichets', GuichetController::class);
-// });
-
-// Promoteurs
-// Route::middleware('verifyToken')->group(function () {
     Route::get('promoteurs', [PromoteurController::class, 'index']);
     Route::get('promoteurs/{id}', [PromoteurController::class, 'show']);
-    Route::post('promoteurs/filter', [PromoteurController::class, 'filter']);
-    Route::post('promoteurs/filter-with-projects', [PromoteurController::class, 'filterWithProjects']);
-    Route::get('promoteurs/export', [PromoteurController::class, 'exportCsv']);
     Route::get('projets', [MicroProjetController::class, 'index']);
     Route::get('projets/{id}', [MicroProjetController::class, 'show']);
-    Route::post('projets/filter', [MicroProjetController::class, 'filter']);
 // });
 
 // Formulaires d'évaluation
@@ -166,55 +158,55 @@ Route::prefix('password')->group(function () {
     });
 // });
 
-// Workflow-exécution
-Route::middleware('verifyToken')->prefix('workflow-executes/{workflowInstanceId}')->group(function () {
-    // Workflow state transitions
-    Route::post('transition', [WorkflowExecutionController::class, 'transition']);
+// // Workflow-exécution
+// Route::middleware('verifyToken')->prefix('workflow-executes/{workflowInstanceId}')->group(function () {
+//     // Workflow state transitions
+//     Route::post('transition', [WorkflowExecutionController::class, 'transition']);
     
-    // AGR_CLASSIC-PLUS: ETAPE_02 - Joindre le plan d'affaires
-    Route::post('deliverables/plan-affaires', [WorkflowInstanceDeliverableController::class, 'store']);
+//     // AGR_CLASSIC-PLUS: ETAPE_02 - Joindre le plan d'affaires
+//     Route::post('deliverables/plan-affaires', [WorkflowInstanceDeliverableController::class, 'store']);
     
-    // AGR_CLASSIC-PLUS: ETAPE_03 - Valider les plans d'affaires
-    Route::post('validate-plan-affaires', [WorkflowExecutionController::class, 'validatePlanAffaires']);
+//     // AGR_CLASSIC-PLUS: ETAPE_03 - Valider les plans d'affaires
+//     Route::post('validate-plan-affaires', [WorkflowExecutionController::class, 'validatePlanAffaires']);
     
-    // MEPS-MPE: ETAPE_03 - Imputation aux agences régionales
-    Route::post('impute-agence', [WorkflowExecutionController::class, 'imputeAgence']);
+//     // MEPS-MPE: ETAPE_03 - Imputation aux agences régionales
+//     Route::post('impute-agence', [WorkflowExecutionController::class, 'imputeAgence']);
     
-    // MEPS-MPE: ETAPE_04 - Mise en place du plan de décaissement
-    Route::apiResource('plan-decaissements', PlanDecaissementController::class);
-    Route::apiResource('ligne-decaissements', LigneDecaissementController::class);
+//     // MEPS-MPE: ETAPE_04 - Mise en place du plan de décaissement
+//     Route::apiResource('plan-decaissements', PlanDecaissementController::class);
+//     Route::apiResource('ligne-decaissements', LigneDecaissementController::class);
     
-    // MEPS-MPE: ETAPE_05_1 to ETAPE_05_5 - Validation du plan de décaissement
-    Route::post('validate-plan-decaissement', [WorkflowExecutionController::class, 'validatePlanDecaissement']);
+//     // MEPS-MPE: ETAPE_05_1 to ETAPE_05_5 - Validation du plan de décaissement
+//     Route::post('validate-plan-decaissement', [WorkflowExecutionController::class, 'validatePlanDecaissement']);
     
-    // AGR_CLASSIC-PLUS: ETAPE_04 & MEPS-MPE: ETAPE_02 - Transmission au partenaire financier
-    Route::apiResource('lots-transmission', LotTransmissionController::class);
-    Route::post('transmit-partenaire', [WorkflowExecutionController::class, 'transmitPartenaire']);
+//     // AGR_CLASSIC-PLUS: ETAPE_04 & MEPS-MPE: ETAPE_02 - Transmission au partenaire financier
+//     Route::apiResource('lots-transmission', LotTransmissionController::class);
+//     Route::post('transmit-partenaire', [WorkflowExecutionController::class, 'transmitPartenaire']);
     
-    // AGR_CLASSIC-PLUS: ETAPE_05 - Traitement des dossiers par le partenaire financier
-    Route::apiResource('plan-remboursements', PlanRemboursementController::class);
-    Route::post('analyse-partenaire', [WorkflowExecutionController::class, 'analysePartenaire']);
+//     // AGR_CLASSIC-PLUS: ETAPE_05 - Traitement des dossiers par le partenaire financier
+//     Route::apiResource('plan-remboursements', PlanRemboursementController::class);
+//     Route::post('analyse-partenaire', [WorkflowExecutionController::class, 'analysePartenaire']);
     
-    // MEPS-MPE: ETAPE_06 - Traitement des lignes de décaissement
-    Route::post('authorize-ligne-decaissement', [WorkflowExecutionController::class, 'authorizeLigneDecaissement']);
+//     // MEPS-MPE: ETAPE_06 - Traitement des lignes de décaissement
+//     Route::post('authorize-ligne-decaissement', [WorkflowExecutionController::class, 'authorizeLigneDecaissement']);
     
-    // MEPS-MPE: ETAPE_07 & AGR_CLASSIC-PLUS: ETAPE_06_1 - Exécution des lignes de décaissement
-    Route::apiResource('decaissements', DecaissementController::class);
-    Route::post('execute-decaissement', [WorkflowExecutionController::class, 'executeDecaissement']);
+//     // MEPS-MPE: ETAPE_07 & AGR_CLASSIC-PLUS: ETAPE_06_1 - Exécution des lignes de décaissement
+//     Route::apiResource('decaissements', DecaissementController::class);
+//     Route::post('execute-decaissement', [WorkflowExecutionController::class, 'executeDecaissement']);
     
-    // MEPS-MPE: ETAPE_08 & AGR_CLASSIC-PLUS: ETAPE_06_2 - Remboursement
-    Route::apiResource('remboursements', RemboursementController::class);
-    Route::post('execute-remboursement', [WorkflowExecutionController::class, 'executeRemboursement']);
+//     // MEPS-MPE: ETAPE_08 & AGR_CLASSIC-PLUS: ETAPE_06_2 - Remboursement
+//     Route::apiResource('remboursements', RemboursementController::class);
+//     Route::post('execute-remboursement', [WorkflowExecutionController::class, 'executeRemboursement']);
     
-    // MEPS-MPE: ETAPE_09 & AGR_CLASSIC-PLUS: ETAPE_06_3 - Recouvrement
-    Route::apiResource('recouvrements', RecouvrementController::class);
-    Route::post('execute-recouvrement', [WorkflowExecutionController::class, 'executeRecouvrement']);
+//     // MEPS-MPE: ETAPE_09 & AGR_CLASSIC-PLUS: ETAPE_06_3 - Recouvrement
+//     Route::apiResource('recouvrements', RecouvrementController::class);
+//     Route::post('execute-recouvrement', [WorkflowExecutionController::class, 'executeRecouvrement']);
 
-    // MEPS-MPE: ETAPE_10 & AGR_CLASSIC-PLUS: ETAPE_08 - Suivis & Exploitation
-    Route::apiResource('exploitations', ExploitationController::class);
-    Route::apiResource('visite-photos', VisitePhotoController::class);
-    Route::post('suivi', [WorkflowExecutionController::class, 'suivi']);
-});
+//     // MEPS-MPE: ETAPE_10 & AGR_CLASSIC-PLUS: ETAPE_08 - Suivis & Exploitation
+//     Route::apiResource('exploitations', ExploitationController::class);
+//     Route::apiResource('visite-photos', VisitePhotoController::class);
+//     Route::post('suivi', [WorkflowExecutionController::class, 'suivi']);
+// });
 
 // Suivis & Indicateurs
 // Route::middleware('verifyToken')->group(function () {

@@ -10,193 +10,89 @@ class PromoteurController extends Controller
 {
     public function index(Request $request)
     {
-        $perPage = $request->get('per_page', 15);
+        $query = Promoteur::with([
+            'sexe', 'agenceRegionale', 'secteurActivite', 'sousSecteurActivite',
+            'niveauEtude', 'typePieceIdentite', 'paysNationalite', 'situationMatrimoniale',
+            'typeSituationHandicap', 'lieuHabitation', 'personnel'
+        ]);
 
-        $promoteurs = Promoteur::with('microProjets')->paginate($perPage);
+        $filters = [
+            'tranche_age', 'sexe_id', 'agenceregionale_id', 'secteuractivite_id',
+            'soussecteuractivite_id', 'niveauetude_id', 'typepieceidentite_id', 'statut',
+            'paysnationalite_id', 'situationmatrimoniale_id', 'typesituationhandicap_id'
+        ];
+
+        foreach ($filters as $filter) {
+            if ($request->filled($filter)) $query->where($filter, $request->input($filter));
+        }
+
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->where(function ($q) use ($search) {
+                $q->where('nom', 'like', "%{$search}%")
+                  ->orWhere('prenom', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%")
+                  ->orWhere('telephone', 'like', "%{$search}%");
+            });
+        }
+
+        $perPage = $request->get('per_page', 15);
+        $promoteurs = $query->paginate($perPage);
 
         return response()->json($promoteurs);
     }
+
     public function show(Request $request, $id)
     {
-        $promoteur = Promoteur::with(['microProjets' => function ($query) use ($request) {
-            $filters_micro_projets = [
-                'stade_projet',
-                'type_projet',
-                'statut'
-            ];
-
-            foreach ($filters_micro_projets as $filter) {
-                if ($request->filled($filter)) {
-                    $query->where($filter, $request->input($filter));
+        $promoteur = Promoteur::with([
+            'sexe', 'agenceRegionale', 'secteurActivite', 'sousSecteurActivite',
+            'niveauEtude', 'typePieceIdentite', 'paysNationalite', 'situationMatrimoniale',
+            'typeSituationHandicap', 'lieuHabitation', 'personnel',
+            'microProjets' => function ($query) use ($request) {
+                $filters = ['stade_projet', 'type_projet', 'statut'];
+                foreach ($filters as $filter) {
+                    if ($request->filled($filter)) $query->where($filter, $request->input($filter));
                 }
             }
-        }])->findOrFail($id);
+        ])->findOrFail($id);
 
         return response()->json($promoteur);
     }
 
-    public function filterWithProjects(Request $request)
-    {
-        $promoteurFilters = [
-            'tranche_age',
-            'sexe_id',
-            'agenceregionale_id',
-            'secteuractivite_id',
-            'soussecteuractivite_id',
-            'niveauetude_id',
-            'typepieceidentite_id',
-            'paysnationalite_id',
-            'situationmatrimoniale_id',
-            'handicap'
-        ];
+    // public function exportCsv()
+    // {
+    //     $promoteurColumns = Schema::getColumnListing('promoteurs');
+    //     $microProjetColumns = Schema::getColumnListing('micro_projets');
+    //     $promoteurColumns = array_values(array_diff($promoteurColumns, ['statut']));
+    //     $filename = 'promoteurs_' . now()->format('Y-m-d_H-i-s') . '.csv';
 
-        $microProjetFilters = [
-            'stade_projet',
-            'type_projet',
-            'statut'
-        ];
+    //     $headers = [
+    //         'Content-Type' => 'text/csv; charset=UTF-8',
+    //         'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+    //     ];
 
-        $query = Promoteur::query();
+    //     return response()->stream(function () use ($promoteurColumns, $microProjetColumns) {
+    //         $file = fopen('php://output', 'w');
+    //         fwrite($file, "\xEF\xBB\xBF");
 
-        foreach ($promoteurFilters as $filter) {
-            if ($request->filled($filter)) {
-                $query->where($filter, $request->input($filter));
-            }
-        }
+    //         $columns = array_merge(
+    //             array_map(fn($col) => 'promoteur_' . $col, $promoteurColumns),
+    //             array_map(fn($col) => 'micro_projet_' . $col, $microProjetColumns)
+    //         );
+    //         fputcsv($file, $columns, ';');
 
-        $hasMicroProjetFilter = false;
+    //         Promoteur::with('microProjets')->chunk(500, function ($promoteurs) use ($file, $promoteurColumns, $microProjetColumns) {
+    //             foreach ($promoteurs as $promoteur) {
+    //                 $microProjet = $promoteur->microProjets->first();
+    //                 $row = array_merge(
+    //                     array_map(fn($col) => $promoteur->{$col}, $promoteurColumns),
+    //                     array_map(fn($col) => $microProjet?->{$col} ?? null, $microProjetColumns)
+    //                 );
+    //                 fputcsv($file, $row, ';');
+    //             }
+    //         });
 
-        foreach ($microProjetFilters as $filter) {
-            if ($request->filled($filter)) {
-                $hasMicroProjetFilter = true;
-                break;
-            }
-        }
-
-        if ($hasMicroProjetFilter) {
-            $query->whereHas('microProjets', function ($microProjetQuery) use ($request, $microProjetFilters) {
-                foreach ($microProjetFilters as $filter) {
-                    if ($request->filled($filter)) {
-                        $microProjetQuery->where($filter, $request->input($filter));
-                    }
-                }
-            });
-        }
-
-        $query->with(['microProjets' => function ($microProjetQuery) use ($request, $microProjetFilters, $hasMicroProjetFilter) {
-            if ($hasMicroProjetFilter) {
-                foreach ($microProjetFilters as $filter) {
-                    if ($request->filled($filter)) {
-                        $microProjetQuery->where($filter, $request->input($filter));
-                    }
-                }
-            }
-        }]);
-
-        $perPage = $request->get('per_page', 15);
-
-        return response()->json($query->paginate($perPage));
-    }
-
-    public function filter(Request $request)
-    {
-        $query = Promoteur::query();
-
-        $filters = [
-            'tranche_age',
-            'sexe_id',
-            'agenceregionale_id',
-            'secteuractivite_id',
-            'soussecteuractivite_id',
-            'niveauetude_id',
-            'statut',
-            'typepieceidentite_id',
-            'paysnationalite_id',
-            'situationmatrimoniale_id',
-            'handicap'
-        ];
-
-        foreach ($filters as $filter) {
-            if ($request->filled($filter)) {
-                $query->where($filter, $request->input($filter));
-            }
-        }
-
-        $perPage = $request->get('per_page', 15);
-
-        return response()->json($query->paginate($perPage));
-    }
-    public function exportCsv()
-{
-    $promoteurColumns = Schema::getColumnListing('promoteurs');
-    $microProjetColumns = Schema::getColumnListing('micro_projets');
-
-    // On exclut uniquement le statut du promoteur
-    $promoteurColumns = array_values(
-        array_diff($promoteurColumns, ['statut'])
-    );
-
-    $filename = 'promoteurs_microprojets_' . now()->format('Y-m-d_H-i-s') . '.csv';
-
-    $headers = [
-        'Content-Type' => 'text/csv; charset=UTF-8',
-        'Content-Disposition' => 'attachment; filename="' . $filename . '"',
-    ];
-
-    return response()->stream(function () use (
-        $promoteurColumns,
-        $microProjetColumns
-    ) {
-
-        $file = fopen('php://output', 'w');
-
-        // BOM UTF-8 pour Excel
-        fwrite($file, "\xEF\xBB\xBF");
-
-        // Colonnes du CSV
-        $columns = [];
-
-        foreach ($promoteurColumns as $column) {
-            $columns[] = 'promoteur_' . $column;
-        }
-
-        foreach ($microProjetColumns as $column) {
-            $columns[] = 'micro_projet_' . $column;
-        }
-
-        fputcsv($file, $columns, ';');
-
-        // Les données
-        Promoteur::with('microProjets')
-            ->chunk(500, function ($promoteurs) use (
-                $file,
-                $promoteurColumns,
-                $microProjetColumns
-            ) {
-
-                foreach ($promoteurs as $promoteur) {
-
-                    // Un promoteur = un seul micro-projet
-                    $microProjet = $promoteur->microProjets->first();
-
-                    $row = [];
-
-                    // Données du promoteur
-                    foreach ($promoteurColumns as $column) {
-                        $row[] = $promoteur->{$column};
-                    }
-
-                    // Données du micro-projet
-                    foreach ($microProjetColumns as $column) {
-                        $row[] = $microProjet?->{$column};
-                    }
-
-                    fputcsv($file, $row, ';');
-                }
-            });
-
-        fclose($file);
-
-    }, 200, $headers);
-}
+    //         fclose($file);
+    //     }, 200, $headers);
+    // }
 }
