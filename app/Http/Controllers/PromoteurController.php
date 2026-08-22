@@ -13,7 +13,7 @@ class PromoteurController extends Controller
         $query = Promoteur::with([
             'sexe', 'agenceRegionale', 'secteurActivite', 'sousSecteurActivite',
             'niveauEtude', 'typePieceIdentite', 'paysNationalite', 'situationMatrimoniale',
-            'typeSituationHandicap', 'lieuHabitation', 'personnel'
+            'typeSituationHandicap', 'lieuHabitation', 'personnel', 'microProjets'
         ]);
 
         $filters = [
@@ -32,7 +32,11 @@ class PromoteurController extends Controller
                 $q->where('nom', 'like', "%{$search}%")
                   ->orWhere('prenom', 'like', "%{$search}%")
                   ->orWhere('email', 'like', "%{$search}%")
-                  ->orWhere('telephone', 'like', "%{$search}%");
+                  ->orWhere('telephone', 'like', "%{$search}%")
+                  ->orWhere('matriculeaej', 'like', "%{$search}%")
+                  ->orWhere('numerocni', 'like', "%{$search}%")
+                  ->orWhere('numerocmu', 'like', "%{$search}%")
+                  ->orWhere('numerocnps', 'like', "%{$search}%");
             });
         }
 
