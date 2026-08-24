@@ -2,10 +2,39 @@
 
 namespace App\Services;
 
+use App\Models\Configuration;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
 
 class MailService
 {
+    protected ?array $smtpConfig = null;
+
+    public function __construct()
+    {
+        $configuration = Configuration::first();
+        
+        if ($configuration) {
+            $this->smtpConfig = [
+                'host' => $configuration->smtp_host_notifications,
+                'port' => $configuration->smtp_port_notifications,
+                'encryption' => $configuration->smtp_encrypt_notifications,
+                'username' => $configuration->email_notifications,
+                'password' => $configuration->mot_de_passe_email_notifications,
+                'from' => [
+                    'address' => $configuration->email_notifications,
+                    'name' => $configuration->sigle_systeme ?? 'AEJ'
+                ]
+            ];
+            
+            Log::info('MailService initialized with database configuration', [
+                'host' => $this->smtpConfig['host'],
+                'port' => $this->smtpConfig['port'],
+                'from' => $this->smtpConfig['from']['address']
+            ]);
+        }
+    }
+
     /**
      * Génère le layout principal des emails.
      */
@@ -29,7 +58,6 @@ class MailService
      */
     protected function send(string $email, string $subject, string $content, array $options = [])
     {
-
         $html = $this->render(
             $content,
             $subject,
@@ -39,7 +67,6 @@ class MailService
         return Mail::html(
             $html,
             function ($message) use ($email, $subject) {
-
                 $message
                     ->to($email)
                     ->subject($subject);
@@ -47,13 +74,11 @@ class MailService
         );
     }
 
-
     /**
      * Email de bienvenue.
      */
     public function sendWelcomeEmail($personnel)
     {
-
         $content = view(
             'emails.welcome',
             [
@@ -94,13 +119,11 @@ class MailService
         );
     }
 
-
     /**
      * Email OTP.
      */
     public function sendOtpEmail(string $email, string $otp)
     {
-
         $content = view(
             'emails.otp',
             ['otp' => $otp,]
@@ -111,13 +134,11 @@ class MailService
         ]);
     }
 
-
     /**
      * Réinitialisation du mot de passe.
      */
     public function sendPasswordResetEmail(string $email, string $resetUrl)
     {
-
         $content = view('emails.password-reset', ['resetUrl' => $resetUrl])->render();
 
         return $this->send($email, 'Réinitialisation de votre mot de passe', $content, [
@@ -125,17 +146,23 @@ class MailService
         ]);
     }
 
-
     /**
      * Alerte de sécurité.
      */
     public function sendSecurityAlert(string $email, string $message, ?string $actionUrl = null)
     {
-
         $content = view('emails.account-alert', ['message' => $message, 'actionUrl' => $actionUrl])->render();
 
         return $this->send($email, 'Alerte de sécurité – AEJ', $content, [
             'headerTitle' => 'Alerte de sécurité',
         ]);
+    }
+
+    /**
+     * Obtenir la configuration SMTP
+     */
+    public function getSmtpConfig(): ?array
+    {
+        return $this->smtpConfig;
     }
 }

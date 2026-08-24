@@ -15,6 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->statefulApi();
         $middleware->alias([
             'verifyToken' => \App\Http\Middleware\VerifyAccessToken::class,
+            'checkMaintenance' => \App\Http\Middleware\CheckMaintenance::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

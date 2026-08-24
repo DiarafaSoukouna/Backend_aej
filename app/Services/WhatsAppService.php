@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Configuration;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -13,14 +14,23 @@ class WhatsAppService
 
     public function __construct()
     {
-        $this->apiUrl = config('services.green_api.url', 'https://api.green-api.com');
-        $this->apiKey = config('services.green_api.api_key');
-        $this->deviceId = config('services.green_api.device_id');
+        $configuration = Configuration::first();
+        
+        if ($configuration) {
+            $this->apiUrl = config('services.green_api.url', 'https://api.green-api.com');
+            $this->deviceId = $configuration->code_instance_whatsapp;
+            $this->apiKey = $configuration->token_instance_whatsapp;
+        } else {
+            $this->apiUrl = config('services.green_api.url', 'https://api.green-api.com');
+            $this->apiKey = config('services.green_api.api_key');
+            $this->deviceId = config('services.green_api.device_id');
+        }
         
         Log::info('WhatsAppService initialized', [
             'apiUrl' => $this->apiUrl,
             'deviceId' => $this->deviceId,
-            'configured' => $this->isConfigured()
+            'configured' => $this->isConfigured(),
+            'source' => $configuration ? 'database' : 'env'
         ]);
     }
 

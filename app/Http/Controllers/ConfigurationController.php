@@ -16,7 +16,18 @@ class ConfigurationController extends Controller
         if (!$configuration) {
             return new JsonResponse(["Message" => "Configuration non trouvée"], 404);
         }
-        return new JsonResponse(["Message" => "Configuration récupérée avec succès", "data" => $configuration], 200);
+        
+        $data = $configuration->toArray();
+        
+        // Ajouter les URLs des logos
+        if ($configuration->logo_systeme) {
+            $data['logo_systeme_url'] = url('/api/files/' . $configuration->logo_systeme);
+        }
+        if ($configuration->logo_structure) {
+            $data['logo_structure_url'] = url('/api/files/' . $configuration->logo_structure);
+        }
+        
+        return new JsonResponse(["Message" => "Configuration récupérée avec succès", "data" => $data], 200);
     }
 
     public function store(Request $request): JsonResponse
@@ -35,9 +46,9 @@ class ConfigurationController extends Controller
             'sigle_structure' => 'required|string|max:255',
             'intitule_structure' => 'required|string|max:255',
             'adresse_sociale_structure' => 'nullable|string|max:255',
-            'email_structure' => 'nullable|email|max:255',
-            'whatsapp_structure' => 'nullable|string|max:255',
-            'telephone_structure' => 'nullable|string|max:255',
+            'email_structure' => 'required|email|max:255',
+            'whatsapp_structure' => 'required|string|max:255',
+            'telephone_structure' => 'required|string|max:255',
             'sigle_monnaie_pays' => 'required|string|max:255',
             'sigle_devise_principale' => 'required|string|max:255',
             'taux_devise_principale' => 'required|numeric',
@@ -70,7 +81,16 @@ class ConfigurationController extends Controller
                 $data['logo_structure'] = $request->file('logo_structure')->store('configurations', 'public');
             }
             $configuration = Configuration::create($data);
-            return new JsonResponse(["Message" => "Configuration créée avec succès", "data" => $configuration], 201);
+            
+            $responseData = $configuration->toArray();
+            if ($configuration->logo_systeme) {
+                $responseData['logo_systeme_url'] = url('/api/files/' . $configuration->logo_systeme);
+            }
+            if ($configuration->logo_structure) {
+                $responseData['logo_structure_url'] = url('/api/files/' . $configuration->logo_structure);
+            }
+            
+            return new JsonResponse(["Message" => "Configuration créée avec succès", "data" => $responseData], 201);
         } catch (\Exception $e) {
             return new JsonResponse(["Message" => "Erreur lors de la création de la configuration", "error" => $e->getMessage()], 500);
         }
@@ -149,9 +169,19 @@ class ConfigurationController extends Controller
             }
             $configuration->update($data);
 
+            $updatedConfiguration = $configuration->fresh();
+            $responseData = $updatedConfiguration->toArray();
+            
+            if ($updatedConfiguration->logo_systeme) {
+                $responseData['logo_systeme_url'] = url('/api/files/' . $updatedConfiguration->logo_systeme);
+            }
+            if ($updatedConfiguration->logo_structure) {
+                $responseData['logo_structure_url'] = url('/api/files/' . $updatedConfiguration->logo_structure);
+            }
+
             return new JsonResponse([
                 "Message" => "Configuration mise à jour avec succès",
-                "data" => $configuration->fresh()
+                "data" => $responseData
             ], 200);
         } catch (\Exception $e) {
             return new JsonResponse([

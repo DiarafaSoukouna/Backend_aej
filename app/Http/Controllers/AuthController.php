@@ -3,12 +3,12 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Personnel;
-use App\Models\Token;
-use App\Models\OtpCode;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\JsonResponse;
+use App\Models\Configuration;
+use App\Models\Personnel;
+use App\Models\OtpCode;
 use App\Services\MailService;
 use App\Services\WhatsAppService;
 
@@ -40,32 +40,83 @@ class AuthController extends Controller
             ], 422);
         }
 
-        $personnel = Personnel::where('email', $request->input('email'))->first();
-        $configOTP = true;
+        try {
+            $email = $request->input('email');
+            $configuration = Configuration::first();
+            $maxAttempts = $configuration ? $configuration->nombre_tentatives_connexion : 5;
+            $blockDuration = $configuration ? $configuration->delai_inactivite_minutes : 15;
+            $blockKey = "login_block:{$email}";
+            $blockedUntilTimestamp = cache($blockKey);
+            
+            if ($blockedUntilTimestamp && is_numeric($blockedUntilTimestamp)) {
+                $blockedUntil = now()->createFromTimestamp((int)$blockedUntilTimestamp);
+                
+                if (now()->lt($blockedUntil)) {
+                    $retryAfter = now()->diffInSeconds($blockedUntil);
+                    return new JsonResponse([
+                        'message' => 'Trop de tentatives. Compte temporairement bloqué.',
+                        'tentative_restant' => 0,
+                        'retry_after' => $retryAfter
+                    ], 423);
+                } else {
+                    cache()->forget($blockKey);
+                }
+            }
 
-        if (!$personnel || !Hash::check($request->mot_de_passe, $personnel->mot_de_passe)) {
+            $personnel = Personnel::where('email', $email)->first();
+            $configOTP = true;
+
+            if (!$personnel || !Hash::check($request->mot_de_passe, $personnel->mot_de_passe)) {
+                $attemptsKey = "login_attempts:{$email}";
+                $attempts = cache($attemptsKey, 0) + 1;
+                cache([$attemptsKey => $attempts], now()->addMinutes($blockDuration));
+                $remainingAttempts = $maxAttempts - $attempts;
+
+                if ($remainingAttempts <= 0) {
+                    $blockUntilTimestamp = (string)now()->addMinutes($blockDuration)->timestamp;
+                    cache([$blockKey => $blockUntilTimestamp], now()->addMinutes($blockDuration));
+                    cache()->forget($attemptsKey);
+
+                    return new JsonResponse([
+                        'message' => 'Nombre maximum de tentatives atteint. Compte bloqué temporairement.',
+                        'tentative_restant' => 0,
+                        'retry_after' => $blockDuration * 60
+                    ], 423);
+                }
+
+                return new JsonResponse([
+                    'message' => 'Identifiants invalides',
+                    'tentative_restant' => $remainingAttempts
+                ], 401);
+            }
+
+            $attemptsKey = "login_attempts:{$email}";
+            cache()->forget($attemptsKey);
+            cache()->forget($blockKey);
+
+            if (!$configOTP) {
+                $cookies = $this->initCookies($personnel);
+
+                return new JsonResponse([
+                    'message' => 'Utilisateur connecté avec succès.',
+                    'user_id' => $personnel->id
+                ], 200)
+                    ->withCookie($cookies['accessToken'])
+                    ->withCookie($cookies['refreshToken']);
+            }
+
             return new JsonResponse([
-                'message' => 'Identifiants invalides'
-            ], 401);
-        }
-
-        if (!$configOTP) {
-            $cookies = $this->initCookies($personnel);
-
+                'message' => 'Identifiants valides. Veuillez envoyer le code OTP.',
+                'user_id' => $personnel->id,
+                'has_phone' => !empty($personnel->telephone),
+                'otp_required' => $configOTP,
+            ], 200);
+        } catch (\Exception $e) {
             return new JsonResponse([
-                'message' => 'Utilisateur connecté avec succès.',
-                'user_id' => $personnel->id
-            ], 200)
-                ->withCookie($cookies['accessToken'])
-                ->withCookie($cookies['refreshToken']);
+                'message' => 'Erreur lors de la connexion',
+                'error' => $e->getMessage()
+            ], 500);
         }
-
-        return new JsonResponse([
-            'message' => 'Identifiants valides. Veuillez envoyer le code OTP.',
-            'user_id' => $personnel->id,
-            'has_phone' => !empty($personnel->telephone),
-            'otp_required' => $configOTP,
-        ], 200);
     }
 
     public function sendOtp(Request $request, MailService $mailService, WhatsAppService $whatsappService): JsonResponse

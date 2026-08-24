@@ -2,11 +2,12 @@
 
 namespace Database\Factories;
 
+use App\Models\Workflow;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class WorkflowFactory extends Factory
 {
-    protected $model = \App\Models\Workflow::class;
+    protected $model = Workflow::class;
 
     public function definition()
     {

@@ -36,4 +36,21 @@ class Configuration extends Model
         'smtp_port_notifications',
         'smtp_encrypt_notifications',
     ];
+
+    protected $casts = [
+        'mise_en_maintenance' => 'boolean',
+        'taux_devise_principale' => 'decimal:2',
+        'delai_inactivite_minutes' => 'integer',
+        'nombre_session_possible' => 'integer',
+        'nombre_tentatives_connexion' => 'integer',
+        'delai_code_otp_minutes' => 'integer',
+        'delai_changement_mdp_mois' => 'integer',
+        'delai_suppression_secondes' => 'integer',
+        'smtp_port_notifications' => 'integer',
+    ];
+
+    public static function exists(): bool
+    {
+        return self::count() > 0;
+    }
 }

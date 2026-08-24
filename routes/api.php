@@ -1,4 +1,5 @@
 <?php
+
 use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\AuthController;
@@ -40,7 +41,7 @@ use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\PlanDecaissementController;
 use App\Http\Controllers\DecaissementController;
 use App\Http\Controllers\RemboursementsDeclarationController;
-use App\Http\Controllers\DecaissementsDeclarationController; 
+use App\Http\Controllers\DecaissementsDeclarationController;
 use App\Http\Controllers\FormulaireEvaluationController;
 use App\Http\Controllers\EvaluationController;
 use App\Http\Controllers\MicroProjetController;
@@ -67,257 +68,248 @@ use App\Http\Controllers\DashboardAgencesController;
 use App\Http\Controllers\DashboardPartenairesController;
 use App\Http\Controllers\DashboardEntreprisesController;
 
-// Paramètres
-// Route::middleware('verifyToken')->group(function () {
+// Middleware de maintenance global - toutes les routes passent par ce middleware
+// Route::middleware('checkMaintenance')->group(function () {
+
+    // Routes publiques (sans authentification)
+    Route::prefix('auth')->group(function () {
+        Route::post('login', [AuthController::class, 'login']);
+        Route::post('send-otp', [AuthController::class, 'sendOtp']);
+        Route::post('verify-otp', [AuthController::class, 'verifyOtp']);
+        Route::get('refresh', [AuthController::class, 'refresh']);
+
+        Route::middleware('verifyToken')->group(function () {
+            Route::post('logout', [AuthController::class, 'logout']);
+            Route::get('me', [AuthController::class, 'me']);
+        });
+    });
+
+    // Password reset routes
+    Route::prefix('password')->group(function () {
+        Route::post('forgot', [PasswordResetController::class, 'forgotPassword']);
+        Route::post('reset', [PasswordResetController::class, 'resetPassword']);
+        Route::post('setup', [PasswordResetController::class, 'setupPassword']);
+        Route::middleware('verifyToken')->post('change', [PasswordResetController::class, 'changePassword']);
+    });
+
+    // Routes de configuration
     Route::apiResource('configurations', ConfigurationController::class);
     Route::patch('configurations', [ConfigurationController::class, 'patch']);
-    Route::apiResource('directions', DirectionController::class);
-    Route::apiResource('services', ServiceController::class);
-    Route::apiResource('fonctions', FonctionController::class);
-    Route::apiResource('type-entreprises', TypeEntrepriseController::class);
-    Route::apiResource('type-organismes', TypeOrganismeController::class);
-    Route::apiResource('type-emplois', TypeEmploiController::class);
-// });
 
-// Gestion des utilisateurs
-// Route::middleware('verifyToken')->group(function () {
-    Route::apiResource('permissions', PermissionController::class);
-    Route::apiResource('roles', RoleController::class);
-    Route::apiResource('personnels', PersonnelController::class);
-    Route::apiResource('notifications', NotificationController::class);
-    Route::put('notifications/{id}/mark-read', [NotificationController::class, 'markAsRead']);
-    Route::get('notifications/personnel/{personnelId}', [NotificationController::class, 'getByPersonnel']);
-// });
+    // Routes protégées par token
+    // Route::middleware('verifyToken')->group(function () {
+        // Paramètres
+        Route::apiResource('directions', DirectionController::class);
+        Route::apiResource('services', ServiceController::class);
+        Route::apiResource('fonctions', FonctionController::class);
+        Route::apiResource('type-entreprises', TypeEntrepriseController::class);
+        Route::apiResource('type-organismes', TypeOrganismeController::class);
+        Route::apiResource('type-emplois', TypeEmploiController::class);
 
-// Authentification
-Route::prefix('auth')->group(function () {
-    Route::post('login', [AuthController::class, 'login']);
-    Route::post('send-otp', [AuthController::class, 'sendOtp']);
-    Route::post('verify-otp', [AuthController::class, 'verifyOtp']);
-    Route::get('refresh', [AuthController::class, 'refresh']);
+        // Gestion des utilisateurs
+        Route::apiResource('permissions', PermissionController::class);
+        Route::apiResource('roles', RoleController::class);
+        Route::apiResource('personnels', PersonnelController::class);
+        Route::apiResource('notifications', NotificationController::class);
+        Route::put('notifications/{id}/mark-read', [NotificationController::class, 'markAsRead']);
+        Route::get('notifications/personnel/{personnelId}', [NotificationController::class, 'getByPersonnel']);
 
-    Route::middleware('verifyToken')->group(function () {
-        Route::post('logout', [AuthController::class, 'logout']);
-        Route::get('me', [AuthController::class, 'me']);
-    });
-});
+        // Entreprises & Projets & Promoteurs
+        Route::apiResource('mega-projets', ProjetController::class);
+        Route::apiResource('zones-intervention', ZoneInterventionController::class);
+        Route::apiResource('dispositifs', DispositifController::class);
+        Route::apiResource('guichets', GuichetController::class);
+        Route::get('promoteurs', [PromoteurController::class, 'index']);
+        Route::get('promoteurs/{id}', [PromoteurController::class, 'show']);
+        Route::get('projets', [MicroProjetController::class, 'index']);
+        Route::get('projets/{id}', [MicroProjetController::class, 'show']);
 
-// Gestion des mots de passe et OTP
-Route::prefix('password')->group(function () {
-    Route::post('setup', [PasswordResetController::class, 'setupPassword']);
-    Route::post('forgot', [PasswordResetController::class, 'forgotPassword']);
-    Route::post('reset', [PasswordResetController::class, 'resetPassword']);
-    Route::middleware('verifyToken')->post('change', [PasswordResetController::class, 'changePassword']);
-});
+        // Formulaires d'évaluation
+        Route::apiResource('formulaires-evaluation', FormulaireEvaluationController::class);
+        Route::get('formulaires-evaluation/{formulaireEvaluation}', [FormulaireEvaluationController::class, 'show']);
+        Route::apiResource('evaluations', EvaluationController::class);
+        Route::post('evaluations/{evaluation}/responses', [EvaluationController::class, 'addResponse']);
+        Route::get('evaluations/{evaluation}/responses', [EvaluationController::class, 'responses']);
 
-// Entreprises & Projets & Promoteurs
-// Route::middleware('verifyToken')->group(function () {
-    Route::apiResource('mega-projets', ProjetController::class);
-    Route::apiResource('zones-intervention', ZoneInterventionController::class);
-    Route::apiResource('dispositifs', DispositifController::class);
-    Route::apiResource('guichets', GuichetController::class);
-    Route::get('promoteurs', [PromoteurController::class, 'index']);
-    Route::get('promoteurs/{id}', [PromoteurController::class, 'show']);
-    Route::get('projets', [MicroProjetController::class, 'index']);
-    Route::get('projets/{id}', [MicroProjetController::class, 'show']);
-// });
+        // Workflow
+        Route::prefix('workflow')->group(function () {
+            Route::apiResource('models', WorkflowController::class);
+            Route::apiResource('versions', WorkflowVersionController::class);
+            Route::apiResource('roles', WorkflowRoleController::class);
+            Route::apiResource('deliverables', WorkflowDeliverableController::class);
+            Route::apiResource('decision-outcomes', WorkflowDecisionOutcomeController::class);
+            Route::apiResource('etapes', WorkflowEtapeController::class);
+            Route::apiResource('etape-slas', WorkflowEtapeSlaController::class);
+            Route::apiResource('etape-deliverables', WorkflowEtapeDeliverableController::class);
+            Route::apiResource('etape-roles', WorkflowEtapeRoleController::class);
+            Route::apiResource('etape-decisions', WorkflowEtapeDecisionController::class);
+        });
 
-// Formulaires d'évaluation
-// Route::middleware('verifyToken')->group(function () {
-    Route::apiResource('formulaires-evaluation', FormulaireEvaluationController::class);
-    Route::get('formulaires-evaluation/{formulaireEvaluation}',[FormulaireEvaluationController::class, 'show']);
-    Route::apiResource('evaluations', EvaluationController::class);
-    Route::post('evaluations/{evaluation}/responses', [EvaluationController::class, 'addResponse']);
-    Route::get('evaluations/{evaluation}/responses', [EvaluationController::class, 'responses']);
-// });
+        // Workflow Instances
+        Route::prefix('workflow-instances')->group(function () {
+            Route::apiResource('instances', WorkflowInstanceController::class);
+            Route::patch('instances/{id}', [WorkflowInstanceController::class, 'patch']);
+            Route::apiResource('histories', WorkflowInstanceHistoryController::class);
+            Route::apiResource('deliverables', WorkflowInstanceDeliverableController::class);
+            Route::apiResource('comments', WorkflowInstanceCommentController::class);
+        });
 
-// Workflow
-// Route::middleware('verifyToken')->group(function () {
-    Route::prefix('workflow')->group(function () {
-        Route::apiResource('models', WorkflowController::class);
-        Route::apiResource('versions', WorkflowVersionController::class);
-        Route::apiResource('roles', WorkflowRoleController::class);
-        Route::apiResource('deliverables', WorkflowDeliverableController::class);
-        Route::apiResource('decision-outcomes', WorkflowDecisionOutcomeController::class);
-        Route::apiResource('etapes', WorkflowEtapeController::class);
-        Route::apiResource('etape-slas', WorkflowEtapeSlaController::class);
-        Route::apiResource('etape-deliverables', WorkflowEtapeDeliverableController::class);
-        Route::apiResource('etape-roles', WorkflowEtapeRoleController::class);
-        Route::apiResource('etape-decisions', WorkflowEtapeDecisionController::class);
-    });
-// });
+        // Suivis & Indicateurs
+        Route::apiResource('suivis', SuiviController::class);
+        Route::apiResource('indicateurs', IndicateurController::class);
+        Route::apiResource('indicateur-suivis', IndicateurSuiviController::class);
+        Route::apiResource('exploitations', ExploitationController::class);
+        Route::apiResource('visite-photos', VisitePhotoController::class);
+        Route::apiResource('entreprises', EntrepriseController::class);
+        Route::apiResource('embauches', EmbaucheController::class);
+        Route::apiResource('observations', ObservationController::class);
 
-// Workflow Instances
-// Route::middleware('verifyToken')->group(function () {
-    Route::prefix('workflow-instances')->group(function () {
-        Route::apiResource('instances', WorkflowInstanceController::class);
-        Route::patch('instances/{id}', [WorkflowInstanceController::class, 'patch']);
-        Route::apiResource('histories', WorkflowInstanceHistoryController::class);
-        Route::apiResource('deliverables', WorkflowInstanceDeliverableController::class);
-        Route::apiResource('comments', WorkflowInstanceCommentController::class);
-    });
-// });
+        // Finances
+        Route::apiResource('organismes', OrganismeFinancementController::class);
+        Route::get('organismes/region/{regionId}', [OrganismeFinancementController::class, 'getByRegion']);
+        Route::get('organismes/type/{typeId}', [OrganismeFinancementController::class, 'getByType']);
+        Route::apiResource('budgets', BudgetController::class);
+        Route::patch('budgets/{id}', [BudgetController::class, 'patch']);
+        Route::apiResource('compte-financements', CompteFinancementController::class);
+        Route::apiResource('plan-decaissements', PlanDecaissementController::class);
+        Route::apiResource('plan-remboursements', PlanRemboursementController::class);
+        Route::apiResource('lots-transmission', LotTransmissionController::class);
+        Route::apiResource('ligne-decaissements', LigneDecaissementController::class);
+        Route::patch('ligne-decaissements/{id}', [LigneDecaissementController::class, 'patch']);
+        Route::apiResource('recouvrements', RecouvrementController::class);
+        Route::apiResource('decaissements', DecaissementController::class);
+        Route::patch('decaissements/{id}', [DecaissementController::class, 'patch']);
+        Route::apiResource('decaissements-declarations', DecaissementsDeclarationController::class);
+        Route::patch('decaissements-declarations/{id}', [DecaissementsDeclarationController::class, 'patch']);
+        Route::apiResource('remboursements', RemboursementController::class);
+        Route::patch('remboursements/{id}', [RemboursementController::class, 'patch']);
+        Route::apiResource('remboursements-declarations', RemboursementsDeclarationController::class);
+        Route::patch('remboursements-declarations/{id}', [RemboursementsDeclarationController::class, 'patch']);
+        Route::apiResource('transactions', TransactionController::class);
+        Route::patch('transactions/{id}', [TransactionController::class, 'patch']);
+        Route::apiResource('categories-transactions', CategorieTransactionController::class);
+        Route::get('balance-comptable', [BalanceComptableController::class, 'index']);
+        Route::get('balance-comptable/micro-projet/{microProjetId}', [BalanceComptableController::class, 'byMicroProjet']);
 
-// // Workflow-exécution
-// Route::middleware('verifyToken')->prefix('workflow-executes/{workflowInstanceId}')->group(function () {
-//     // Workflow state transitions
-//     Route::post('transition', [WorkflowExecutionController::class, 'transition']);
-    
-//     // AGR_CLASSIC-PLUS: ETAPE_02 - Joindre le plan d'affaires
-//     Route::post('deliverables/plan-affaires', [WorkflowInstanceDeliverableController::class, 'store']);
-    
-//     // AGR_CLASSIC-PLUS: ETAPE_03 - Valider les plans d'affaires
-//     Route::post('validate-plan-affaires', [WorkflowExecutionController::class, 'validatePlanAffaires']);
-    
-//     // MEPS-MPE: ETAPE_03 - Imputation aux agences régionales
-//     Route::post('impute-agence', [WorkflowExecutionController::class, 'imputeAgence']);
-    
-//     // MEPS-MPE: ETAPE_04 - Mise en place du plan de décaissement
-//     Route::apiResource('plan-decaissements', PlanDecaissementController::class);
-//     Route::apiResource('ligne-decaissements', LigneDecaissementController::class);
-    
-//     // MEPS-MPE: ETAPE_05_1 to ETAPE_05_5 - Validation du plan de décaissement
-//     Route::post('validate-plan-decaissement', [WorkflowExecutionController::class, 'validatePlanDecaissement']);
-    
-//     // AGR_CLASSIC-PLUS: ETAPE_04 & MEPS-MPE: ETAPE_02 - Transmission au partenaire financier
-//     Route::apiResource('lots-transmission', LotTransmissionController::class);
-//     Route::post('transmit-partenaire', [WorkflowExecutionController::class, 'transmitPartenaire']);
-    
-//     // AGR_CLASSIC-PLUS: ETAPE_05 - Traitement des dossiers par le partenaire financier
-//     Route::apiResource('plan-remboursements', PlanRemboursementController::class);
-//     Route::post('analyse-partenaire', [WorkflowExecutionController::class, 'analysePartenaire']);
-    
-//     // MEPS-MPE: ETAPE_06 - Traitement des lignes de décaissement
-//     Route::post('authorize-ligne-decaissement', [WorkflowExecutionController::class, 'authorizeLigneDecaissement']);
-    
-//     // MEPS-MPE: ETAPE_07 & AGR_CLASSIC-PLUS: ETAPE_06_1 - Exécution des lignes de décaissement
-//     Route::apiResource('decaissements', DecaissementController::class);
-//     Route::post('execute-decaissement', [WorkflowExecutionController::class, 'executeDecaissement']);
-    
-//     // MEPS-MPE: ETAPE_08 & AGR_CLASSIC-PLUS: ETAPE_06_2 - Remboursement
-//     Route::apiResource('remboursements', RemboursementController::class);
-//     Route::post('execute-remboursement', [WorkflowExecutionController::class, 'executeRemboursement']);
-    
-//     // MEPS-MPE: ETAPE_09 & AGR_CLASSIC-PLUS: ETAPE_06_3 - Recouvrement
-//     Route::apiResource('recouvrements', RecouvrementController::class);
-//     Route::post('execute-recouvrement', [WorkflowExecutionController::class, 'executeRecouvrement']);
+        // Documents
+        Route::prefix('documents')->group(function () {
+            Route::post('upload', [DocumentController::class, 'uploadDocument']);
+            Route::get('/', [DocumentController::class, 'indexDocuments']);
+            Route::get('{id}', [DocumentController::class, 'showDocument']);
+            Route::delete('{id}', [DocumentController::class, 'deleteDocument']);
+        });
 
-//     // MEPS-MPE: ETAPE_10 & AGR_CLASSIC-PLUS: ETAPE_08 - Suivis & Exploitation
-//     Route::apiResource('exploitations', ExploitationController::class);
-//     Route::apiResource('visite-photos', VisitePhotoController::class);
-//     Route::post('suivi', [WorkflowExecutionController::class, 'suivi']);
-// });
+        // // Workflow-exécution
+        // Route::middleware('verifyToken')->prefix('workflow-executes/{workflowInstanceId}')->group(function () {
+        //     // Workflow state transitions
+        //     Route::post('transition', [WorkflowExecutionController::class, 'transition']);
 
-// Suivis & Indicateurs
-// Route::middleware('verifyToken')->group(function () {
-    Route::apiResource('suivis', SuiviController::class);
-    Route::apiResource('indicateurs', IndicateurController::class);
-    Route::apiResource('indicateur-suivis', IndicateurSuiviController::class);
-    Route::apiResource('exploitations', ExploitationController::class);
-    Route::apiResource('visite-photos', VisitePhotoController::class);
-    Route::apiResource('entreprises', EntrepriseController::class);
-    Route::apiResource('embauches', EmbaucheController::class);
-    Route::apiResource('observations', ObservationController::class);
-// });
+        //     // AGR_CLASSIC-PLUS: ETAPE_02 - Joindre le plan d'affaires
+        //     Route::post('deliverables/plan-affaires', [WorkflowInstanceDeliverableController::class, 'store']);
 
-// Finances
-// Route::middleware('verifyToken')->group(function () {
-    Route::apiResource('organismes', OrganismeFinancementController::class);
-    Route::get('organismes/region/{regionId}', [OrganismeFinancementController::class, 'getByRegion']);
-    Route::get('organismes/type/{typeId}', [OrganismeFinancementController::class, 'getByType']);
-    Route::apiResource('budgets', BudgetController::class);
-    Route::patch('budgets/{id}', [BudgetController::class, 'patch']);
-    Route::apiResource('compte-financements', CompteFinancementController::class);
-    Route::apiResource('plan-decaissements', PlanDecaissementController::class);
-    Route::apiResource('plan-remboursements', PlanRemboursementController::class);
-    Route::apiResource('lots-transmission', LotTransmissionController::class);
-    Route::apiResource('ligne-decaissements', LigneDecaissementController::class);
-    Route::patch('ligne-decaissements/{id}', [LigneDecaissementController::class, 'patch']);
-    Route::apiResource('recouvrements', RecouvrementController::class);
-    Route::apiResource('decaissements', DecaissementController::class);
-    Route::patch('decaissements/{id}', [DecaissementController::class, 'patch']);
-    Route::apiResource('decaissements-declarations', DecaissementsDeclarationController::class);
-    Route::patch('decaissements-declarations/{id}', [DecaissementsDeclarationController::class, 'patch']);
-    Route::apiResource('remboursements', RemboursementController::class);
-    Route::patch('remboursements/{id}', [RemboursementController::class, 'patch']);
-    Route::apiResource('remboursements-declarations', RemboursementsDeclarationController::class);
-    Route::patch('remboursements-declarations/{id}', [RemboursementsDeclarationController::class, 'patch']);
-    Route::apiResource('transactions', TransactionController::class);
-    Route::patch('transactions/{id}', [TransactionController::class, 'patch']);
-    Route::apiResource('categories-transactions', CategorieTransactionController::class);
-    Route::get('balance-comptable', [BalanceComptableController::class, 'index']);
-    Route::get('balance-comptable/micro-projet/{microProjetId}', [BalanceComptableController::class, 'byMicroProjet']);
-// });
+        //     // AGR_CLASSIC-PLUS: ETAPE_03 - Valider les plans d'affaires
+        //     Route::post('validate-plan-affaires', [WorkflowExecutionController::class, 'validatePlanAffaires']);
 
-// Fichiers
-Route::prefix('files')->group(function () {
-    Route::get('{path}', [DocumentController::class, 'serve'])->where('path', '.*');
-    Route::post('upload', [DocumentController::class, 'upload']);
-    Route::delete('delete', [DocumentController::class, 'delete']);
-});
+        //     // MEPS-MPE: ETAPE_03 - Imputation aux agences régionales
+        //     Route::post('impute-agence', [WorkflowExecutionController::class, 'imputeAgence']);
 
-// Documents
-// Route::middleware('verifyToken')->group(function () {
-    Route::prefix('documents')->group(function () {
-        Route::post('upload', [DocumentController::class, 'uploadDocument']);
-        Route::get('/', [DocumentController::class, 'indexDocuments']);
-        Route::get('{id}', [DocumentController::class, 'showDocument']);
-        Route::delete('{id}', [DocumentController::class, 'deleteDocument']);
-    });
-// });
+        //     // MEPS-MPE: ETAPE_04 - Mise en place du plan de décaissement
+        //     Route::apiResource('plan-decaissements', PlanDecaissementController::class);
+        //     Route::apiResource('ligne-decaissements', LigneDecaissementController::class);
 
-// AEJ API
-Route::prefix('aej')->group(function () {
-    Route::get('types-pieces-identites', [AejApiController::class, 'getTypesPiecesIdentites']);
-    Route::get('situations-matrimoniale', [AejApiController::class, 'getSituationsMatrimoniale']);
-    Route::get('secteurs', [AejApiController::class, 'getSecteurs']);
-    Route::get('sous-secteurs', [AejApiController::class, 'getSousSecteurs']);
-    Route::get('niveaux-etudes', [AejApiController::class, 'getNiveauxEtudes']);
-    Route::get('agences-regionales', [AejApiController::class, 'getAgencesRegionales']);
-    Route::get('sexes', [AejApiController::class, 'getSexes']);
-    Route::get('lieu-habitations', [AejApiController::class, 'getLieuHabitations']);
-    Route::get('pays', [AejApiController::class, 'getPays']);
-    Route::get('situations-handicaps', [AejApiController::class, 'getSituationsHandicaps']);
-    Route::get('communes', [AejApiController::class, 'getCommunes']);
-    Route::get('division-regionale', [AejApiController::class, 'getDivisionRegionale']);
-    Route::get('villes', [AejApiController::class, 'getVilles']);
-    Route::get('referentiels', [AejApiController::class, 'getAllReferentiels']);
+        //     // MEPS-MPE: ETAPE_05_1 to ETAPE_05_5 - Validation du plan de décaissement
+        //     Route::post('validate-plan-decaissement', [WorkflowExecutionController::class, 'validatePlanDecaissement']);
 
-    // Cache and sync routes
-    Route::post('clear-cache', [AejApiController::class, 'clearCache']);
-    Route::post('sync', [SyncAejController::class, 'sync']);
-    Route::post('sync-all', [SyncAejController::class, 'syncAll']);
-});
+        //     // AGR_CLASSIC-PLUS: ETAPE_04 & MEPS-MPE: ETAPE_02 - Transmission au partenaire financier
+        //     Route::apiResource('lots-transmission', LotTransmissionController::class);
+        //     Route::post('transmit-partenaire', [WorkflowExecutionController::class, 'transmitPartenaire']);
 
-// Dashboards
-Route::prefix('dashboard')->group(function () {
-    Route::prefix('agences')->group(function () {
-        Route::get('kpis', [DashboardAgencesController::class, 'getKPIs']);
-        Route::get('projets-agence', [DashboardAgencesController::class, 'getProjetsParAgence']);
-        Route::get('projets-statut', [DashboardAgencesController::class, 'getProjetsParStatut']);
-        Route::get('financement-agence', [DashboardAgencesController::class, 'getFinancementParAgence']);
-        Route::get('classement', [DashboardAgencesController::class, 'getClassementAgences']);
-        Route::get('alertes', [DashboardAgencesController::class, 'getAlertes']);
+        //     // AGR_CLASSIC-PLUS: ETAPE_05 - Traitement des dossiers par le partenaire financier
+        //     Route::apiResource('plan-remboursements', PlanRemboursementController::class);
+        //     Route::post('analyse-partenaire', [WorkflowExecutionController::class, 'analysePartenaire']);
+
+        //     // MEPS-MPE: ETAPE_06 - Traitement des lignes de décaissement
+        //     Route::post('authorize-ligne-decaissement', [WorkflowExecutionController::class, 'authorizeLigneDecaissement']);
+
+        //     // MEPS-MPE: ETAPE_07 & AGR_CLASSIC-PLUS: ETAPE_06_1 - Exécution des lignes de décaissement
+        //     Route::apiResource('decaissements', DecaissementController::class);
+        //     Route::post('execute-decaissement', [WorkflowExecutionController::class, 'executeDecaissement']);
+
+        //     // MEPS-MPE: ETAPE_08 & AGR_CLASSIC-PLUS: ETAPE_06_2 - Remboursement
+        //     Route::apiResource('remboursements', RemboursementController::class);
+        //     Route::post('execute-remboursement', [WorkflowExecutionController::class, 'executeRemboursement']);
+
+        //     // MEPS-MPE: ETAPE_09 & AGR_CLASSIC-PLUS: ETAPE_06_3 - Recouvrement
+        //     Route::apiResource('recouvrements', RecouvrementController::class);
+        //     Route::post('execute-recouvrement', [WorkflowExecutionController::class, 'executeRecouvrement']);
+
+        //     // MEPS-MPE: ETAPE_10 & AGR_CLASSIC-PLUS: ETAPE_08 - Suivis & Exploitation
+        //     Route::apiResource('exploitations', ExploitationController::class);
+        //     Route::apiResource('visite-photos', VisitePhotoController::class);
+        //     Route::post('suivi', [WorkflowExecutionController::class, 'suivi']);
+        // });
+    // });
+
+    // Fichiers (publics)
+    Route::prefix('files')->group(function () {
+        Route::get('{path}', [DocumentController::class, 'serve'])->where('path', '.*');
+        Route::post('upload', [DocumentController::class, 'upload']);
+        Route::delete('delete', [DocumentController::class, 'delete']);
     });
 
-    Route::prefix('partenaires')->group(function () {
-        Route::get('kpis', [DashboardPartenairesController::class, 'getKPIs']);
-        Route::get('portefeuille-partenaire', [DashboardPartenairesController::class, 'getPortefeuilleParPartenaire']);
-        Route::get('accorde-vs-decaisse', [DashboardPartenairesController::class, 'getAccordeVsDecaisse']);
-        Route::get('etat-financements', [DashboardPartenairesController::class, 'getEtatFinancements']);
-        Route::get('evolution-remboursements', [DashboardPartenairesController::class, 'getEvolutionRemboursements']);
-        Route::get('classement', [DashboardPartenairesController::class, 'getClassementPartenaires']);
-        Route::get('alertes', [DashboardPartenairesController::class, 'getAlertes']);
+    // AEJ API (public)
+    Route::prefix('aej')->group(function () {
+        Route::get('types-pieces-identites', [AejApiController::class, 'getTypesPiecesIdentites']);
+        Route::get('situations-matrimoniale', [AejApiController::class, 'getSituationsMatrimoniale']);
+        Route::get('secteurs', [AejApiController::class, 'getSecteurs']);
+        Route::get('sous-secteurs', [AejApiController::class, 'getSousSecteurs']);
+        Route::get('niveaux-etudes', [AejApiController::class, 'getNiveauxEtudes']);
+        Route::get('agences-regionales', [AejApiController::class, 'getAgencesRegionales']);
+        Route::get('sexes', [AejApiController::class, 'getSexes']);
+        Route::get('lieu-habitations', [AejApiController::class, 'getLieuHabitations']);
+        Route::get('pays', [AejApiController::class, 'getPays']);
+        Route::get('situations-handicaps', [AejApiController::class, 'getSituationsHandicaps']);
+        Route::get('communes', [AejApiController::class, 'getCommunes']);
+        Route::get('division-regionale', [AejApiController::class, 'getDivisionRegionale']);
+        Route::get('villes', [AejApiController::class, 'getVilles']);
+        Route::get('referentiels', [AejApiController::class, 'getAllReferentiels']);
+
+        // Cache and sync routes
+        Route::post('clear-cache', [AejApiController::class, 'clearCache']);
+        Route::post('sync', [SyncAejController::class, 'sync']);
+        Route::post('sync-all', [SyncAejController::class, 'syncAll']);
     });
 
-    Route::prefix('entreprises')->group(function () {
-        Route::get('kpis', [DashboardEntreprisesController::class, 'getKPIs']);
-        Route::get('region', [DashboardEntreprisesController::class, 'getEntreprisesParRegion']);
-        Route::get('emplois-secteur', [DashboardEntreprisesController::class, 'getEmploisParSecteur']);
-        Route::get('types-emplois', [DashboardEntreprisesController::class, 'getTypesEmplois']);
-        Route::get('top-recruteuses', [DashboardEntreprisesController::class, 'getTopEntreprisesRecruteuses']);
-        Route::get('secteur', [DashboardEntreprisesController::class, 'getEntreprisesParSecteur']);
-        Route::get('classement', [DashboardEntreprisesController::class, 'getClassementEntreprises']);
-        Route::get('alertes', [DashboardEntreprisesController::class, 'getAlertes']);
+    // Dashboards (public)
+    Route::prefix('dashboard')->group(function () {
+        Route::prefix('agences')->group(function () {
+            Route::get('kpis', [DashboardAgencesController::class, 'getKPIs']);
+            Route::get('projets-agence', [DashboardAgencesController::class, 'getProjetsParAgence']);
+            Route::get('projets-statut', [DashboardAgencesController::class, 'getProjetsParStatut']);
+            Route::get('financement-agence', [DashboardAgencesController::class, 'getFinancementParAgence']);
+            Route::get('classement', [DashboardAgencesController::class, 'getClassementAgences']);
+            Route::get('alertes', [DashboardAgencesController::class, 'getAlertes']);
+        });
+
+        Route::prefix('partenaires')->group(function () {
+            Route::get('kpis', [DashboardPartenairesController::class, 'getKPIs']);
+            Route::get('portefeuille-partenaire', [DashboardPartenairesController::class, 'getPortefeuilleParPartenaire']);
+            Route::get('accorde-vs-decaisse', [DashboardPartenairesController::class, 'getAccordeVsDecaisse']);
+            Route::get('etat-financements', [DashboardPartenairesController::class, 'getEtatFinancements']);
+            Route::get('evolution-remboursements', [DashboardPartenairesController::class, 'getEvolutionRemboursements']);
+            Route::get('classement', [DashboardPartenairesController::class, 'getClassementPartenaires']);
+            Route::get('alertes', [DashboardPartenairesController::class, 'getAlertes']);
+        });
+
+        Route::prefix('entreprises')->group(function () {
+            Route::get('kpis', [DashboardEntreprisesController::class, 'getKPIs']);
+            Route::get('region', [DashboardEntreprisesController::class, 'getEntreprisesParRegion']);
+            Route::get('emplois-secteur', [DashboardEntreprisesController::class, 'getEmploisParSecteur']);
+            Route::get('types-emplois', [DashboardEntreprisesController::class, 'getTypesEmplois']);
+            Route::get('top-recruteuses', [DashboardEntreprisesController::class, 'getTopEntreprisesRecruteuses']);
+            Route::get('secteur', [DashboardEntreprisesController::class, 'getEntreprisesParSecteur']);
+            Route::get('classement', [DashboardEntreprisesController::class, 'getClassementEntreprises']);
+            Route::get('alertes', [DashboardEntreprisesController::class, 'getAlertes']);
+        });
     });
-});
+// });
