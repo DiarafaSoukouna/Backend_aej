@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Embauche;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Validator;
 
 class EmbaucheController extends Controller
 {
@@ -22,7 +23,7 @@ class EmbaucheController extends Controller
 
     public function store(Request $request): JsonResponse
     {
-        $validated = $request->validate([
+        $validation = Validator::make($request->all(), [
             'promoteur_id' => 'required|exists:promoteurs,id',
             'entreprise_id' => 'nullable|exists:entreprises,id',
             'micro_projet_id' => 'nullable|exists:micro_projets,id',
@@ -30,15 +31,29 @@ class EmbaucheController extends Controller
             'poste' => 'required|string|max:200',
         ]);
 
-        $embauche = Embauche::create($validated);
-        return response()->json(['message' => 'Embauche created successfully', 'data' => $embauche], 201);
+        if ($validation->fails()) {
+            return new JsonResponse([
+                'message' => 'Validation failed',
+                'errors' => $validation->errors()
+            ], 422);
+        }
+
+        try {
+            $embauche = Embauche::create($validation->validated());
+            return response()->json(['message' => 'Embauche created successfully', 'data' => $embauche], 201);
+        } catch (\Throwable $th) {
+            return new JsonResponse([
+                'message' => 'Embauche creation failed',
+                'errors' => $th->getMessage()
+            ], 500);
+        }
     }
 
     public function update(Request $request, $id): JsonResponse
     {
         $embauche = Embauche::findOrFail($id);
 
-        $validated = $request->validate([
+        $validation = Validator::make($request->all(), [
             'promoteur_id' => 'nullable|exists:promoteurs,id',
             'entreprise_id' => 'nullable|exists:entreprises,id',
             'micro_projet_id' => 'nullable|exists:micro_projets,id',
@@ -46,14 +61,35 @@ class EmbaucheController extends Controller
             'poste' => 'nullable|string|max:200',
         ]);
 
-        $embauche->update($validated);
-        return response()->json(['message' => 'Embauche updated successfully', 'data' => $embauche]);
+        if ($validation->fails()) {
+            return new JsonResponse([
+                'message' => 'Validation failed',
+                'errors' => $validation->errors()
+            ], 422);
+        }
+
+        try {
+            $embauche->update($validation->validated());
+            return response()->json(['message' => 'Embauche updated successfully', 'data' => $embauche]);
+        } catch (\Throwable $th) {
+            return new JsonResponse([
+                'message' => 'Embauche update failed',
+                'errors' => $th->getMessage()
+            ], 500);
+        }
     }
 
     public function destroy($id): JsonResponse
     {
         $embauche = Embauche::findOrFail($id);
-        $embauche->delete();
-        return response()->json(['message' => 'Embauche deleted successfully'], 204);
+        try {
+            $embauche->delete();
+            return response()->json(['message' => 'Embauche deleted successfully'], 204);
+        } catch (\Throwable $th) {
+            return new JsonResponse([
+                'message' => 'Embauche deletion failed',
+                'errors' => $th->getMessage()
+            ], 500);
+        }
     }
 }

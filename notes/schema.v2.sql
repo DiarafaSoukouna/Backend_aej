@@ -550,14 +550,22 @@ CREATE TABLE
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
         code VARCHAR(50) UNIQUE,
         projet_id BIGINT UNSIGNED UNIQUE,
+        guichet_id  BIGINT UNSIGNED,
+        workflow_version VARCHAR(50),
         intitule VARCHAR(200) NOT NULL,
         budget_alloue DECIMAL(15, 2) NOT NULL,
+        montant_min DECIMAL(15, 2) DEFAULT 0,
+        montant_max DECIMAL(15, 2) DEFAULT 0,
+        taux DECIMAL(5, 2) DEFAULT 0,
+        duree INT DEFAULT 0,
         nbre_emplois_prevu INT DEFAULT 0,
         nbre_beneficiaire_prevu INT DEFAULT 0,
         nbre_micro_projet_prevu INT DEFAULT 0,
         created_at DATETIME NOT NULL,
         updated_at DATETIME NOT NULL,
-        FOREIGN KEY (projet_id) REFERENCES projets (id) ON DELETE CASCADE
+        FOREIGN KEY (projet_id) REFERENCES projets (id) ON DELETE CASCADE,
+        FOREIGN KEY (guichet_id) REFERENCES guichets (id),
+        FOREIGN KEY (workflow_version) REFERENCES workflow_versions (code)
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
 -- ##############################################################

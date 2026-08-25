@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\CompteFinancement;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Validator;
 
 class CompteFinancementController extends Controller
 {
@@ -69,7 +70,7 @@ class CompteFinancementController extends Controller
     {
         $compte = CompteFinancement::findOrFail($id);
 
-        $validated = $request->validate([
+        $validation = Validator::make($request->all(), [
             'micro_projet_id' => 'nullable|exists:micro_projets,id',
             'organisme_id' => 'nullable|exists:organisme_financements,id',
             'budget_id' => 'nullable|exists:budgets,id|unique:compte_financements,budget_id,' . $id,
@@ -84,19 +85,39 @@ class CompteFinancementController extends Controller
             'observations' => 'nullable|string',
         ]);
 
-        $compte->update($validated);
-        return new JsonResponse([
-            'message' => 'Compte financement updated successfully',
-            'data' => $compte
-        ], 200);
+        if ($validation->fails()) {
+            return new JsonResponse([
+                'message' => 'Validation failed',
+                'errors' => $validation->errors()
+            ], 422);
+        }
+
+        try {
+            $compte->update($validation->validated());
+            return new JsonResponse([
+                'message' => 'Compte financement updated successfully',
+                'data' => $compte
+            ], 200);
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'message' => 'Error updating compte financement',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+
     }
 
-    public function destroy($id)
+    public function destroy($id): JsonResponse
     {
         $compte = CompteFinancement::findOrFail($id);
-        $compte->delete();
-        return new JsonResponse([
-            'message' => 'Compte financement deleted successfully'
-        ], 200);
+        try {
+            $compte->delete();
+            return response()->json(['message' => 'Compte financement deleted successfully'], 204);
+        } catch (\Throwable $th) {
+            return new JsonResponse([
+                'message' => 'Compte financement deletion failed',
+                'errors' => $th->getMessage()
+            ], 500);
+        }
     }
 }

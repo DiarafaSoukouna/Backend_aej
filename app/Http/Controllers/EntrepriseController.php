@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Entreprise;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Validator;
 
 class EntrepriseController extends Controller
 {
@@ -22,7 +23,7 @@ class EntrepriseController extends Controller
 
     public function store(Request $request): JsonResponse
     {
-        $validated = $request->validate([
+        $validation = Validator::make($request->all(), [
             'numero' => 'nullable|string|max:50|unique:entreprises,numero',
             'raison_sociale' => 'required|string|max:200',
             'sigle' => 'nullable|string|max:30',
@@ -36,15 +37,29 @@ class EntrepriseController extends Controller
             'commune_id' => 'nullable|exists:communes,id',
         ]);
 
-        $entreprise = Entreprise::create($validated);
-        return response()->json(['message' => 'Entreprise created successfully', 'data' => $entreprise], 201);
+        if ($validation->fails()) {
+            return new JsonResponse([
+                'message' => 'Validation failed',
+                'errors' => $validation->errors()
+            ], 422);
+        }
+
+        try {
+            $entreprise = Entreprise::create($validation->validated());
+            return response()->json(['message' => 'Entreprise created successfully', 'data' => $entreprise], 201);
+        } catch (\Throwable $th) {
+            return new JsonResponse([
+                'message' => 'Entreprise creation failed',
+                'errors' => $th->getMessage()
+            ], 500);
+        }
     }
 
     public function update(Request $request, $id): JsonResponse
     {
         $entreprise = Entreprise::findOrFail($id);
 
-        $validated = $request->validate([
+        $validation = Validator::make($request->all(), [
             'numero' => 'nullable|string|max:50|unique:entreprises,numero,' . $id,
             'raison_sociale' => 'nullable|string|max:200',
             'sigle' => 'nullable|string|max:30',
@@ -58,14 +73,35 @@ class EntrepriseController extends Controller
             'commune_id' => 'nullable|exists:communes,id',
         ]);
 
-        $entreprise->update($validated);
-        return response()->json(['message' => 'Entreprise updated successfully', 'data' => $entreprise]);
+        if ($validation->fails()) {
+            return new JsonResponse([
+                'message' => 'Validation failed',
+                'errors' => $validation->errors()
+            ], 422);
+        }
+
+        try {
+            $entreprise->update($validation->validated());
+            return response()->json(['message' => 'Entreprise updated successfully', 'data' => $entreprise]);
+        } catch (\Throwable $th) {
+            return new JsonResponse([
+                'message' => 'Entreprise update failed',
+                'errors' => $th->getMessage()
+            ], 500);
+        }
     }
 
     public function destroy($id): JsonResponse
     {
         $entreprise = Entreprise::findOrFail($id);
-        $entreprise->delete();
-        return response()->json(['message' => 'Entreprise deleted successfully'], 204);
+        try {
+            $entreprise->delete();
+            return response()->json(['message' => 'Entreprise deleted successfully'], 204);
+        } catch (\Throwable $th) {
+            return new JsonResponse([
+                'message' => 'Entreprise deletion failed',
+                'errors' => $th->getMessage()
+            ], 500);
+        }
     }
 }
