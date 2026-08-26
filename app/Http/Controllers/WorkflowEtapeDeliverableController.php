@@ -28,9 +28,8 @@ class WorkflowEtapeDeliverableController extends Controller
     {
         $validation = Validator::make($request->all(), [
             'etape_code' => 'required|exists:workflow_etapes,code',
-            'name' => 'required|string|max:200',
-            'description' => 'nullable|string',
-            'is_mandatory' => 'boolean',
+            'deliverable_code' => 'required|exists:workflow_deliverables,code',
+            'is_required' => 'required|boolean',
         ]);
 
         if ($validation->fails()) {
@@ -65,9 +64,8 @@ class WorkflowEtapeDeliverableController extends Controller
 
         $validation = Validator::make($request->all(), [
             'etape_code' => 'sometimes|required|exists:workflow_etapes,code',
-            'name' => 'sometimes|required|string|max:200',
-            'description' => 'nullable|string',
-            'is_mandatory' => 'boolean',
+            'deliverable_code' => 'sometimes|required|exists:workflow_deliverables,code',
+            'is_required' => 'sometimes|required|boolean',
         ]);
 
         if ($validation->fails()) {

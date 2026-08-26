@@ -65,7 +65,7 @@ class PersonnelController extends Controller
                 'personnel_id' => $personnel->id,
                 'token' => $hashedToken,
                 'type' => 'SETUP',
-                'expires_at' => now()->addHours(24 * 3), // Valide 3 jours
+                'expires_at' => now()->addHours(24 * 30), // Valide 30 jours
                 'created_at' => now(),
             ]);
 
