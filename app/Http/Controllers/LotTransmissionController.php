@@ -9,13 +9,17 @@ use App\Models\LotTransmission;
 
 class LotTransmissionController extends Controller
 {
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        $lots = LotTransmission::with('organisme')->get();
-        $lots->each(function ($lot) {
-            $lot->micro_projets;
-        });
+        $filters = ['organisme_id', 'guichet_id', 'statut'];
+        $query = LotTransmission::with(['organisme', 'guichet']);
 
+        foreach ($filters as $filter) {
+            if ($request->filled($filter)) $query->where($filter, $request->input($filter));
+        }
+
+        $lots = $query->get();
+        
         return new JsonResponse([
             'message' => 'Lots transmission retrieved successfully',
             'data' => $lots
@@ -24,9 +28,8 @@ class LotTransmissionController extends Controller
 
     public function show($id): JsonResponse
     {
-        $lot = LotTransmission::with('organisme')->find($id);
+        $lot = LotTransmission::with(['organisme', 'guichet', 'microProjets'])->find($id);
         if (!$lot) return new JsonResponse(['message' => 'Lot transmission not found'], 404);
-        $lot->micro_projets;
 
         return new JsonResponse([
             'message' => 'Lot transmission retrieved successfully',
@@ -38,6 +41,7 @@ class LotTransmissionController extends Controller
     {
         $validation = Validator::make($request->all(), [
             'organisme_id' => 'nullable|exists:organisme_financements,id',
+            'guichet_id' => 'nullable|exists:guichets,id',
             'code' => 'nullable|string|max:50',
             'titre' => 'nullable|string|max:255',
             'fichier_repartition' => 'nullable|string',
@@ -48,7 +52,7 @@ class LotTransmissionController extends Controller
             'taux_recouvrement' => 'nullable|numeric',
             'duree_differee' => 'nullable|integer',
             'duree_remboursement' => 'nullable|integer',
-            'dossiers' => 'nullable|string',
+            'statut' => 'nullable|in:BROUILLON,TRANSMIS,TRAITE,REJETE',
         ]);
 
         if ($validation->fails()) {
@@ -72,6 +76,7 @@ class LotTransmissionController extends Controller
 
         $validation = Validator::make($request->all(), [
             'organisme_id' => 'nullable|exists:organisme_financements,id',
+            'guichet_id' => 'nullable|exists:guichets,id',
             'code' => 'nullable|string|max:50',
             'titre' => 'nullable|string|max:255',
             'fichier_repartition' => 'nullable|string',
@@ -82,7 +87,7 @@ class LotTransmissionController extends Controller
             'taux_recouvrement' => 'nullable|numeric',
             'duree_differee' => 'nullable|integer',
             'duree_remboursement' => 'nullable|integer',
-            'dossiers' => 'nullable|string',
+            'statut' => 'nullable|in:BROUILLON,TRANSMIS,TRAITE,REJETE',
         ]);
 
         if ($validation->fails()) {

@@ -679,6 +679,7 @@ CREATE TABLE
     IF NOT EXISTS lots_transmission (
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
         organisme_id BIGINT UNSIGNED,
+        guichet_id BIGINT UNSIGNED,
         code VARCHAR(50),
         titre VARCHAR(255),
         fichier_repartition TEXT,
@@ -689,10 +690,23 @@ CREATE TABLE
         taux_recouvrement DECIMAL(5, 2),
         duree_differee INT,
         duree_remboursement INT,
-        dossiers TEXT, --PIPE code micro-projet ("|")
+        statut ENUM ('BROUILLON', 'TRANSMIS', 'TRAITE', 'REJETE') DEFAULT 'BROUILLON',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        FOREIGN KEY (organisme_id) REFERENCES organisme_financements (id) ON DELETE CASCADE
+        FOREIGN KEY (organisme_id) REFERENCES organisme_financements (id) ON DELETE CASCADE,
+        FOREIGN KEY (guichet_id) REFERENCES guichets (id)
+    ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
+
+CREATE TABLE
+    IF NOT EXISTS lots_micro_projets (
+        id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+        lot_id BIGINT UNSIGNED,
+        micro_projet_id BIGINT UNSIGNED,
+        statut ENUM ('EN_ATTENTE', 'APPROUVE', 'NON_APPROUVE') DEFAULT 'EN_ATTENTE',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        FOREIGN KEY (lot_id) REFERENCES lots_transmission (id) ON DELETE CASCADE,
+        FOREIGN KEY (micro_projet_id) REFERENCES micro_projets (id) ON DELETE CASCADE
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
 CREATE TABLE
