@@ -47,10 +47,10 @@ class AuthController extends Controller
             $blockDuration = $configuration ? $configuration->delai_inactivite_minutes : 15;
             $blockKey = "login_block:{$email}";
             $blockedUntilTimestamp = cache($blockKey);
-            
+
             if ($blockedUntilTimestamp && is_numeric($blockedUntilTimestamp)) {
                 $blockedUntil = now()->createFromTimestamp((int)$blockedUntilTimestamp);
-                
+
                 if (now()->lt($blockedUntil)) {
                     $retryAfter = now()->diffInSeconds($blockedUntil);
                     return new JsonResponse([
@@ -64,7 +64,8 @@ class AuthController extends Controller
             }
 
             $personnel = Personnel::where('email', $email)->first();
-            $configOTP = true;
+            $dureeOTP = $configuration ? $configuration->delai_code_otp_minutes : 0;
+            $configOTP = $dureeOTP > 0 ? true : false;
 
             if (!$personnel || !Hash::check($request->mot_de_passe, $personnel->mot_de_passe)) {
                 $attemptsKey = "login_attempts:{$email}";
@@ -134,6 +135,8 @@ class AuthController extends Controller
         }
 
         $personnel = Personnel::where('email', $request->input('email'))->first();
+        $configuration = Configuration::first();
+        $dureeOTP = $configuration ? $configuration->delai_code_otp_minutes : 15;
 
         if (!$personnel) {
             return new JsonResponse([
@@ -141,16 +144,42 @@ class AuthController extends Controller
             ], 404);
         }
 
+        $mode = $request->input('mode');
         try {
-            $otpCode = str_pad(rand(0, 999999), 6, '0', STR_PAD_LEFT);
-            $mode = $request->input('mode', 'MAIL');
+            $recentOtp = OtpCode::where('personnel_id', $personnel->id)
+                ->where('mode', $mode)
+                ->where('created_at', '>=', now()->subSeconds(60))
+                ->latest()
+                ->first();
+
+            if ($recentOtp) {
+                $remainingSeconds = max(1, 60 - now()->diffInSeconds($recentOtp->created_at));
+
+                return new JsonResponse([
+                    'message' => "Veuillez patienter {$remainingSeconds} secondes avant de demander un nouveau code.",
+                    'retry_after' => $remainingSeconds
+                ], 429);
+            }
+
+            $otpCountLastHour = OtpCode::where('personnel_id', $personnel->id)
+                ->where('mode', $mode)
+                ->where('created_at', '>=', now()->subHour())
+                ->count();
+
+            if ($otpCountLastHour >= 5) {
+                return new JsonResponse([
+                    'message' => 'Trop de demandes de codes OTP. Veuillez réessayer dans une heure.'
+                ], 429);
+            }
+
+            $otpCode = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
 
             OtpCode::where('personnel_id', $personnel->id)->where('used', false)->update(['used' => true]);
             OtpCode::create([
                 'personnel_id' => $personnel->id,
                 'code' => Hash::make($otpCode),
                 'mode' => $mode,
-                'expires_at' => now()->addMinutes(15),
+                'expires_at' => now()->addMinutes($dureeOTP),
             ]);
 
             if ($mode === 'WHATSAPP') {

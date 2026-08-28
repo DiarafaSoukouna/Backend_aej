@@ -74,8 +74,8 @@ use App\Http\Controllers\DashboardEntreprisesController;
     // Routes publiques (sans authentification)
     Route::prefix('auth')->group(function () {
         Route::post('login', [AuthController::class, 'login']);
-        Route::post('send-otp', [AuthController::class, 'sendOtp']);
-        Route::post('verify-otp', [AuthController::class, 'verifyOtp']);
+        Route::middleware('throttle:5,1')->post('send-otp', [AuthController::class, 'sendOtp']);
+        Route::middleware('throttle:5,1')->post('verify-otp', [AuthController::class, 'verifyOtp']);
         Route::get('refresh', [AuthController::class, 'refresh']);
 
         Route::middleware('verifyToken')->group(function () {

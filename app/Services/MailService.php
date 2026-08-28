@@ -13,7 +13,7 @@ class MailService
     public function __construct()
     {
         $configuration = Configuration::first();
-        
+
         if ($configuration) {
             $this->smtpConfig = [
                 'host' => $configuration->smtp_host_notifications,
@@ -26,7 +26,7 @@ class MailService
                     'name' => $configuration->sigle_systeme ?? 'AEJ'
                 ]
             ];
-            
+
             Log::info('MailService initialized with database configuration', [
                 'host' => $this->smtpConfig['host'],
                 'port' => $this->smtpConfig['port'],
@@ -63,6 +63,16 @@ class MailService
             $subject,
             $options
         );
+
+        config([
+            'mail.mailers.smtp.host' => $this->smtpConfig['host'],
+            'mail.mailers.smtp.port' => $this->smtpConfig['port'],
+            'mail.mailers.smtp.encryption' => $this->smtpConfig['encryption'],
+            'mail.mailers.smtp.username' => $this->smtpConfig['username'],
+            'mail.mailers.smtp.password' => $this->smtpConfig['password'],
+            'mail.from.address' => $this->smtpConfig['from']['address'],
+            'mail.from.name' => $this->smtpConfig['from']['name'],
+        ]);
 
         return Mail::html(
             $html,
@@ -156,13 +166,5 @@ class MailService
         return $this->send($email, 'Alerte de sécurité – AEJ', $content, [
             'headerTitle' => 'Alerte de sécurité',
         ]);
-    }
-
-    /**
-     * Obtenir la configuration SMTP
-     */
-    public function getSmtpConfig(): ?array
-    {
-        return $this->smtpConfig;
     }
 }
