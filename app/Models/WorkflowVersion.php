@@ -12,6 +12,7 @@ class WorkflowVersion extends Model
         'code',
         'name',
         'description',
+        'etape_start_code',
         'is_active',
         'is_default',
     ];
@@ -29,5 +30,10 @@ class WorkflowVersion extends Model
     public function etapes()
     {
         return $this->hasMany(WorkflowEtape::class, 'workflow_version', 'code');
+    }
+
+    public function etape_start()
+    {
+        return $this->hasOne(WorkflowEtape::class, 'code', 'etape_start_code');
     }
 }

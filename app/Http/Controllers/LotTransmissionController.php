@@ -18,11 +18,20 @@ class LotTransmissionController extends Controller
             if ($request->filled($filter)) $query->where($filter, $request->input($filter));
         }
 
-        $lots = $query->get();
-        
+        $perPage = $request->get('per_page', 20);
+        $lots = $query->paginate($perPage);
+
         return new JsonResponse([
-            'message' => 'Lots transmission retrieved successfully',
-            'data' => $lots
+            'message' => 'Lot micro projets retrieved successfully',
+            'data' => $lots->items(),
+            'pagination' => [
+                'current_page' => $lots->currentPage(),
+                'per_page' => $lots->perPage(),
+                'total' => $lots->total(),
+                'last_page' => $lots->lastPage(),
+                'from' => $lots->firstItem(),
+                'to' => $lots->lastItem(),
+            ],
         ], 200);
     }
 

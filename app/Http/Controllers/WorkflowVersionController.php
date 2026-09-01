@@ -11,13 +11,13 @@ class WorkflowVersionController extends Controller
 {
     public function index(): JsonResponse
     {
-        $versions = WorkflowVersion::with(['workflow', 'etapes'])->get();
+        $versions = WorkflowVersion::with(['workflow', 'etapes', 'etape_start'])->get();
         return new JsonResponse(['Message' => 'Workflow version list retrieved successfully', 'data' => $versions], 200);
     }
 
     public function show($id): JsonResponse
     {
-        $version = WorkflowVersion::with(['workflow', 'etapes'])->find($id);
+        $version = WorkflowVersion::with(['workflow', 'etapes', 'etape_start'])->find($id);
         if (!$version) {
             return new JsonResponse(['Message' => 'Workflow version not found'], 404);
         }
@@ -32,6 +32,7 @@ class WorkflowVersionController extends Controller
             'description' => 'nullable|string',
             'version' => 'required|string|max:20',
             'code' => 'nullable|string|max:50|unique:workflow_versions,code',
+            'etape_start_code' => 'nullable|string|max:50|exists:workflow_etapes,code',
             'is_active' => 'boolean',
             'is_default' => 'boolean',
         ]);
@@ -73,6 +74,7 @@ class WorkflowVersionController extends Controller
             'name' => 'sometimes|required|string|max:150',
             'description' => 'nullable|string',
             'version' => 'sometimes|required|string|max:20',
+            'etape_start_code' => 'nullable|string|max:50|exists:workflow_etapes,code',
             'is_active' => 'boolean',
             'is_default' => 'boolean',
         ]);

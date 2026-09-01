@@ -396,6 +396,7 @@ CREATE TABLE
         code VARCHAR(50) NOT NULL UNIQUE, -- GENERATE BY [workflow_code + '_' + VERSION] IF NOT EXISTS
         name VARCHAR(150) NOT NULL,
         description TEXT,
+        etape_start_code VARCHAR(50),
         is_active BOOLEAN NOT NULL DEFAULT TRUE,
         is_default BOOLEAN NOT NULL DEFAULT FALSE,
         created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -695,6 +696,18 @@ CREATE TABLE
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         FOREIGN KEY (organisme_id) REFERENCES organisme_financements (id) ON DELETE CASCADE,
         FOREIGN KEY (guichet_id) REFERENCES guichets (id)
+    ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
+
+CREATE TABLE
+    IF NOT EXISTS lots_importation (
+        id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+        micro_projet_id BIGINT UNSIGNED,
+        code VARCHAR(50),
+        nom_promoteur VARCHAR(100),
+        prenom_promoteur VARCHAR(100),
+        montant_sollicite DECIMAL(15, 2) DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (micro_projet_id) REFERENCES micro_projets (id) ON DELETE CASCADE
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
 CREATE TABLE

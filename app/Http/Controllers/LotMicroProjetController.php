@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Validator;
 use App\Models\LotMicroProjet;
+use App\Models\LotImportation;
 
 class LotMicroProjetController extends Controller
 {
@@ -74,10 +75,11 @@ class LotMicroProjetController extends Controller
                     'statut' => $statut,
                 ]);
                 $createdRecords[] = $lotMicroProjet->load(['lot', 'microProjet']);
+                LotImportation::where('micro_projet_id', $microProjetId)->delete();
             }
 
             return new JsonResponse([
-                'message' => count($createdRecords) . ' micro projets ajoutés au lot avec succès',
+                'message' => count($createdRecords) . ' micro projets ajoutés au lot avec succès et supprimés du lot d\'importation',
                 'data' => $createdRecords
             ], 201);
         } catch (\Exception $e) {
