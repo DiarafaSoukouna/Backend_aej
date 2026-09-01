@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Laravel\Sanctum\HasApiTokens;
 
@@ -20,7 +19,9 @@ class Personnel extends Authenticatable
         'organisme_id',
         'agence_regionale_id',
         'is_active',
+        'agence_id',
         'fonction_id',
+        'organisme_id',
         'mot_de_passe',
         'remember_token'
         
@@ -36,5 +37,25 @@ class Personnel extends Authenticatable
     public function getAuthPassword(): string
     {
         return $this->mot_de_passe;
+    }
+
+    public function role()
+    {
+        return $this->belongsTo(Role::class);
+    }
+    
+    public function agence()
+    {
+        return $this->belongsTo(AgenceRegionale::class);
+    }
+    
+    public function fonction()
+    {
+        return $this->belongsTo(Fonction::class);
+    }
+    
+    public function organisme()
+    {
+        return $this->belongsTo(OrganismeFinancement::class);
     }
 }

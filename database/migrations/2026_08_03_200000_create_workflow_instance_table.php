@@ -13,7 +13,7 @@ return new class extends Migration
             $table->unsignedBigInteger('micro_projet_id')->nullable();
             $table->string('workflow_version', 50);
             $table->string('current_etape_code', 50)->nullable();
-            $table->enum('status', ['EN_COURS', 'TERMINE', 'REJETE', 'ABANDONNE'])->default('EN_COURS');
+            $table->enum('statut', ['EN_COURS', 'TERMINE', 'REJETE', 'ABANDONNE'])->default('EN_COURS');
             $table->timestamp('started_at')->useCurrent();
             $table->timestamp('completed_at')->nullable();
             

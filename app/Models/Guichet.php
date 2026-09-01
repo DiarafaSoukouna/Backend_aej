@@ -4,12 +4,14 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Models\Workflow;
 
 class Guichet extends Model
 {
     use HasFactory;
 
     protected $fillable = [
+        'workflow_code',
         'code',
         'libelle',
         'description',
@@ -26,4 +28,9 @@ class Guichet extends Model
         'is_active' => 'boolean',
         'is_form_active' => 'boolean',
     ];
+
+    public function workflow()
+    {
+        return $this->belongsTo(Workflow::class, 'workflow_code', 'code');
+    }
 }

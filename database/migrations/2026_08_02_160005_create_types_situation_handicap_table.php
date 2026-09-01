@@ -10,7 +10,6 @@ return new class extends Migration
     {
         Schema::create('types_situation_handicap', function (Blueprint $table) {
             $table->unsignedBigInteger('id')->primary();
-            $table->string('code', 10)->nullable();
             $table->string('libelle', 100);
             $table->timestamp('synced_at')->nullable();
             $table->timestamps();

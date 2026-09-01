@@ -10,15 +10,17 @@ return new class extends Migration
     {
         Schema::create('plan_decaissements', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('budget_id');
-            $table->string('code', 50);
-            $table->string('intitule', 200);
+            $table->unsignedBigInteger('micro_projet_id')->nullable();
+            $table->unsignedBigInteger('budget_id')->nullable();
+            $table->unsignedBigInteger('compte_financement_id')->nullable();
             $table->decimal('montant_planifie', 18, 2);
             $table->date('date_prevue')->nullable();
-            $table->timestamp('created_at')->useCurrent();
-            $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();
-            
+            $table->text('justificatif_path')->nullable();
+            $table->timestamps();
+
+            $table->foreign('micro_projet_id')->references('id')->on('micro_projets')->onDelete('cascade');
             $table->foreign('budget_id')->references('id')->on('budgets')->onDelete('cascade');
+            $table->foreign('compte_financement_id')->references('id')->on('compte_financements')->onDelete('cascade');
         });
     }
 

@@ -31,7 +31,7 @@ class ObservationController extends Controller
         $validated = $request->validate([
             'micro_projet_id' => 'required|exists:micro_projets,id',
             'auteur_id' => 'required|exists:personnels,id',
-            'observation' => 'required|string',
+            'content' => 'required|string',
         ]);
 
         $observation = Observation::create($validated);
@@ -48,7 +48,7 @@ class ObservationController extends Controller
         $validated = $request->validate([
             'micro_projet_id' => 'required|exists:micro_projets,id',
             'auteur_id' => 'required|exists:personnels,id',
-            'observation' => 'required|string',
+            'content' => 'required|string',
         ]);
 
         $observation->update($validated);

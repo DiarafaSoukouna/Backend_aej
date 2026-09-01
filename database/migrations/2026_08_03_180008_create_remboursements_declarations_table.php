@@ -10,19 +10,18 @@ return new class extends Migration
     {
         Schema::create('remboursements_declarations', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('plan_remboursement_id')->nullable();
             $table->unsignedBigInteger('promoteur_id')->nullable();
-            $table->unsignedBigInteger('budget_id')->nullable();
             $table->decimal('montant_declare', 18, 2)->nullable();
             $table->date('date_declaree')->nullable();
             $table->string('reference_banque', 100)->nullable();
             $table->text('justificatif_path')->nullable();
             $table->text('observations')->nullable();
             $table->enum('statut', ['BROUILLON', 'SOUMIS', 'TRAITE'])->default('BROUILLON');
-            $table->timestamp('created_at')->useCurrent();
-            $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();
-            
+            $table->timestamps();
+
+            $table->foreign('plan_remboursement_id')->references('id')->on('plan_remboursements');
             $table->foreign('promoteur_id')->references('id')->on('promoteurs');
-            $table->foreign('budget_id')->references('id')->on('budgets');
         });
     }
 

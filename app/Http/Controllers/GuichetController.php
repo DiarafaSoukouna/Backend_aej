@@ -10,19 +10,20 @@ class GuichetController extends Controller
 {
     public function index(): JsonResponse
     {
-        $guichets = Guichet::all();
+        $guichets = Guichet::with('workflow')->get();
         return response()->json(['message' => 'Guichets retrieved successfully', 'data' => $guichets]);
     }
 
     public function show($id): JsonResponse
     {
-        $guichet = Guichet::findOrFail($id);
+        $guichet = Guichet::with('workflow')->findOrFail($id);
         return response()->json(['message' => 'Guichet retrieved successfully', 'data' => $guichet]);
     }
 
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
+            'workflow_code' => 'nullable|string|max:50|exists:workflows,code',
             'code' => 'nullable|string|max:50|unique:guichets,code',
             'libelle' => 'required|string|max:100',
             'description' => 'nullable|string',
@@ -42,6 +43,7 @@ class GuichetController extends Controller
         $guichet = Guichet::findOrFail($id);
 
         $validated = $request->validate([
+            'workflow_code' => 'nullable|string|max:50|exists:workflows,code',
             'code' => 'nullable|string|max:50|unique:guichets,code,' . $id,
             'libelle' => 'nullable|string|max:100',
             'description' => 'nullable|string',

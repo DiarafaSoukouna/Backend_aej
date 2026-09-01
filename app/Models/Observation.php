@@ -9,7 +9,7 @@ class Observation extends Model
     protected $fillable = [
         'micro_projet_id',
         'auteur_id',
-        'observation',
+        'content',
     ];
 
     public function microProjet()

@@ -18,6 +18,7 @@ class MicroProjet extends Model
         'secteur_id',
         'commune_id',
         'agence_id',
+        'agence_imputation_id',
         'promoteur_id',
         'stade_projet',
         'type_projet',
@@ -41,7 +42,7 @@ class MicroProjet extends Model
 
     public function organisme()
     {
-        return $this->belongsTo(Organisme::class, 'organisme_id');
+        return $this->belongsTo(OrganismeFinancement::class, 'organisme_id');
     }
 
     public function guichet()
@@ -64,8 +65,43 @@ class MicroProjet extends Model
         return $this->belongsTo(AgenceRegionale::class, 'agence_id');
     }
 
+    public function agenceImputation()
+    {
+        return $this->belongsTo(AgenceRegionale::class, 'agence_imputation_id');
+    }
+
     public function promoteur()
     {
         return $this->belongsTo(Promoteur::class, 'promoteur_id');
+    }
+
+    public function workflowInstance()
+    {
+        return $this->hasOne(WorkflowInstance::class, 'micro_projet_id');
+    }
+
+    public function embauches()
+    {
+        return $this->hasMany(Embauche::class, 'micro_projet_id');
+    }
+
+    public function ligneDecaissements()
+    {
+        return $this->hasManyThrough(LigneDecaissement::class, PlanDecaissement::class, 'micro_projet_id', 'plan_decaissement_id');
+    }
+
+    public function recouvrements()
+    {
+        return $this->hasMany(Recouvrement::class, 'micro_projet_id');
+    }
+
+    public function planDecaissement()
+    {
+        return $this->hasOne(PlanDecaissement::class, 'micro_projet_id');
+    }
+
+    public function planRemboursement()
+    {
+        return $this->hasOne(PlanRemboursement::class, 'micro_projet_id');
     }
 }

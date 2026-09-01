@@ -29,6 +29,9 @@ class SyncAejReferentielsJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
+    public $tries = 1;
+    public $timeout = 300;
+
     public function __construct(
         protected string $referentiel = 'all'
     ) {}
@@ -125,14 +128,14 @@ class SyncAejReferentielsJob implements ShouldQueue
     protected function syncSousSecteurs(AejApiService $service): void
     {
         $data = $service->getSousSecteurs();
-        
+
         foreach ($data as $item) {
             $model = SousSecteur::find($item->id);
             if (!$model) {
                 $model = new SousSecteur();
                 $model->id = $item->id;
             }
-            $model->secteur_id = $item->secteur_id;
+            $model->secteur_id = $item->secteur_id ?? null;
             $model->libelle = $item->libelle;
             $model->synced_at = now();
             $model->save();
@@ -171,14 +174,14 @@ class SyncAejReferentielsJob implements ShouldQueue
             }
             $model->code = $item->code;
             $model->nom = $item->nom;
-            $model->latitude = $item->latitude;
-            $model->longitude = $item->longitude;
-            $model->contact = $item->contact;
-            $model->localisation = $item->localisation;
-            $model->adresse = $item->adresse;
-            $model->telephone = $item->telephone;
-            $model->email = $item->email;
-            $model->chef_agence_id = $item->chef_agence_id;
+            $model->latitude = $item->latitude ?? null;
+            $model->longitude = $item->longitude ?? null;
+            $model->contact = $item->contact ?? null;
+            $model->localisation = $item->localisation ?? null;
+            $model->adresse = $item->adresse ?? null;
+            $model->telephone = $item->telephone ?? null;
+            $model->email = $item->email ?? null;
+            $model->chef_agence_id = $item->chef_agence_id ?? null;
             $model->synced_at = now();
             $model->save();
         }
@@ -207,7 +210,7 @@ class SyncAejReferentielsJob implements ShouldQueue
     protected function syncLieuHabitations(AejApiService $service): void
     {
         $data = $service->getLieuHabitations();
-        
+
         foreach ($data as $item) {
             $model = LieuHabitation::find($item->id);
             if (!$model) {
@@ -215,7 +218,7 @@ class SyncAejReferentielsJob implements ShouldQueue
                 $model->id = $item->id;
             }
             $model->nom = $item->nom;
-            $model->ville_id = $item->ville_id;
+            $model->ville_id = $item->ville_id ?? null;
             $model->synced_at = now();
             $model->save();
         }
@@ -252,7 +255,6 @@ class SyncAejReferentielsJob implements ShouldQueue
                 $model = new TypeSituationHandicap();
                 $model->id = $item->id;
             }
-            $model->code = $item->code;
             $model->libelle = $item->libelle;
             $model->synced_at = now();
             $model->save();
@@ -264,7 +266,7 @@ class SyncAejReferentielsJob implements ShouldQueue
     protected function syncCommunes(AejApiService $service): void
     {
         $data = $service->getCommunes();
-        
+
         foreach ($data as $item) {
             $model = Commune::find($item->id);
             if (!$model) {
@@ -272,10 +274,10 @@ class SyncAejReferentielsJob implements ShouldQueue
                 $model->id = $item->id;
             }
             $model->nom = $item->nom;
-            $model->ville_id = $item->ville_id;
-            $model->divisionregionaleaej_id = $item->divisionregionaleaej_id;
-            $model->guichetemploi_id = $item->guichetemploi_id;
-            $model->code = $item->code;
+            $model->ville_id = $item->ville_id ?? null;
+            $model->divisionregionaleaej_id = $item->divisionregionaleaej_id ?? null;
+            $model->guichetemploi_id = $item->guichetemploi_id ?? null;
+            $model->code = $item->code ?? null;
             $model->synced_at = now();
             $model->save();
         }
@@ -305,15 +307,15 @@ class SyncAejReferentielsJob implements ShouldQueue
     protected function syncVilles(AejApiService $service): void
     {
         $data = $service->getVilles();
-        
+
         foreach ($data as $item) {
             $model = Ville::find($item->id);
             if (!$model) {
                 $model = new Ville();
                 $model->id = $item->id;
             }
-            $model->departement_id = $item->departement_id;
-            $model->code = $item->code;
+            $model->departement_id = $item->departement_id ?? null;
+            $model->code = $item->code ?? null;
             $model->nom = $item->nom;
             $model->synced_at = now();
             $model->save();

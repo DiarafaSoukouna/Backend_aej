@@ -50,7 +50,7 @@
         "statut": "EN_ATTENTE",
         "observations": "Observation"
     },
-    "budgets_remboursements": {
+    "compte_remboursements": {
         "budget_id": 1,
         "montant_remboursement": 1000000,
         "montant_garantie": 1000000,

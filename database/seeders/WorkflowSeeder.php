@@ -13,8 +13,8 @@ use App\Models\WorkflowEtapeRole;
 use App\Models\WorkflowEtapeDeliverable;
 use App\Models\WorkflowEtapeDecision;
 use App\Models\WorkflowDecisionOutcome;
-use App\Models\WorkflowRole;
 use App\Models\WorkflowDeliverable;
+use App\Models\Role;
 use Database\Factories\WorkflowFactory;
 
 
@@ -31,25 +31,34 @@ class WorkflowSeeder extends Seeder
     {
         // Seed Roles first (required for workflow_etapes_roles foreign key)
         foreach (WorkflowFactory::getWorkflowRoles() as $code => $data) {
-            \App\Models\Role::updateOrCreate(
-                ['code' => $code],
-                [
+            $role = \App\Models\Role::where('libelle', $data['name'])->first();
+            if (!$role) {
+                \App\Models\Role::create([
+                    'code' => $code,
                     'libelle' => $data['name'],
                     'description' => $data['description'],
-                ]
-            );
+                ]);
+            }
         }
 
         // Seed Workflow Roles
         foreach (WorkflowFactory::getWorkflowRoles() as $code => $data) {
-            WorkflowRole::updateOrCreate(
-                ['code' => $code],
-                [
-                    'name' => $data['name'],
+            $role = Role::where('libelle', $data['name'])->first();
+            if ($role) {
+                // Update existing role (don't change code to avoid FK constraint issues)
+                $role->update([
                     'description' => $data['description'],
                     'is_active' => $data['is_active'],
-                ]
-            );
+                ]);
+            } else {
+                // Create new role
+                Role::create([
+                    'code' => $code,
+                    'libelle' => $data['name'],
+                    'description' => $data['description'],
+                    'is_active' => $data['is_active'],
+                ]);
+            }
         }
 
         // Seed Workflow Decision Outcomes
@@ -144,14 +153,15 @@ class WorkflowSeeder extends Seeder
         // Seed Workflow Etapes Roles
         foreach (WorkflowFactory::getWorkflowEtapesRoles() as $workflowCode => $roles) {
             foreach ($roles as $roleData) {
-                if (WorkflowEtape::where('code', $roleData['etape_code'])->exists()) {
+                if (WorkflowEtape::where('code', $roleData['etape_code'])->exists() 
+                    && \App\Models\Role::where('code', $roleData['role_code'])->exists()) {
                     WorkflowEtapeRole::updateOrCreate(
                         [
                             'etape_code' => $roleData['etape_code'],
                             'role_code' => $roleData['role_code'],
                         ],
                         [
-                            'responsibility' => $roleData['action'] ?? null,
+                            'action' => $roleData['action'] ?? null,
                         ]
                     );
                 }

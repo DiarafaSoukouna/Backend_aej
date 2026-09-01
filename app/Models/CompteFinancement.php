@@ -6,19 +6,26 @@ use Illuminate\Database\Eloquent\Model;
 
 class CompteFinancement extends Model
 {
-    public $timestamps = false;
-
     protected $fillable = [
-        'organisme_id',
         'micro_projet_id',
+        'organisme_id',
+        'budget_id',
         'etat_ouverture',
-        'localite_ouverture',
-        'date_ouverture',
         'avis_partenaire',
-        'observation',
+        'montant_accorde',
+        'duree_pret',
+        'duree_remboursement',
+        'taux_interet',
+        'date_ouverture',
+        'lieu_ouverture',
+        'observations',
     ];
 
     protected $casts = [
+        'montant_accorde' => 'decimal:2',
+        'duree_pret' => 'integer',
+        'duree_remboursement' => 'integer',
+        'taux_interet' => 'decimal:2',
         'date_ouverture' => 'date',
     ];
 
@@ -30,5 +37,15 @@ class CompteFinancement extends Model
     public function microProjet()
     {
         return $this->belongsTo(MicroProjet::class, 'micro_projet_id');
+    }
+
+    public function budget()
+    {
+        return $this->belongsTo(Budget::class, 'budget_id');
+    }
+
+    public function planDecaissements()
+    {
+        return $this->hasMany(PlanDecaissement::class, 'compte_financement_id');
     }
 }

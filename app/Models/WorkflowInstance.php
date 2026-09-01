@@ -17,7 +17,8 @@ class WorkflowInstance extends Model
         'micro_projet_id',
         'workflow_version',
         'current_etape_code',
-        'status',
+        'next_etape_code',
+        'statut',
         'started_at',
         'completed_at',
     ];
@@ -50,5 +51,10 @@ class WorkflowInstance extends Model
     public function currentEtape()
     {
         return $this->belongsTo(WorkflowEtape::class, 'current_etape_code', 'code');
+    }
+
+    public function nextEtape()
+    {
+        return $this->belongsTo(WorkflowEtape::class, 'next_etape_code', 'code');
     }
 }

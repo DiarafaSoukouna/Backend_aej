@@ -31,6 +31,7 @@ class WorkflowVersionController extends Controller
             'name' => 'required|string|max:150',
             'description' => 'nullable|string',
             'version' => 'required|string|max:20',
+            'code' => 'nullable|string|max:50|unique:workflow_versions,code',
             'is_active' => 'boolean',
             'is_default' => 'boolean',
         ]);
@@ -43,7 +44,9 @@ class WorkflowVersionController extends Controller
         }
 
         try {
-            $version = WorkflowVersion::create($request->all());
+            $data = $request->all();
+            if (!isset($data['code']) || empty($data['code'])) $data['code'] = $data['workflow_code'] . '_' . $data['version'];
+            $version = WorkflowVersion::create($data);
 
             return new JsonResponse([
                 'message' => 'Workflow version created successfully',

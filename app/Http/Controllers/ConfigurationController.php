@@ -44,7 +44,7 @@ class ConfigurationController extends Controller
             'delai_inactivite_minutes' => 'required|integer',
             'nombre_session_possible' => 'required|integer',
             'nombre_tentatives_connexion' => 'required|integer',
-            'delai_code_tp_minutes' => 'required|integer',
+            'delai_code_otp_minutes' => 'required|integer',
             'delai_changement_mdp_mois' => 'required|integer',
             'delai_suppression_secondes' => 'required|integer',
             'code_instance_whatsapp' => 'nullable|string|max:255',
@@ -107,7 +107,7 @@ public function patch(Request $request): JsonResponse
         'delai_inactivite_minutes' => 'sometimes|integer',
         'nombre_session_possible' => 'sometimes|integer',
         'nombre_tentatives_connexion' => 'sometimes|integer',
-        'delai_code_tp_minutes' => 'sometimes|integer',
+        'delai_code_otp_minutes' => 'sometimes|integer',
         'delai_changement_mdp_mois' => 'sometimes|integer',
         'delai_suppression_secondes' => 'sometimes|integer',
 

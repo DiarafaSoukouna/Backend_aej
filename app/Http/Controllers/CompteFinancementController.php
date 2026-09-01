@@ -10,7 +10,7 @@ class CompteFinancementController extends Controller
 {
     public function index()
     {
-        $comptes = CompteFinancement::with(['organisme', 'microProjet'])->get();
+        $comptes = CompteFinancement::with(['organisme', 'microProjet', 'budget'])->get();
         return new JsonResponse([
             'message' => 'Comptes financement retrieved successfully',
             'data' => $comptes
@@ -19,19 +19,24 @@ class CompteFinancementController extends Controller
 
     public function show($id)
     {
-        return CompteFinancement::with(['organisme', 'microProjet'])->findOrFail($id);
+        return CompteFinancement::with(['organisme', 'microProjet', 'budget'])->findOrFail($id);
     }
 
     public function store(Request $request)
     {
         $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
-            'organisme_id' => 'nullable|exists:organisme_financements,id',
             'micro_projet_id' => 'nullable|exists:micro_projets,id',
-            'etat_ouverture' => 'required|in:OUVERT,FERME,NON_OUVERT',
-            'localite_ouverture' => 'nullable|string|max:100',
-            'date_ouverture' => 'nullable|date',
+            'organisme_id' => 'nullable|exists:organisme_financements,id',
+            'budget_id' => 'nullable|exists:budgets,id|unique:compte_financements,budget_id',
+            'etat_ouverture' => 'nullable|in:OUVERT,FERME,NON_OUVERT',
             'avis_partenaire' => 'nullable|in:ACCORDE,AJOURNE,REJETE',
-            'observation' => 'nullable|string',
+            'montant_accorde' => 'nullable|numeric',
+            'duree_pret' => 'nullable|integer',
+            'duree_remboursement' => 'nullable|integer',
+            'taux_interet' => 'nullable|numeric',
+            'date_ouverture' => 'nullable|date',
+            'lieu_ouverture' => 'nullable|string|max:100',
+            'observations' => 'nullable|string',
         ]);
 
         if ($validator->fails()) {
@@ -53,13 +58,18 @@ class CompteFinancementController extends Controller
         $compte = CompteFinancement::findOrFail($id);
 
         $validated = $request->validate([
-            'organisme_id' => 'nullable|exists:organisme_financements,id',
             'micro_projet_id' => 'nullable|exists:micro_projets,id',
-            'etat_ouverture' => 'required|in:OUVERT,FERME,NON_OUVERT',
-            'localite_ouverture' => 'nullable|string|max:100',
-            'date_ouverture' => 'nullable|date',
+            'organisme_id' => 'nullable|exists:organisme_financements,id',
+            'budget_id' => 'nullable|exists:budgets,id|unique:compte_financements,budget_id,' . $id,
+            'etat_ouverture' => 'nullable|in:OUVERT,FERME,NON_OUVERT',
             'avis_partenaire' => 'nullable|in:ACCORDE,AJOURNE,REJETE',
-            'observation' => 'nullable|string',
+            'montant_accorde' => 'nullable|numeric',
+            'duree_pret' => 'nullable|integer',
+            'duree_remboursement' => 'nullable|integer',
+            'taux_interet' => 'nullable|numeric',
+            'date_ouverture' => 'nullable|date',
+            'lieu_ouverture' => 'nullable|string|max:100',
+            'observations' => 'nullable|string',
         ]);
 
         $compte->update($validated);
