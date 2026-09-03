@@ -317,22 +317,23 @@ class DashboardPartenairesController extends Controller
 
     /**
      * Apply common filters
+     * agence_id filtre via promoteurs.agenceregionale_id (micro_projets.agence_id est toujours NULL)
+     * secteur_id filtre via promoteurs.secteuractivite_id (micro_projets.secteur_id est toujours NULL)
      */
     private function applyFilters($query, Request $request)
     {
         if ($request->has('annee')) {
             $query->whereYear('micro_projets.created_at', $request->annee);
         }
-        if ($request->has('region_id')) {
+        if ($request->has('agence_id')) {
             $query->whereHas('promoteur', function ($q) use ($request) {
-                $q->where('region_id', $request->region_id);
+                $q->where('agenceregionale_id', $request->agence_id);
             });
         }
-        if ($request->has('agence_id')) {
-            $query->where('micro_projets.agence_id', $request->agence_id);
-        }
         if ($request->has('secteur_id')) {
-            $query->where('micro_projets.secteur_id', $request->secteur_id);
+            $query->whereHas('promoteur', function ($q) use ($request) {
+                $q->where('secteuractivite_id', $request->secteur_id);
+            });
         }
         if ($request->has('statut')) {
             $query->where('micro_projets.statut', $request->statut);

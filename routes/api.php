@@ -66,6 +66,7 @@ use App\Http\Controllers\RecouvrementController;
 use App\Http\Controllers\DashboardAgencesController;
 use App\Http\Controllers\DashboardPartenairesController;
 use App\Http\Controllers\DashboardEntreprisesController;
+use App\Http\Controllers\DashboardRapportController;
 
 
 // Paramètres
@@ -310,6 +311,13 @@ Route::prefix('dashboard')->group(function () {
         Route::get('secteur', [DashboardEntreprisesController::class, 'getEntreprisesParSecteur']);
         Route::get('classement', [DashboardEntreprisesController::class, 'getClassementEntreprises']);
         Route::get('alertes', [DashboardEntreprisesController::class, 'getAlertes']);
+    });
+
+    Route::prefix('rapport')->group(function () {
+        Route::get('agences', [DashboardRapportController::class, 'statParAgence']);
+        Route::get('organismes', [DashboardRapportController::class, 'statParOrganisme']);
+        Route::get('secteurs', [DashboardRapportController::class, 'statParSecteur']);
+        Route::get('sous-secteurs', [DashboardRapportController::class, 'statParSousSecteur']);
     });
 });
 

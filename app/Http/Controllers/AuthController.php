@@ -104,10 +104,12 @@ class AuthController extends Controller
             $token = $personnel->createToken('auth-token')->plainTextToken;
             $cookie = cookie('accessToken', $token, 60 * 24 * 30, '/', null, true, true, false, 'Lax'); // 30 jours, HTTPS, HTTP only, SameSite Lax
 
-            return new JsonResponse([
+            $response = new JsonResponse([
                 'message' => 'Code OTP validé, utilisateur connecté avec succès.',
                 'user_id' => $personnel->id,
-            ], 200)->withCookie($cookie);
+            ], 200);
+
+            return $response->withCookie($cookie);
         } catch (\Exception $e) {
             return new JsonResponse([
                 'message' => 'Erreur lors de la vérification du code OTP',
