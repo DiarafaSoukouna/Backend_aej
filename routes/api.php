@@ -69,6 +69,11 @@ use App\Http\Controllers\RecouvrementController;
 use App\Http\Controllers\DashboardAgencesController;
 use App\Http\Controllers\DashboardPartenairesController;
 use App\Http\Controllers\DashboardEntreprisesController;
+use App\Http\Controllers\DashboardRapportController;
+use App\Http\Controllers\QuestionEvaluationController;
+use App\Http\Controllers\AiReport\IndividualReportController;
+use App\Http\Controllers\AiReport\GlobalReportController;
+use App\Http\Controllers\AiReport\PeriodicBulletinController;
 
 // Middleware de maintenance global - toutes les routes passent par ce middleware
 // Route::middleware('checkMaintenance')->group(function () {
@@ -129,6 +134,8 @@ use App\Http\Controllers\DashboardEntreprisesController;
         // Formulaires d'évaluation
         Route::apiResource('formulaires-evaluation', FormulaireEvaluationController::class);
         Route::get('formulaires-evaluation/{formulaireEvaluation}', [FormulaireEvaluationController::class, 'show']);
+        Route::apiResource('questions-evaluation', QuestionEvaluationController::class);
+        Route::get('questions-evaluation/{questionEvaluation}', [QuestionEvaluationController::class, 'show']);
         Route::apiResource('evaluations', EvaluationController::class);
         Route::post('evaluations/{evaluation}/responses', [EvaluationController::class, 'addResponse']);
         Route::get('evaluations/{evaluation}/responses', [EvaluationController::class, 'responses']);
@@ -314,6 +321,37 @@ use App\Http\Controllers\DashboardEntreprisesController;
             Route::get('secteur', [DashboardEntreprisesController::class, 'getEntreprisesParSecteur']);
             Route::get('classement', [DashboardEntreprisesController::class, 'getClassementEntreprises']);
             Route::get('alertes', [DashboardEntreprisesController::class, 'getAlertes']);
+        });
+
+        Route::prefix('rapport')->group(function () {
+            Route::get('agences', [DashboardRapportController::class, 'statParAgence']);
+            Route::get('organismes', [DashboardRapportController::class, 'statParOrganisme']);
+            Route::get('secteurs', [DashboardRapportController::class, 'statParSecteur']);
+            Route::get('sous-secteurs', [DashboardRapportController::class, 'statParSousSecteur']);
+        });
+    });
+
+    // Routes pour les rapports AI
+    Route::prefix('ai-reports')->group(function () {
+        Route::prefix('individual')->group(function () {
+            Route::post('{promoteurId}/pdf',         [IndividualReportController::class, 'generatePdf']);
+            Route::post('{promoteurId}/ask',         [IndividualReportController::class, 'askQuestion']);
+            Route::get('{promoteurId}/history',      [IndividualReportController::class, 'history']);
+            Route::get('{promoteurId}/download/{logId}', [IndividualReportController::class, 'download']);
+        });
+
+        Route::prefix('global')->group(function () {
+            Route::post('/',               [GlobalReportController::class, 'generate']);
+            Route::get('risk-profiles',    [GlobalReportController::class, 'riskProfiles']);
+            Route::get('history',          [GlobalReportController::class, 'history']);
+            Route::get('download/{logId}', [GlobalReportController::class, 'download']);
+        });
+
+        Route::prefix('bulletins')->group(function () {
+            Route::get('/',                [PeriodicBulletinController::class, 'index']);
+            Route::post('/',               [PeriodicBulletinController::class, 'generate']);
+            Route::get('{id}',             [PeriodicBulletinController::class, 'show']);
+            Route::get('{id}/download',    [PeriodicBulletinController::class, 'download']);
         });
     });
 // });

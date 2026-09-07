@@ -10,11 +10,18 @@ class IndicateurSuivi extends Model
     
     protected $fillable = [
         'indicateur_id',
+        'promoteur_id',
         'valeur',
+        'periode'
     ];
 
     public function indicateur()
     {
         return $this->belongsTo(Indicateur::class);
+    }
+
+    public function promoteur()
+    {
+        return $this->belongsTo(Promoteur::class);
     }
 }

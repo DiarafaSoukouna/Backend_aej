@@ -8,10 +8,11 @@ class Indicateur extends Model
 {
     protected $fillable = [
         'micro_projet_id',
-        'nom',
+        'code',
+        'libelle',
         'description',
-        'type_valeur',
         'unite',
+        'valeur_cible',
         'statut',
     ];
 

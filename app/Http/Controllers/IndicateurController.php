@@ -26,10 +26,12 @@ class IndicateurController extends Controller
     public function store(Request $request) : JsonResponse
     {
         $validation = Validator::make($request->all(), [
-            'nom' => 'required|string|max:150|unique:indicateurs',
+            'micro_projet_id' => 'required|exists:micro_projets,id',
+            'code' => 'required|string|unique:indicateurs,code',
+            'libelle' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'type_valeur' => 'required|in:numerique,texte,pourcentage,booleen',
             'unite' => 'nullable|string|max:50',
+            'valeur_cible' => 'required|string',
             'statut' => 'boolean',
         ]);
 
@@ -63,9 +65,11 @@ class IndicateurController extends Controller
         }
 
         $validation = Validator::make($request->all(), [
-            'nom' => 'sometimes|required|string|max:150|unique:indicateurs,nom,' . $id,
+            'micro_projet_id' => 'required|exists:micro_projets,id',
+            'code' => 'required|string|unique:indicateurs,code,' . $id,
+            'libelle' => 'sometimes|required|string|max:255',
             'description' => 'nullable|string',
-            'type_valeur' => 'sometimes|required|in:numerique,texte,pourcentage,booleen',
+            'valeur_cible' => 'sometimes|required|string',
             'unite' => 'nullable|string|max:50',
             'statut' => 'boolean',
         ]);

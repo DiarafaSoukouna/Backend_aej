@@ -28,6 +28,7 @@ class IndicateurSuiviController extends Controller
     {
         $validation = Validator::make($request->all(), [
             'indicateur_id' => 'required|exists:indicateurs,id',
+            'promoteur_id' => 'required|exists:promoteurs,id',
             'valeur' => 'required|string|max:255',
         ]);
 
