@@ -11,13 +11,13 @@ class IndicateurSuiviController extends Controller
 {
     public function index(): JsonResponse
     {
-        $indicateursSuivi = IndicateurSuivi::with('indicateur')->get();
+        $indicateursSuivi = IndicateurSuivi::with('indicateur', 'promoteur')->get();
         return new JsonResponse(['Message' => 'IndicateurSuivi list retrieved successfully', 'data' => $indicateursSuivi], 200);
     }
 
     public function show($id): JsonResponse
     {
-        $indicateurSuivi = IndicateurSuivi::with('indicateur')->find($id);
+        $indicateurSuivi = IndicateurSuivi::with('indicateur', 'promoteur')->find($id);
         if (!$indicateurSuivi) {
             return new JsonResponse(['Message' => 'IndicateurSuivi not found'], 404);
         }
@@ -30,6 +30,7 @@ class IndicateurSuiviController extends Controller
             'indicateur_id' => 'required|exists:indicateurs,id',
             'promoteur_id' => 'required|exists:promoteurs,id',
             'valeur' => 'required|string|max:255',
+            'periode' => 'required|date_format:Y-m-d',
         ]);
 
         if ($validation->fails()) {
@@ -64,7 +65,9 @@ class IndicateurSuiviController extends Controller
 
         $validation = Validator::make($request->all(), [
             'indicateur_id' => 'sometimes|required|exists:indicateurs,id',
+            'promoteur_id' => 'sometimes|required|exists:promoteurs,id',
             'valeur' => 'sometimes|required|string|max:255',
+            'periode' => 'sometimes|required|date_format:Y-m-d',
         ]);
 
         if ($validation->fails()) {

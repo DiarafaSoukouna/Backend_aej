@@ -79,10 +79,15 @@ class MicroProjet extends Model
     {
         return $this->hasOne(WorkflowInstance::class, 'micro_projet_id');
     }
-
-    public function embauches()
+    
+    public function budget()
     {
-        return $this->hasMany(Embauche::class, 'micro_projet_id');
+        return $this->hasOne(Budget::class, 'micro_projet_id');
+    }
+
+    public function compteFinancement()
+    {
+        return $this->hasOne(CompteFinancement::class, 'micro_projet_id');
     }
 
     public function ligneDecaissements()
@@ -103,5 +108,55 @@ class MicroProjet extends Model
     public function planRemboursement()
     {
         return $this->hasOne(PlanRemboursement::class, 'micro_projet_id');
+    }
+
+    public function lotMicroProjet()
+    {
+        return $this->hasOne(LotMicroProjet::class, 'micro_projet_id');
+    }
+
+    public function lotTransmission()
+    {
+        return $this->hasOneThrough(LotTransmission::class, LotMicroProjet::class, 'micro_projet_id', 'id', 'id', 'lot_id');
+    }
+
+    public function transactions()
+    {
+        return $this->hasMany(Transaction::class, 'micro_projet_id');
+    }
+
+    public function exploitations()
+    {
+        return $this->hasMany(Exploitation::class, 'micro_projet_id');
+    }
+
+    public function indicateurs()
+    {
+        return $this->hasMany(Indicateur::class, 'micro_projet_id');
+    }
+
+    public function suivis()
+    {
+        return $this->hasMany(Suivi::class, 'micro_projet_id');
+    }
+
+    public function embauches()
+    {
+        return $this->hasMany(Embauche::class, 'micro_projet_id');
+    }
+
+    public function formulaireEvaluation()
+    {
+        return $this->hasMany(FormulaireEvaluation::class, 'micro_projet_id');
+    }
+
+    public function documents()
+    {
+        return $this->hasMany(Document::class, 'micro_projet_id');
+    }
+
+    public function observations()
+    {
+        return $this->hasMany(Observation::class, 'micro_projet_id');
     }
 }

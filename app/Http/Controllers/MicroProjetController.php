@@ -12,7 +12,9 @@ class MicroProjetController extends Controller
     {
         $query = MicroProjet::with([
             'dispositif', 'organisme', 'guichet', 'secteur', 'commune', 
-            'agence', 'agenceImputation', 'promoteur', 'workflowInstance'
+            'agence', 'agenceImputation', 'promoteur', 'workflowInstance',
+            'budget', 'compteFinancement', 'planDecaissement', 'planRemboursement', 
+            'lotTransmission', 'lotMicroProjet'
         ]);
 
         $filters = [
@@ -54,7 +56,11 @@ class MicroProjetController extends Controller
     {
         $microProjet = MicroProjet::with([
             'dispositif', 'organisme', 'guichet', 'secteur', 'commune', 
-            'agence', 'agenceImputation', 'promoteur', 'workflowInstance'
+            'agence', 'agenceImputation', 'promoteur', 'workflowInstance',
+            'budget', 'compteFinancement', 'planDecaissement', 'planRemboursement', 'recouvrements',
+            'lotTransmission', 'lotMicroProjet', 'transactions',
+            'exploitations', 'indicateurs', 'suivis', 'embauches', 'formulaireEvaluation', 
+            'documents', 'observations'
         ])->findOrFail($id);
         
         return new JsonResponse([

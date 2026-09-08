@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class IndicateurSuivi extends Model
 {
-    protected $table = 'indicateurs_suivi';
+    protected $table = 'indicateurs_suivi'; 
     
     protected $fillable = [
         'indicateur_id',

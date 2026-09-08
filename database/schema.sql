@@ -1048,7 +1048,7 @@ CREATE TABLE
 CREATE TABLE
     IF NOT EXISTS indicateurs (
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-        micro_projet_id BIGINT UNSIGNED,
+        micro_projet_id BIGINT UNSIGNED, 
         code VARCHAR(50) NOT NULL UNIQUE,
         libelle VARCHAR(255),
         description TEXT NULL,
@@ -1066,7 +1066,7 @@ CREATE TABLE
         indicateur_id BIGINT UNSIGNED,
         promoteur_id BIGINT UNSIGNED,
         valeur VARCHAR(255) NOT NULL,
-        periode VARCHAR(50),
+        periode DATE NOT NULL,
         created_at DATETIME NOT NULL,
         updated_at DATETIME NOT NULL,
         FOREIGN KEY (indicateur_id) REFERENCES indicateurs (id) ON DELETE CASCADE,
@@ -1114,7 +1114,7 @@ CREATE TABLE
 -- 17. FORMULAIRES & QUESTIONNAIRES
 -- ##############################################################
 CREATE TABLE
-    IF NOT EXISTS formulaires_evaluation (
+    IF NOT EXISTS formulaire_evaluations (
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
         micro_projet_id BIGINT UNSIGNED,
         code VARCHAR(50) NOT NULL UNIQUE,

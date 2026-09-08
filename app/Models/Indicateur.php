@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models;
+namespace App\Models; 
 
 use Illuminate\Database\Eloquent\Model;
 
@@ -25,7 +25,7 @@ class Indicateur extends Model
         return $this->belongsTo(MicroProjet::class);
     }
 
-    public function indicateursSuivi()
+    public function suivis()
     {
         return $this->hasMany(IndicateurSuivi::class);
     }
