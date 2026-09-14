@@ -11,7 +11,7 @@ class BudgetController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $budgets = Budget::with(['microProjet', 'validePar', 'planDecaissements', 'remboursements'])->get();
+        $budgets = Budget::with(['microProjet', 'validePar', 'planDecaissements', 'planRemboursements'])->get();
 
         if ($request->has('micro_projet_id') && !empty($request->micro_projet_id))
             $budgets = $budgets->where('micro_projet_id', $request->micro_projet_id);
@@ -29,7 +29,7 @@ class BudgetController extends Controller
 
     public function show($id): JsonResponse
     {
-        $budget = Budget::with(['microProjet', 'validePar', 'planDecaissements', 'remboursements'])->find($id);
+        $budget = Budget::with(['microProjet', 'validePar', 'planDecaissements', 'ligneDecaissements', 'planRemboursements', 'decaissements', 'remboursements'])->find($id);
         if (!$budget) {
             return new JsonResponse(['Message' => 'Budget not found'], 404);
         }

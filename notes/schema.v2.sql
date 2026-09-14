@@ -781,7 +781,7 @@ CREATE TABLE
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
         micro_projet_id BIGINT UNSIGNED,
         organisme_id BIGINT UNSIGNED,
-        budget_id BIGINT UNSIGNED UNIQUE,
+        -- budget_id BIGINT UNSIGNED UNIQUE,
         etat_ouverture ENUM ('OUVERT', 'FERME', 'NON_OUVERT') DEFAULT 'NON_OUVERT',
         avis_partenaire ENUM ('ACCORDE', 'AJOURNE', 'REJETE'),
         montant_accorde DECIMAL(15, 2),
@@ -795,7 +795,7 @@ CREATE TABLE
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         FOREIGN KEY (micro_projet_id) REFERENCES micro_projets (id) ON DELETE CASCADE,
         FOREIGN KEY (organisme_id) REFERENCES organisme_financements (id) ON DELETE CASCADE,
-        FOREIGN KEY (budget_id) REFERENCES budgets (id) ON DELETE CASCADE
+        -- FOREIGN KEY (budget_id) REFERENCES budgets (id) ON DELETE CASCADE
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
 -- A SUPPRIMER

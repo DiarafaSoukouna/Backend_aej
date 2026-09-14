@@ -4,31 +4,34 @@
 -- Référentiel des niveaux hiérarchiques du cadre de résultat (Axe, Effet, Produit...)
 CREATE TABLE
     niveaux_cadre_resultat (
-        id_nsc BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-        code_number_nsc VARCHAR(20) NOT NULL,
-        libelle_nsc VARCHAR(100) NOT NULL, -- ex: "Axe", "Effet", "Produit"
-        nombre_nsc INTEGER NOT NULL, -- ordre / profondeur du niveau
-        programme INTEGER NULL REFERENCES programmes (id_programme) ON DELETE SET NULL,
-        type_niveau VARCHAR(10) NOT NULL, -- ex: "1", "2", "3"
-        CONSTRAINT uq_niveaux_cadre_resultat_code UNIQUE (code_number_nsc, programme)
+        id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+        code VARCHAR(20) NOT NULL,
+        libelle VARCHAR(100) NOT NULL, -- ex: "Axe", "Effet", "Produit"
+        order INTEGER NOT NULL, -- ordre / profondeur du niveau
+        type VARCHAR(10) NOT NULL, -- ex: "1", "2", "3"
+        actif BOOLEAN NOT NULL DEFAULT TRUE,
+        code_programme INTEGER NOT NULL REFERENCES programmes (code_programme) ON DELETE SET NULL,
+        CONSTRAINT uq_niveaux_cadre_resultat_code UNIQUE (code, code_programme)
     );
 
 -- ============================================================
 -- 2. Cadre de résultat (l'entité hiérarchique elle-même)
 -- ============================================================
--- Éléments du cadre de résultat (axes, effets, produits...), organisés hiérarchiquement via parent_cs
+-- Éléments du cadre de résultat (axes, effets, produits...), organisés hiérarchiquement via parent
 CREATE TABLE
     cadres_resultat (
-        id_cs BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-        abgrege_cs VARCHAR(20) NOT NULL, -- ex: "OS1"
-        code_cs VARCHAR(20) NOT NULL UNIQUE, -- ex: "S01"
-        intutile_cs TEXT NOT NULL,
+        id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+        abgrege VARCHAR(20) NOT NULL, -- ex: "OS1"
+        code VARCHAR(20) NOT NULL UNIQUE, -- ex: "S01"
+        intitule TEXT NOT NULL,
+        description TEXT NULL,
         date_enregistrement DATE NOT NULL DEFAULT CURRENT_DATE,
         date_modification DATE NULL,
         etat VARCHAR(30) NULL,
-        niveau_cs INTEGER NOT NULL REFERENCES niveaux_cadre_resultat (id_nsc) ON DELETE RESTRICT,
-        parent_cs INTEGER NULL REFERENCES cadres_resultat (id_cs) ON DELETE SET NULL, -- auto-référence (hiérarchie)
-        partenaire_cs INTEGER NULL REFERENCES partenaires (id_partenaire) ON DELETE SET NULL
+        programme_id INTEGER NOT NULL REFERENCES programmes (id) ON DELETE SET NULL,
+        niveau_id INTEGER NOT NULL REFERENCES niveaux_cadre_resultat (id) ON DELETE SET NULL,
+        parent_id INTEGER NULL REFERENCES cadres_resultat (id) ON DELETE SET NULL,
+        partenaire_id INTEGER NULL REFERENCES partenaires (id) ON DELETE SET NULL
     );
 
 -- ============================================================
@@ -37,17 +40,17 @@ CREATE TABLE
 -- Indicateurs rattachés à un élément du cadre de résultat
 CREATE TABLE
     indicateurs_cadre_resultat (
-        id_indicateur_str BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-        code_indicateur_istr VARCHAR(30) NOT NULL UNIQUE, -- ex: "R002"
-        intitule_indicateur_istr TEXT NOT NULL,
-        description_istr TEXT NULL,
-        code_istr INTEGER NOT NULL REFERENCES cadres_resultat (id_cs) ON DELETE CASCADE,
-        niveau_istr INTEGER NULL, -- à confirmer : FK vers niveaux_cadre_resultat ou simple entier ?
-        programme_istr INTEGER NULL REFERENCES programmes (id_programme) ON DELETE SET NULL,
-        structure_istr INTEGER NULL REFERENCES structures (id_structure) ON DELETE SET NULL,
-        periodicite_iop VARCHAR(30) NULL, -- ex: "Trimestriel"
-        responsable_istr VARCHAR(100) NULL,
-        source_istr VARCHAR(150) NULL
+        id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+        code VARCHAR(20) NOT NULL UNIQUE, -- ex: "R002"
+        intitule TEXT NOT NULL,
+        description TEXT NULL,
+        niveau INTEGER NULL, -- à confirmer : FK vers niveaux_cadre_resultat ou simple entier ?
+        code_indicateur VARCHAR(30) NOT NULL REFERENCES cadres_resultat (id) ON DELETE CASCADE,
+        code_programme INTEGER NOT NULL REFERENCES programmes (code_programme) ON DELETE SET NULL,
+        code_ucture INTEGER NULL REFERENCES structures (codeucture) ON DELETE SET NULL,
+        periodicite VARCHAR(30) NULL, -- ex: "Trimestriel"
+        responsable VARCHAR(100) NULL,
+        source VARCHAR(150) NULL
     );
 
 -- ============================================================
@@ -56,14 +59,14 @@ CREATE TABLE
 -- Valeurs cibles annuelles fixées pour chaque indicateur, par programme et unité de gestion
 CREATE TABLE
     cibles_indicateur_cadre_resultat (
-        id_cible_indicateur_istr BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+        id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
         annee DATE NOT NULL, -- ex: "2019-01-01"
-        valeur_cible_indcateur_istr NUMERIC(15, 2) NOT NULL,
-        code_indicateur_istr INTEGER NOT NULL REFERENCES indicateurs_cadre_resultat (id_indicateur_str) ON DELETE CASCADE,
-        code_programme INTEGER NOT NULL REFERENCES programmes (code_programme) ON DELETE RESTRICT,
+        valeur NUMERIC(15, 2) NOT NULL,
+        code INTEGER NOT NULL REFERENCES indicateurs_cadre_resultat (code) ON DELETE CASCADE,
+        code_programme INTEGER NOT NULL REFERENCES programmes (code_programme) ON DELETE SET NULL,
         code_ug INTEGER NULL REFERENCES unites_gestion (code_ug) ON DELETE SET NULL,
         CONSTRAINT uq_cible_indicateur_annee UNIQUE (
-            code_indicateur_istr,
+            code_indicateur,
             code_programme,
             code_ug,
             annee
@@ -76,20 +79,15 @@ CREATE TABLE
 -- Suivi périodique des valeurs réalisées pour chaque indicateur du cadre de résultat, par programme et unité de gestion
 CREATE TABLE
     suivis_indicateur_cadre_resultat (
-        id_suivi_indicateur_istr BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-        code_indicateur_istr INTEGER NOT NULL REFERENCES indicateurs_cadre_resultat (id_indicateur_str) ON DELETE CASCADE,
-        Date_suivi DATE NOT NULL,
+        id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+        date_suivi DATE NOT NULL,
+        valeur_realisee NUMERIC(15, 2) NOT NULL,
+        commentaire_suivi TEXT NULL,
+        code_suivi INTEGER NOT NULL REFERENCES indicateurs_cadre_resultat (code_indicateur) ON DELETE CASCADE,
         code_ug INTEGER NULL REFERENCES unites_gestion (code_ug) ON DELETE SET NULL,
-        valeur_realisee_istr NUMERIC(15, 2) NOT NULL,
-        commentaire_suivi_istr TEXT NULL,
         date_enregistrement TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
         modifier_par VARCHAR(100) NULL,
-        CONSTRAINT uq_suivi_indicateur_periode UNIQUE (
-            code_indicateur_istr,
-            code_programme,
-            code_ug,
-            periode_suivi
-        )
+        CONSTRAINT uq_suivi_indicateur_periode UNIQUE (code_suivi, code_ug)
     );
 
 -- ============================================================
@@ -97,7 +95,7 @@ CREATE TABLE
 -- ============================================================
 CREATE TABLE
     niveau_cadre_analytique (
-        id_nca BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+        id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
         nombre_nca INT NOT NULL,
         libelle_nca VARCHAR(100) NOT NULL,
         code_number_nca VARCHAR(15) NOT NULL,
@@ -154,9 +152,9 @@ CREATE TABLE
 -- ============================================================
 CREATE TABLE
     ptba (
-        id_ptba BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-        code_activite_ptba VARCHAR(100) NOT NULL,
-        intitule_activite_ptba VARCHAR(200) NOT NULL,
+        id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+        code_activite VARCHAR(100) NOT NULL,
+        intitule_activite VARCHAR(200) NOT NULL,
         statut_activite VARCHAR(100) NOT NULL,
         responsable_ptba_id BIGINT,
         version_ptba_id BIGINT,
@@ -164,7 +162,7 @@ CREATE TABLE
         type_activite_id VARCHAR(15),
         code_programme_id VARCHAR(15),
         observation text,
-        cout_ptba double precision,
+        cout double precision,
         source_financement_ptba_id VARCHAR(14),
         ugl_ptba_id VARCHAR(10),
         cadre_analytique_id BIGINT,
@@ -175,11 +173,20 @@ CREATE TABLE
 -- 10. Paramétrages des unités d'indicateurs
 -- ============================================================
 CREATE TABLE
-    unite_indicateur (
-        id_unite BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-        unite_ui VARCHAR(20) NOT NULL,
-        definition_ui VARCHAR(300) NOT NULL
-    );
+    unite_mesure (
+        id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+        symbole VARCHAR(20) NOT NULL,
+        definition VARCHAR(300) NOT NULL,
+        type_valeur ENUM(
+            'NOMBRE',
+            'DECIMAL',
+            'POURCENTAGE',
+            'MONETAIRE',
+            'DUREE',
+            'TEXTE',
+            'BOOLEEN'
+        ) NOT NULL DEFAULT 'DECIMAL'
+);
 
 -- ============================================================
 -- 11. Suivi des activités et tâches du PTBA
@@ -210,7 +217,7 @@ CREATE TABLE
     indicateur_tache_ptba (
         id_indicateur_tache BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
         intitule_indicateur_tache VARCHAR(200) NOT NULL,
-        code_indicateur_ptba VARCHAR(15) NOT NULL,
+        code_indicateur VARCHAR(15) NOT NULL,
         trimestre_1 VARCHAR(100),
         trimestre_2 VARCHAR(100),
         trimestre_3 VARCHAR(100),
@@ -279,25 +286,25 @@ CREATE TABLE
         pistes_solutions text
     );
 
-CREATE INDEX idx_cadres_resultat_niveau ON cadres_resultat (niveau_cs);
+CREATE INDEX idx_cadres_resultat_niveau ON cadres_resultat (niveau);
 
-CREATE INDEX idx_cadres_resultat_parent ON cadres_resultat (parent_cs);
+CREATE INDEX idx_cadres_resultat_parent ON cadres_resultat (parent);
 
-CREATE INDEX idx_cadres_resultat_partenaire ON cadres_resultat (partenaire_cs);
+CREATE INDEX idx_cadres_resultat_partenaire ON cadres_resultat (partenaire);
 
-CREATE INDEX idx_cibles_indicateur_code_indicateur ON cibles_indicateur_cadre_resultat (code_indicateur_istr);
+CREATE INDEX idx_cibles_indicateur_code ON cibles_indicateur_cadre_resultat (code_indicateur);
 
 CREATE INDEX idx_cibles_indicateur_programme ON cibles_indicateur_cadre_resultat (code_programme);
 
 CREATE INDEX idx_cibles_indicateur_ug ON cibles_indicateur_cadre_resultat (code_ug);
 
-CREATE INDEX idx_suivis_indicateur_code_indicateur ON suivis_indicateur_cadre_resultat (code_indicateur_istr);
+CREATE INDEX idx_suivis_indicateur_code ON suivis_indicateur_cadre_resultat (code_indicateur);
 
-CREATE INDEX idx_indicateurs_cadre_resultat_code_istr ON indicateurs_cadre_resultat (code_istr);
+CREATE INDEX idx_indicateurs_cadre_resultat_code ON indicateurs_cadre_resultat (code);
 
-CREATE INDEX idx_indicateurs_cadre_resultat_programme ON indicateurs_cadre_resultat (programme_istr);
+CREATE INDEX idx_indicateurs_cadre_resultat_programme ON indicateurs_cadre_resultat (programme);
 
-CREATE INDEX idx_indicateurs_cadre_resultat_structure ON indicateurs_cadre_resultat (structure_istr);
+CREATE INDEX idx_indicateurs_cadre_resultatucture ON indicateurs_cadre_resultat (structure);
 
 CREATE INDEX idx_suivis_indicateur_programme ON suivis_indicateur_cadre_resultat (code_programme);
 

@@ -43,18 +43,28 @@ class Budget extends Model
         return $this->belongsTo(Personnel::class, 'valide_par');
     }
 
+    public function ligneDecaissements()
+    {
+        return $this->hasManyThrough(LigneDecaissement::class, PlanDecaissement::class, 'budget_id', 'plan_decaissement_id', 'id', 'id');
+    }
+
     public function planDecaissements()
     {
-        return $this->hasMany(PlanDecaissement::class);
+        return $this->hasOne(PlanDecaissement::class, 'budget_id');
     }
 
     public function decaissements()
     {
-        return $this->hasMany(Decaissement::class);
+        return $this->hasManyThrough(Decaissement::class, PlanDecaissement::class, 'budget_id', 'plan_decaissement_id', 'id', 'id');
+    }
+
+    public function planRemboursements()
+    {
+        return $this->hasOne(PlanRemboursement::class, 'budget_id');
     }
 
     public function remboursements()
     {
-        return $this->hasMany(Remboursement::class);
+        return $this->hasManyThrough(Remboursement::class, PlanRemboursement::class, 'budget_id', 'plan_remboursement_id', 'id', 'id');
     }
 }
