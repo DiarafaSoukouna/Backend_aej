@@ -57,7 +57,7 @@ class MicroProjetController extends Controller
         $microProjet = MicroProjet::with([
             'dispositif', 'organisme', 'guichet', 'secteur', 'commune', 
             'agence', 'agenceImputation', 'promoteur', 'workflowInstance',
-            'budget', 'compteFinancement', 'planDecaissement', 'planRemboursement', 'recouvrements',
+            'budget', 'compteFinancement', 'planDecaissement', 'planRemboursement', 'recouvrements', 'garanties',
             'lotTransmission', 'lotMicroProjet', 'transactions',
             'exploitations', 'indicateurs', 'suivis', 'embauches', 'formulaireEvaluation', 
             'documents', 'observations'

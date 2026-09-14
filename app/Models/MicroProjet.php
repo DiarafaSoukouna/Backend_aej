@@ -159,4 +159,9 @@ class MicroProjet extends Model
     {
         return $this->hasMany(Observation::class, 'micro_projet_id');
     }
+
+    public function garanties()
+    {
+        return $this->hasMany(Garantie::class, 'micro_projet_id');
+    }
 }

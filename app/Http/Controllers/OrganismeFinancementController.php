@@ -17,7 +17,7 @@ class OrganismeFinancementController extends Controller
 
     public function show($id): JsonResponse
     {
-        $organisme = OrganismeFinancement::with(['typeOrganisme', 'region'])->find($id);
+        $organisme = OrganismeFinancement::with(['typeOrganisme', 'region', 'garanties'])->find($id);
         if (!$organisme) {
             return new JsonResponse(['Message' => 'Organisme de financement not found'], 404);
         }

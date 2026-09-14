@@ -167,4 +167,22 @@ class MailService
             'headerTitle' => 'Alerte de sécurité',
         ]);
     }
+
+    /**
+     * Rappel de paiement de garantie.
+     */
+    public function sendGarantieRappelEmail(string $email, array $garantieData)
+    {
+        $content = view('emails.garantie-rappel', [
+            'montant' => $garantieData['montant'],
+            'date_rappel' => $garantieData['date_rappel'],
+            'statut' => $garantieData['statut'],
+            'micro_projet_code' => $garantieData['micro_projet_code'],
+            'organisme' => $garantieData['organisme'],
+        ])->render();
+
+        return $this->send($email, 'Rappel de paiement de garantie', $content, [
+            'headerTitle' => 'Rappel de paiement',
+        ]);
+    }
 }

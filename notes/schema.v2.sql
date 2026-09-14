@@ -960,6 +960,20 @@ CREATE TABLE
         FOREIGN KEY (agent_id) REFERENCES personnels (id) ON DELETE CASCADE
     )
 
+CREATE TABLE 
+    IF NOT EXISTS garanties (
+        id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+        micro_projet_id BIGINT UNSIGNED,
+        organisme_id BIGINT UNSIGNED,
+        montant_garantie DECIMAL(18, 2),
+        date_rappel DATE,
+        statut ENUM ('EN_ATTENTE', 'PAYE', 'PARTIEL', 'NON_PAYE') DEFAULT 'EN_ATTENTE',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        FOREIGN KEY (micro_projet_id) REFERENCES micro_projets (id) ON DELETE CASCADE,
+        FOREIGN KEY (organisme_id) REFERENCES organisme_financements (id) ON DELETE CASCADE
+    )
+
 -- TRANSACTIONS BENEFICIAIRE (DEPENSES - RECETTES)
 CREATE TABLE
     IF NOT EXISTS categories_transactions (
