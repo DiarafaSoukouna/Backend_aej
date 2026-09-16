@@ -140,14 +140,14 @@ class DocumentController extends Controller
             $safeFolder = str_replace('..', '', $folder);
             $safeFolder = preg_replace('/[^a-zA-Z0-9_\-\/]/', '', $safeFolder);
             $path = $file->store($safeFolder, 'public');
-            
+
             $document = Document::create([
                 'name' => $file->getClientOriginalName(),
                 'path' => $path,
                 'type' => $file->getMimeType(),
                 'size' => $file->getSize(),
                 'url' => url('/api/files/' . $path),
-                'created_by' => $request->user()->id,
+                'created_by' => $request->user()?->id,
                 'micro_projet_id' => $request->input('micro_projet_id'),
             ]);
             

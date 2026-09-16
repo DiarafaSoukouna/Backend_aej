@@ -18,7 +18,6 @@ class Document extends Model
 
     protected $casts = [
         'size' => 'integer',
-        'created_by' => 'integer',
         'micro_projet_id' => 'integer',
     ];
 
