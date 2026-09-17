@@ -50,6 +50,8 @@ class DecaissementController extends Controller
             'date_decaissement' => 'nullable|date',
             'reference_banque' => 'nullable|string',
             'statut' => 'nullable|in:EN_ATTENTE,VALIDE,NON_VALIDE',
+            'numero_decaissement' => 'nullable|string',
+            'justificatif_path' => 'nullable|string',
             'observations' => 'nullable|string',
         ]);
 
@@ -89,6 +91,8 @@ class DecaissementController extends Controller
             'date_decaissement' => 'nullable|date',
             'reference_banque' => 'nullable|string',
             'statut' => 'nullable|in:EN_ATTENTE,VALIDE,NON_VALIDE',
+            'numero_decaissement' => 'nullable|string',
+            'justificatif_path' => 'nullable|string',
             'observations' => 'nullable|string',
         ]);
 
@@ -125,6 +129,8 @@ class DecaissementController extends Controller
             'date_decaissement' => 'nullable|date',
             'reference_banque' => 'nullable|string',
             'statut' => 'nullable|in:EN_ATTENTE,VALIDE,NON_VALIDE',
+            'numero_decaissement' => 'nullable|string',
+            'justificatif_path' => 'nullable|string',
             'observations' => 'nullable|string',
         ]);
 

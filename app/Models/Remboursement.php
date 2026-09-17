@@ -14,6 +14,7 @@ class Remboursement extends Model
         'montant_impaye',
         'penalites',
         'date_paiement',
+        'justificatif_path',
         'observations',
         'statut',
     ];

@@ -42,6 +42,7 @@ class RemboursementController extends Controller
             'montant_impaye' => 'nullable|numeric',
             'penalites' => 'nullable|numeric',
             'date_paiement' => 'nullable|date',
+            'justificatif_path' => 'nullable|string',
             'observations' => 'nullable|string',
             'statut' => 'nullable|in:EN_ATTENTE,PAYE,PARTIEL,NON_PAYE',
         ]);
@@ -84,6 +85,7 @@ class RemboursementController extends Controller
             'montant_impaye' => 'nullable|numeric',
             'penalites' => 'nullable|numeric',
             'date_paiement' => 'nullable|date',
+            'justificatif_path' => 'nullable|string',
             'observations' => 'nullable|string',
             'statut' => 'nullable|in:EN_ATTENTE,PAYE,PARTIEL,NON_PAYE',
         ]);
@@ -124,6 +126,7 @@ class RemboursementController extends Controller
             'montant_impaye' => 'nullable|numeric',
             'penalites' => 'nullable|numeric',
             'date_paiement' => 'nullable|date',
+            'justificatif_path' => 'nullable|string',
             'observations' => 'nullable|string',
             'statut' => 'nullable|in:EN_ATTENTE,PAYE,PARTIEL,NON_PAYE',
         ]);

@@ -873,6 +873,7 @@ CREATE TABLE
 CREATE TABLE
     IF NOT EXISTS decaissements (
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+        numero_decaissement VARCHAR(100),
         plan_decaissement_id BIGINT UNSIGNED,
         ligne_decaissement_id BIGINT UNSIGNED,
         agence_id BIGINT UNSIGNED,
@@ -880,6 +881,7 @@ CREATE TABLE
         date_decaissement DATE,
         reference_banque TEXT,
         statut ENUM ('EN_ATTENTE', 'VALIDE', 'NON_VALIDE') DEFAULT 'EN_ATTENTE',
+        justificatif_path TEXT,
         observations TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -934,6 +936,7 @@ CREATE TABLE
         montant_impaye DECIMAL(18, 2),
         penalites DECIMAL(18, 2) DEFAULT 0,
         date_paiement DATE,
+        justificatif_path TEXT,
         observations TEXT,
         statut ENUM ('EN_ATTENTE', 'PAYE', 'PARTIEL', 'NON_PAYE') DEFAULT 'NON_PAYE',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -1186,7 +1189,7 @@ CREATE TABLE
         current_etape_code VARCHAR(50),
         next_etape_code VARCHAR(50),
         statut VARCHAR(20) NOT NULL DEFAULT 'EN_COURS' CHECK (
-            statu IN ('EN_COURS', 'TERMINE', 'REJETE', 'ABANDONNE')
+            statut IN ('EN_COURS', 'TERMINE', 'REJETE', 'ABANDONNE')
         ),
         started_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
         completed_at TIMESTAMP NULL,

@@ -280,6 +280,8 @@ use App\Http\Controllers\AiReport\PeriodicBulletinController;
             Route::get('organismes', [DashboardRapportController::class, 'statParOrganisme']);
             Route::get('secteurs', [DashboardRapportController::class, 'statParSecteur']);
             Route::get('sous-secteurs', [DashboardRapportController::class, 'statParSousSecteur']);
+            Route::get('annees', [DashboardRapportController::class, 'statFinancementParAnnee']);
+            Route::get('croises', [DashboardRapportController::class, 'statCroiseeVariables']);
         });
     });
 
