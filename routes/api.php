@@ -314,10 +314,21 @@ Route::prefix('dashboard')->group(function () {
     });
 
     Route::prefix('rapport')->group(function () {
-        Route::get('agences', [DashboardRapportController::class, 'statParAgence']);
-        Route::get('organismes', [DashboardRapportController::class, 'statParOrganisme']);
-        Route::get('secteurs', [DashboardRapportController::class, 'statParSecteur']);
+        // --- Listes agrégées (existants corrigés) ---
+        Route::get('agences',       [DashboardRapportController::class, 'statParAgence']);
+        Route::get('organismes',    [DashboardRapportController::class, 'statParOrganisme']);
+        Route::get('secteurs',      [DashboardRapportController::class, 'statParSecteur']);
         Route::get('sous-secteurs', [DashboardRapportController::class, 'statParSousSecteur']);
+
+        // --- Rapport individuel par organisme ---
+        Route::get('organisme/{organisme_id}', [DashboardRapportController::class, 'rapportOrganisme']);
+
+        // --- Nouveaux rapports ---
+        Route::get('guichets',     [DashboardRapportController::class, 'statParGuichet']);
+        Route::get('annees',       [DashboardRapportController::class, 'statParAnnee']);
+        Route::get('synthese',     [DashboardRapportController::class, 'synthese']);
+        Route::get('financier',    [DashboardRapportController::class, 'rapportFinancier']);
+        Route::get('remboursements/declinaison', [DashboardRapportController::class, 'declinaisonRemboursements']);
     });
 });
 
@@ -328,7 +339,7 @@ use App\Http\Controllers\AiReport\IndividualReportController;
 use App\Http\Controllers\AiReport\GlobalReportController;
 use App\Http\Controllers\AiReport\PeriodicBulletinController;
 
-// TODO: remettre ->middleware('auth:sanctum') après les tests
+// TODO: remettre ->middleware('auth:sanctum') 
 Route::prefix('ai-reports')->group(function () {
 
     // ----- Module 1 : Rapports individuels -----

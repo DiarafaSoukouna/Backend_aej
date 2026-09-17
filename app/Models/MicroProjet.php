@@ -6,6 +6,21 @@ use Illuminate\Database\Eloquent\Model;
 
 class MicroProjet extends Model
 {
+    /**
+     * Relations chargées automatiquement à chaque fois que le modèle est utilisé.
+     * Ainsi, partout où les micro-projets sont retournés, les objets liés
+     * (guichet, dispositif, organisme, etc.) sont inclus directement.
+     */
+    protected $with = [
+        'dispositif',
+        'organisme',
+        'guichet',
+        'secteur',
+        'commune',
+        'agence',
+        'agenceImputation',
+    ];
+
     protected $fillable = [
         'code',
         'intitule',

@@ -9,11 +9,56 @@ use Illuminate\Support\Facades\Http;
 
 class PromoteurController extends Controller
 {
+    // -------------------------------------------------------------------------
+    // Helpers privés — Stats calculées (nombre_emplois, montant_rembourse, taux_impaye)
+    // -------------------------------------------------------------------------
+
+    private function applyStats($query)
+    {
+        return $query
+            ->withCount('embauches')
+            ->withSum('remboursements', 'montant_paye')
+            ->withSum('remboursements', 'montant_echu')
+            ->withSum('remboursements', 'montant_impaye');
+    }
+
+    private function transformStats($collection)
+    {
+        return $collection->transform(function ($promoteur) {
+            $totalEchu   = (float) ($promoteur->remboursements_montant_echu_sum   ?? 0);
+            $totalImpaye = (float) ($promoteur->remboursements_montant_impaye_sum ?? 0);
+
+            $promoteur->nombre_emplois    = (int)   ($promoteur->embauches_count                    ?? 0);
+            $promoteur->montant_rembourse = (float) ($promoteur->remboursements_montant_paye_sum    ?? 0);
+            $promoteur->taux_impaye       = $totalEchu > 0
+                ? round(($totalImpaye / $totalEchu) * 100, 2)
+                : 0.0;
+
+            unset(
+                $promoteur->embauches_count,
+                $promoteur->remboursements_montant_paye_sum,
+                $promoteur->remboursements_montant_echu_sum,
+                $promoteur->remboursements_montant_impaye_sum
+            );
+
+            return $promoteur;
+        });
+    }
+
+    // -------------------------------------------------------------------------
+    // Endpoints
+    // -------------------------------------------------------------------------
+
+
     public function index(Request $request)
     {
         $perPage = $request->get('per_page', 15);
 
-        $promoteurs = Promoteur::with('microProjets')->paginate($perPage);
+        $query = $this->applyStats(Promoteur::with('microProjets'));
+
+        $promoteurs = $query->paginate($perPage);
+
+        $this->transformStats($promoteurs->getCollection());
 
         return response()->json($promoteurs);
     }
@@ -34,6 +79,14 @@ class PromoteurController extends Controller
                 }
             }
         }])->findOrFail($id);
+
+      
+        $promoteur->loadCount('embauches')
+                  ->loadSum('remboursements', 'montant_paye')
+                  ->loadSum('remboursements', 'montant_echu')
+                  ->loadSum('remboursements', 'montant_impaye');
+
+        $this->transformStats(collect([$promoteur]));
 
         return response()->json($promoteur);
     }
@@ -96,9 +149,15 @@ class PromoteurController extends Controller
             }
         }]);
 
+        $this->applyStats($query);
+
         $perPage = $request->get('per_page', 15);
 
-        return response()->json($query->paginate($perPage));
+        $paginator = $query->paginate($perPage);
+
+        $this->transformStats($paginator->getCollection());
+
+        return response()->json($paginator);
     }
 
     public function filter(Request $request)
@@ -126,6 +185,8 @@ class PromoteurController extends Controller
                 $query->where($filter, $request->input($filter));
             }
         }
+
+        $this->applyStats($query);
 
         $promoteurs = $query->paginate($request->get('per_page', 15));
 
@@ -197,16 +258,17 @@ class PromoteurController extends Controller
         }
 
         $promoteurs->getCollection()->transform(function ($promoteur) use ($maps) {
-            $promoteur->sexe = $maps['sexe'][$promoteur->sexe_id] ?? null;
-            $promoteur->lieuhabitation = $maps['lieuhabitation'][$promoteur->lieuhabitation_id] ?? null;
-            $promoteur->typepieceidentite = $maps['typepieceidentite'][$promoteur->typepieceidentite_id] ?? null;
-            $promoteur->niveauetude = $maps['niveauetude'][$promoteur->niveauetude_id] ?? null;
-            $promoteur->paysnationalite = $maps['paysnationalite'][$promoteur->paysnationalite_id] ?? null;
+            // Référentiels externes
+            $promoteur->sexe                = $maps['sexe'][$promoteur->sexe_id]                               ?? null;
+            $promoteur->lieuhabitation      = $maps['lieuhabitation'][$promoteur->lieuhabitation_id]           ?? null;
+            $promoteur->typepieceidentite   = $maps['typepieceidentite'][$promoteur->typepieceidentite_id]     ?? null;
+            $promoteur->niveauetude         = $maps['niveauetude'][$promoteur->niveauetude_id]                 ?? null;
+            $promoteur->paysnationalite     = $maps['paysnationalite'][$promoteur->paysnationalite_id]         ?? null;
             $promoteur->typesituationhandicap = $maps['typesituationhandicap'][$promoteur->typesituationhandicap_id] ?? null;
             $promoteur->situationmatrimoniale = $maps['situationmatrimoniale'][$promoteur->situationmatrimoniale_id] ?? null;
-            $promoteur->secteuractivite = $maps['secteuractivite'][$promoteur->secteuractivite_id] ?? null;
+            $promoteur->secteuractivite     = $maps['secteuractivite'][$promoteur->secteuractivite_id]         ?? null;
             $promoteur->soussecteuractivite = $maps['soussecteuractivite'][$promoteur->soussecteuractivite_id] ?? null;
-            $promoteur->agenceregionale = $maps['agenceregionale'][$promoteur->agenceregionale_id] ?? null;
+            $promoteur->agenceregionale     = $maps['agenceregionale'][$promoteur->agenceregionale_id]        ?? null;
 
             unset(
                 $promoteur->sexe_id,
@@ -219,6 +281,23 @@ class PromoteurController extends Controller
                 $promoteur->secteuractivite_id,
                 $promoteur->soussecteuractivite_id,
                 $promoteur->agenceregionale_id
+            );
+
+            // Stats calculées
+            $totalEchu   = (float) ($promoteur->remboursements_montant_echu_sum   ?? 0);
+            $totalImpaye = (float) ($promoteur->remboursements_montant_impaye_sum ?? 0);
+
+            $promoteur->nombre_emplois    = (int)   ($promoteur->embauches_count                 ?? 0);
+            $promoteur->montant_rembourse = (float) ($promoteur->remboursements_montant_paye_sum ?? 0);
+            $promoteur->taux_impaye       = $totalEchu > 0
+                ? round(($totalImpaye / $totalEchu) * 100, 2)
+                : 0.0;
+
+            unset(
+                $promoteur->embauches_count,
+                $promoteur->remboursements_montant_paye_sum,
+                $promoteur->remboursements_montant_echu_sum,
+                $promoteur->remboursements_montant_impaye_sum
             );
 
             return $promoteur;
