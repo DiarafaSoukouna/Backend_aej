@@ -7,9 +7,7 @@ use Illuminate\Support\Str;
 use Carbon\Carbon;
 use App\Models\Promoteur;
 
-/**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Promoteur>
- */
+
 class PromoteurFactory extends Factory
 {
     private array $noms = [

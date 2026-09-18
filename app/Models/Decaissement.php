@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Decaissement extends Model
 {
     protected $fillable = [
+        'numero_decaissement',
         'plan_decaissement_id',
         'ligne_decaissement_id',
         'agence_id',
@@ -14,6 +15,7 @@ class Decaissement extends Model
         'date_decaissement',
         'reference_banque',
         'statut',
+        'justificatif_path',
         'observations',
     ];
 

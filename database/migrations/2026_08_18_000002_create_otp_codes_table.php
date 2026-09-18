@@ -15,11 +15,13 @@ return new class extends Migration
             $table->id();
             $table->foreignId('personnel_id')->constrained('personnels')->onDelete('cascade');
             $table->string('code', 255);
+            $table->enum('mode', ['MAIL', 'WHATSAPP'])->default('MAIL');
             $table->dateTime('expires_at');
             $table->boolean('used')->default(false);
             $table->timestamps();
             $table->index(['personnel_id', 'expires_at']);
             $table->index('code');
+            $table->index('mode');
         });
     }
 

@@ -30,7 +30,6 @@ class WorkflowEtapeSlaController extends Controller
             'etape_code' => 'required|exists:workflow_etapes,code',
             'duration_value' => 'required|integer',
             'duration_unit' => 'required|in:HEURES,JOURS,SEMAINES,MOIS',
-            'delay_type' => 'required|in:FIXE,RELATIF',
             'description' => 'nullable|string',
         ]);
 
@@ -68,7 +67,6 @@ class WorkflowEtapeSlaController extends Controller
             'etape_code' => 'sometimes|required|exists:workflow_etapes,code',
             'duration_value' => 'sometimes|required|integer',
             'duration_unit' => 'sometimes|required|in:HEURES,JOURS,SEMAINES,MOIS',
-            'delay_type' => 'sometimes|required|in:FIXE,RELATIF',
             'description' => 'nullable|string',
         ]);
 

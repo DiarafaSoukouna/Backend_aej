@@ -9,9 +9,15 @@ use App\Models\PlanRemboursement;
 
 class PlanRemboursementController extends Controller
 {
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
         $plans = PlanRemboursement::with(['microProjet', 'budget'])->get();
+
+        if ($request->has('micro_projet_id') && !empty($request->micro_projet_id)) 
+            $plans = $plans->where('micro_projet_id', $request->micro_projet_id);
+        if ($request->has('budget_id') && !empty($request->budget_id)) 
+            $plans = $plans->where('budget_id', $request->budget_id);
+        
         return new JsonResponse(['message' => 'Plans remboursement retrieved successfully', 'data' => $plans], 200);
     }
 

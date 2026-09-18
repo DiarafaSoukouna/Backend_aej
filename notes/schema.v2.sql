@@ -27,7 +27,7 @@ CREATE TABLE
         delai_inactivite_minutes INT NOT NULL,
         nombre_session_possible INT NOT NULL,
         nombre_tentatives_connexion INT NOT NULL,
-        delai_code_tp_minutes INT NOT NULL,
+        delai_code_otp_minutes INT NOT NULL,
         delai_changement_mdp_mois INT NOT NULL,
         delai_suppression_secondes INT NOT NULL,
         code_instance_whatsapp VARCHAR(255) NULL,
@@ -309,6 +309,7 @@ CREATE TABLE
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
         personnel_id BIGINT UNSIGNED,
         code VARCHAR(255) NOT NULL, --Hashed
+        mode ENUM ('MAIL', 'WHATSAPP') DEFAULT 'MAIL',
         expires_at DATETIME NOT NULL,
         used TINYINT (1) NOT NULL DEFAULT 0,
         created_at DATETIME NOT NULL,
@@ -395,6 +396,7 @@ CREATE TABLE
         code VARCHAR(50) NOT NULL UNIQUE, -- GENERATE BY [workflow_code + '_' + VERSION] IF NOT EXISTS
         name VARCHAR(150) NOT NULL,
         description TEXT,
+        etape_start_code VARCHAR(50),
         is_active BOOLEAN NOT NULL DEFAULT TRUE,
         is_default BOOLEAN NOT NULL DEFAULT FALSE,
         created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -549,14 +551,22 @@ CREATE TABLE
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
         code VARCHAR(50) UNIQUE,
         projet_id BIGINT UNSIGNED UNIQUE,
+        guichet_id  BIGINT UNSIGNED,
+        workflow_version VARCHAR(50),
         intitule VARCHAR(200) NOT NULL,
         budget_alloue DECIMAL(15, 2) NOT NULL,
+        montant_min DECIMAL(15, 2) DEFAULT 0,
+        montant_max DECIMAL(15, 2) DEFAULT 0,
+        taux DECIMAL(5, 2) DEFAULT 0,
+        duree INT DEFAULT 0,
         nbre_emplois_prevu INT DEFAULT 0,
         nbre_beneficiaire_prevu INT DEFAULT 0,
         nbre_micro_projet_prevu INT DEFAULT 0,
         created_at DATETIME NOT NULL,
         updated_at DATETIME NOT NULL,
-        FOREIGN KEY (projet_id) REFERENCES projets (id) ON DELETE CASCADE
+        FOREIGN KEY (projet_id) REFERENCES projets (id) ON DELETE CASCADE,
+        FOREIGN KEY (guichet_id) REFERENCES guichets (id),
+        FOREIGN KEY (workflow_version) REFERENCES workflow_versions (code)
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
 -- ##############################################################
@@ -670,6 +680,7 @@ CREATE TABLE
     IF NOT EXISTS lots_transmission (
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
         organisme_id BIGINT UNSIGNED,
+        guichet_id BIGINT UNSIGNED,
         code VARCHAR(50),
         titre VARCHAR(255),
         fichier_repartition TEXT,
@@ -680,10 +691,35 @@ CREATE TABLE
         taux_recouvrement DECIMAL(5, 2),
         duree_differee INT,
         duree_remboursement INT,
-        dossiers TEXT, --PIPE code micro-projet ("|")
+        statut ENUM ('BROUILLON', 'TRANSMIS', 'TRAITE', 'REJETE') DEFAULT 'BROUILLON',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        FOREIGN KEY (organisme_id) REFERENCES organisme_financements (id) ON DELETE CASCADE
+        FOREIGN KEY (organisme_id) REFERENCES organisme_financements (id) ON DELETE CASCADE,
+        FOREIGN KEY (guichet_id) REFERENCES guichets (id)
+    ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
+
+CREATE TABLE
+    IF NOT EXISTS lots_importation (
+        id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+        micro_projet_id BIGINT UNSIGNED,
+        code VARCHAR(50),
+        nom_promoteur VARCHAR(100),
+        prenom_promoteur VARCHAR(100),
+        montant_sollicite DECIMAL(15, 2) DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (micro_projet_id) REFERENCES micro_projets (id) ON DELETE CASCADE
+    ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
+
+CREATE TABLE
+    IF NOT EXISTS lots_micro_projets (
+        id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+        lot_id BIGINT UNSIGNED,
+        micro_projet_id BIGINT UNSIGNED,
+        statut ENUM ('EN_ATTENTE', 'APPROUVE', 'NON_APPROUVE') DEFAULT 'EN_ATTENTE',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        FOREIGN KEY (lot_id) REFERENCES lots_transmission (id) ON DELETE CASCADE,
+        FOREIGN KEY (micro_projet_id) REFERENCES micro_projets (id) ON DELETE CASCADE
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
 CREATE TABLE
@@ -700,11 +736,17 @@ CREATE TABLE
 CREATE TABLE
     IF NOT EXISTS documents (
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(255),
+        path VARCHAR(255),
+        type VARCHAR(50),
+        size INT,
+        url TEXT,
+        created_by BIGINT UNSIGNED,
         micro_projet_id BIGINT UNSIGNED,
-        type_document VARCHAR(100),
-        fichier VARCHAR(255),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (micro_projet_id) REFERENCES micro_projets (id) ON DELETE CASCADE
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        FOREIGN KEY (micro_projet_id) REFERENCES micro_projets (id) ON DELETE CASCADE,
+        FOREIGN KEY (created_by) REFERENCES personnels (id)
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
 -- ##############################################################
@@ -739,7 +781,7 @@ CREATE TABLE
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
         micro_projet_id BIGINT UNSIGNED,
         organisme_id BIGINT UNSIGNED,
-        budget_id BIGINT UNSIGNED UNIQUE,
+        -- budget_id BIGINT UNSIGNED UNIQUE,
         etat_ouverture ENUM ('OUVERT', 'FERME', 'NON_OUVERT') DEFAULT 'NON_OUVERT',
         avis_partenaire ENUM ('ACCORDE', 'AJOURNE', 'REJETE'),
         montant_accorde DECIMAL(15, 2),
@@ -753,7 +795,7 @@ CREATE TABLE
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         FOREIGN KEY (micro_projet_id) REFERENCES micro_projets (id) ON DELETE CASCADE,
         FOREIGN KEY (organisme_id) REFERENCES organisme_financements (id) ON DELETE CASCADE,
-        FOREIGN KEY (budget_id) REFERENCES budgets (id) ON DELETE CASCADE
+        -- FOREIGN KEY (budget_id) REFERENCES budgets (id) ON DELETE CASCADE
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
 -- A SUPPRIMER
@@ -831,6 +873,7 @@ CREATE TABLE
 CREATE TABLE
     IF NOT EXISTS decaissements (
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+        numero_decaissement VARCHAR(100),
         plan_decaissement_id BIGINT UNSIGNED,
         ligne_decaissement_id BIGINT UNSIGNED,
         agence_id BIGINT UNSIGNED,
@@ -838,6 +881,7 @@ CREATE TABLE
         date_decaissement DATE,
         reference_banque TEXT,
         statut ENUM ('EN_ATTENTE', 'VALIDE', 'NON_VALIDE') DEFAULT 'EN_ATTENTE',
+        justificatif_path TEXT,
         observations TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -892,6 +936,7 @@ CREATE TABLE
         montant_impaye DECIMAL(18, 2),
         penalites DECIMAL(18, 2) DEFAULT 0,
         date_paiement DATE,
+        justificatif_path TEXT,
         observations TEXT,
         statut ENUM ('EN_ATTENTE', 'PAYE', 'PARTIEL', 'NON_PAYE') DEFAULT 'NON_PAYE',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -916,6 +961,20 @@ CREATE TABLE
         FOREIGN KEY (micro_projet_id) REFERENCES micro_projets (id) ON DELETE CASCADE,
         FOREIGN KEY (plan_remboursement_id) REFERENCES plan_remboursements (id) ON DELETE CASCADE,
         FOREIGN KEY (agent_id) REFERENCES personnels (id) ON DELETE CASCADE
+    )
+
+CREATE TABLE 
+    IF NOT EXISTS garanties (
+        id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+        micro_projet_id BIGINT UNSIGNED,
+        organisme_id BIGINT UNSIGNED,
+        montant_garantie DECIMAL(18, 2),
+        date_rappel DATE,
+        statut ENUM ('EN_ATTENTE', 'PAYE', 'PARTIEL', 'NON_PAYE') DEFAULT 'EN_ATTENTE',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        FOREIGN KEY (micro_projet_id) REFERENCES micro_projets (id) ON DELETE CASCADE,
+        FOREIGN KEY (organisme_id) REFERENCES organisme_financements (id) ON DELETE CASCADE
     )
 
 -- TRANSACTIONS BENEFICIAIRE (DEPENSES - RECETTES)
@@ -1068,7 +1127,7 @@ CREATE TABLE
 -- 17. FORMULAIRES & QUESTIONNAIRES
 -- ##############################################################
 CREATE TABLE
-    IF NOT EXISTS formulaires_evaluation (
+    IF NOT EXISTS formulaire_evaluations (
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
         micro_projet_id BIGINT UNSIGNED,
         code VARCHAR(50) NOT NULL UNIQUE,
@@ -1130,7 +1189,7 @@ CREATE TABLE
         current_etape_code VARCHAR(50),
         next_etape_code VARCHAR(50),
         statut VARCHAR(20) NOT NULL DEFAULT 'EN_COURS' CHECK (
-            statu IN ('EN_COURS', 'TERMINE', 'REJETE', 'ABANDONNE')
+            statut IN ('EN_COURS', 'TERMINE', 'REJETE', 'ABANDONNE')
         ),
         started_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
         completed_at TIMESTAMP NULL,

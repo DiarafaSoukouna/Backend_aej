@@ -9,9 +9,17 @@ use Illuminate\Support\Facades\Validator;
 
 class RemboursementsDeclarationController extends Controller
 {
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
         $declarations = RemboursementsDeclaration::with(['planRemboursement', 'promoteur'])->get();
+
+        if ($request->has('plan_remboursement_id') && !empty($request->plan_remboursement_id)) 
+            $declarations = $declarations->where('plan_remboursement_id', $request->plan_remboursement_id);
+        if ($request->has('promoteur_id') && !empty($request->promoteur_id)) 
+            $declarations = $declarations->where('promoteur_id', $request->promoteur_id);
+        if ($request->has('statut') && !empty($request->statut)) 
+            $declarations = $declarations->where('statut', $request->statut);
+
         return new JsonResponse([
             'message' => 'Declarations retrieved successfully',
             'data' => $declarations

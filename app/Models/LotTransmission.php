@@ -13,6 +13,7 @@ class LotTransmission extends Model
 
     protected $fillable = [
         'organisme_id',
+        'guichet_id',
         'code',
         'titre',
         'fichier_repartition',
@@ -23,7 +24,7 @@ class LotTransmission extends Model
         'taux_recouvrement',
         'duree_differee',
         'duree_remboursement',
-        'dossiers',
+        'statut',
     ];
 
     protected $casts = [
@@ -33,26 +34,20 @@ class LotTransmission extends Model
         'duree_remboursement' => 'integer',
     ];
 
-    protected $appends = [
-        'micro_projets',
-    ];
-
     public function organisme()
     {
         return $this->belongsTo(OrganismeFinancement::class, 'organisme_id');
     }
 
-    public function getMicroProjetsAttribute()
+    public function guichet()
     {
-        if (empty($this->dossiers)) return collect();
+        return $this->belongsTo(Guichet::class, 'guichet_id');
+    }
 
-        $codes = array_values(array_filter(
-            array_map('trim', explode('|', $this->dossiers))
-        ));
-
-        if (empty($codes)) return collect();
-
-        $microProjets = MicroProjet::whereIn('code', $codes)->get()->keyBy('code');
-        return collect($codes)->map(fn($code) => $microProjets->get($code))->filter()->values();
+    public function microProjets()
+    {
+        return $this->belongsToMany(MicroProjet::class, 'lots_micro_projets', 'lot_id', 'micro_projet_id')
+                    ->withPivot('statut')
+                    ->withTimestamps();
     }
 }

@@ -41,6 +41,52 @@ class Personnel extends Authenticatable
     {
         return $this->belongsTo(Role::class);
     }
+
+     public function permissions()
+    {
+        return $this->role ? $this->role->permissions : collect();
+    }
+
+    public function hasPermission(string $module, string $action = null): bool
+    {
+        if (!$this->role) {
+            return false;
+        }
+ 
+        $permission = $this->role->permissions()->where('module', $module)->first();
+ 
+        if (!$permission) {
+            return false;
+        }
+ 
+        if ($permission->full_access) {
+            return true;
+        }
+ 
+        if ($action === null) {
+            return $permission->autorise;
+        }
+ 
+        $acces = json_decode($permission->acces, true) ?? [];
+ 
+        return in_array($action, $acces);
+    }
+ 
+    public function getAllPermissions(): array
+    {
+        if (!$this->role) {
+            return [];
+        }
+ 
+        return $this->role->permissions->map(function ($permission) {
+            return [
+                'module' => $permission->module,
+                'autorise' => $permission->autorise,
+                'acces' => json_decode($permission->acces, true) ?? [],
+                'full_access' => $permission->full_access,
+            ];
+        })->toArray();
+    }
     
     public function agence()
     {

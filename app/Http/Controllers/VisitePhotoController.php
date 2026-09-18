@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\VisitePhoto;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Validator;
 
 class VisitePhotoController extends Controller
 {
@@ -22,7 +23,7 @@ class VisitePhotoController extends Controller
 
     public function store(Request $request): JsonResponse
     {
-        $validated = $request->validate([
+        $validation = Validator::make($request->all(), [
             'exploitation_id' => 'required|exists:exploitations,id',
             'photo_url' => 'required|string|max:500',
             'description' => 'nullable|string|max:255',
@@ -30,15 +31,29 @@ class VisitePhotoController extends Controller
             'prise_par_id' => 'nullable|exists:personnels,id',
         ]);
 
-        $photo = VisitePhoto::create($validated);
-        return response()->json(['message' => 'Photo created successfully', 'data' => $photo], 201);
+        if ($validation->fails()) {
+            return response()->json([
+                'message' => 'Validation failed',
+                'errors' => $validation->errors()
+            ], 422);
+        }
+
+        try {
+            $photo = VisitePhoto::create($validation->validated());
+            return response()->json(['message' => 'Photo created successfully', 'data' => $photo], 201);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'message' => 'Photo creation failed',
+                'errors' => $th->getMessage()
+            ], 500);
+        }
     }
 
     public function update(Request $request, $id): JsonResponse
     {
         $photo = VisitePhoto::findOrFail($id);
 
-        $validated = $request->validate([
+        $validation = Validator::make($request->all(), [
             'exploitation_id' => 'nullable|exists:exploitations,id',
             'photo_url' => 'nullable|string|max:500',
             'description' => 'nullable|string|max:255',
@@ -46,14 +61,35 @@ class VisitePhotoController extends Controller
             'prise_par_id' => 'nullable|exists:personnels,id',
         ]);
 
-        $photo->update($validated);
-        return response()->json(['message' => 'Photo updated successfully', 'data' => $photo]);
+        if ($validation->fails()) {
+            return response()->json([
+                'message' => 'Validation failed',
+                'errors' => $validation->errors()
+            ], 422);
+        }
+
+        try {
+            $photo->update($validation->validated());
+            return response()->json(['message' => 'Photo updated successfully', 'data' => $photo]);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'message' => 'Photo update failed',
+                'errors' => $th->getMessage()
+            ], 500);
+        }
     }
 
     public function destroy($id): JsonResponse
     {
         $photo = VisitePhoto::findOrFail($id);
-        $photo->delete();
-        return response()->json(['message' => 'Photo deleted successfully'], 204);
+        try {
+            $photo->delete();
+            return response()->json(['message' => 'Photo deleted successfully'], 204);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'message' => 'Photo deletion failed',
+                'errors' => $th->getMessage()
+            ], 500);
+        }
     }
 }

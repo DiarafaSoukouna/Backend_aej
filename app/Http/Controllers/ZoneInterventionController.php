@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\ZoneIntervention;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Validator;
 
 class ZoneInterventionController extends Controller
 {
@@ -22,7 +23,7 @@ class ZoneInterventionController extends Controller
 
     public function store(Request $request): JsonResponse
     {
-        $validated = $request->validate([
+        $validation = Validator::make($request->all(), [
             'projet_id' => 'required|exists:projets,id',
             'departement_id' => 'nullable|exists:departements,id',
             'adresse' => 'nullable|string',
@@ -30,15 +31,29 @@ class ZoneInterventionController extends Controller
             'longitude' => 'nullable|numeric',
         ]);
 
-        $zone = ZoneIntervention::create($validated);
-        return response()->json(['message' => 'Zone created successfully', 'data' => $zone], 201);
+        if ($validation->fails()) {
+            return response()->json([
+                'message' => 'Validation failed',
+                'errors' => $validation->errors()
+            ], 422);
+        }
+
+        try {
+            $zone = ZoneIntervention::create($validation->validated());
+            return response()->json(['message' => 'Zone created successfully', 'data' => $zone], 201);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'message' => 'Zone creation failed',
+                'errors' => $th->getMessage()
+            ], 500);
+        }
     }
 
     public function update(Request $request, $id): JsonResponse
     {
         $zone = ZoneIntervention::findOrFail($id);
 
-        $validated = $request->validate([
+        $validation = Validator::make($request->all(), [
             'projet_id' => 'nullable|exists:projets,id',
             'departement_id' => 'nullable|exists:departements,id',
             'adresse' => 'nullable|string',
@@ -46,14 +61,36 @@ class ZoneInterventionController extends Controller
             'longitude' => 'nullable|numeric',
         ]);
 
-        $zone->update($validated);
-        return response()->json(['message' => 'Zone updated successfully', 'data' => $zone]);
+        if ($validation->fails()) {
+            return response()->json([
+                'message' => 'Validation failed',
+                'errors' => $validation->errors()
+            ], 422);
+        }
+
+        try {
+            $zone->update($validation->validated());
+            return response()->json(['message' => 'Zone updated successfully', 'data' => $zone]);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'message' => 'Zone update failed',
+                'errors' => $th->getMessage()
+            ], 500);
+        }
     }
 
     public function destroy($id): JsonResponse
     {
         $zone = ZoneIntervention::findOrFail($id);
-        $zone->delete();
-        return response()->json(['message' => 'Zone deleted successfully'], 204);
+        
+        try {
+            $zone->delete();
+            return response()->json(['message' => 'Zone deleted successfully'], 204);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'message' => 'Zone deletion failed',
+                'errors' => $th->getMessage()
+            ], 500);
+        }
     }
 }

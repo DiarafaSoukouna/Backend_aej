@@ -6,7 +6,7 @@ use App\Models\WorkflowRole;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-
+use Illuminate\Support\Facades\Validator;
 
 class WorkflowRoleController extends Controller
 {
@@ -21,19 +21,33 @@ class WorkflowRoleController extends Controller
 
     public function store(Request $request): JsonResponse
     {
-        $validated = $request->validate([
+        $validation = Validator::make($request->all(), [
             'code' => 'required|string|max:50|unique:workflow_roles,code',
             'name' => 'required|string|max:150',
             'description' => 'nullable|string',
             'is_active' => 'boolean',
         ]);
 
-        $role = WorkflowRole::create($validated);
+        if ($validation->fails()) {
+            return response()->json([
+                'message' => 'Validation failed',
+                'errors' => $validation->errors()
+            ], 422);
+        }
 
-        return new JsonResponse([
-            'message' => 'Role created successfully',
-            'data' => $role
-        ], 201);
+        try {
+            $role = WorkflowRole::create($validation->validated());
+
+            return new JsonResponse([
+                'message' => 'Role created successfully',
+                'data' => $role
+            ], 201);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'message' => 'Role creation failed',
+                'errors' => $th->getMessage()
+            ], 500);
+        }
     }
 
     public function show(WorkflowRole $workflowRole): JsonResponse
@@ -46,27 +60,48 @@ class WorkflowRoleController extends Controller
 
     public function update(Request $request, WorkflowRole $workflowRole): JsonResponse
     {
-        $validated = $request->validate([
+        $validation = Validator::make($request->all(), [
             'code' => 'sometimes|required|string|max:50|unique:workflow_roles,code,' . $workflowRole->id,
             'name' => 'sometimes|required|string|max:150',
             'description' => 'nullable|string',
             'is_active' => 'boolean',
         ]);
 
-        $workflowRole->update($validated);
+        if ($validation->fails()) {
+            return response()->json([
+                'message' => 'Validation failed',
+                'errors' => $validation->errors()
+            ], 422);
+        }
 
-        return new JsonResponse([
-            'message' => 'Role updated successfully',
-            'data' => $workflowRole
-        ], 200);
+        try {
+            $workflowRole->update($validation->validated());
+
+            return new JsonResponse([
+                'message' => 'Role updated successfully',
+                'data' => $workflowRole
+            ], 200);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'message' => 'Role update failed',
+                'errors' => $th->getMessage()
+            ], 500);
+        }
     }
 
     public function destroy(WorkflowRole $workflowRole): JsonResponse
     {
-        $workflowRole->delete();
+        try {
+            $workflowRole->delete();
 
-        return new JsonResponse([
-            'message' => 'Role deleted successfully'
-        ], 200);
+            return new JsonResponse([
+                'message' => 'Role deleted successfully'
+            ], 200);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'message' => 'Role deletion failed',
+                'errors' => $th->getMessage()
+            ], 500);
+        }
     }
 }

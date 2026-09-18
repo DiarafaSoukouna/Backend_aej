@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Guichet;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Validator;
 
 class GuichetController extends Controller
 {
@@ -22,7 +23,7 @@ class GuichetController extends Controller
 
     public function store(Request $request): JsonResponse
     {
-        $validated = $request->validate([
+        $validation = Validator::make($request->all(), [
             'workflow_code' => 'nullable|string|max:50|exists:workflows,code',
             'code' => 'nullable|string|max:50|unique:guichets,code',
             'libelle' => 'required|string|max:100',
@@ -34,15 +35,29 @@ class GuichetController extends Controller
             'is_form_active' => 'nullable|boolean',
         ]);
 
-        $guichet = Guichet::create($validated);
-        return response()->json(['message' => 'Guichet created successfully', 'data' => $guichet], 201);
+        if ($validation->fails()) {
+            return new JsonResponse([
+                'message' => 'Validation failed',
+                'errors' => $validation->errors()
+            ], 422);
+        }
+
+        try {
+            $guichet = Guichet::create($validation->validated());
+            return response()->json(['message' => 'Guichet created successfully', 'data' => $guichet], 201);
+        } catch (\Throwable $th) {
+            return new JsonResponse([
+                'message' => 'Guichet creation failed',
+                'errors' => $th->getMessage()
+            ], 500);
+        }
     }
 
     public function update(Request $request, $id): JsonResponse
     {
         $guichet = Guichet::findOrFail($id);
 
-        $validated = $request->validate([
+        $validation = Validator::make($request->all(), [
             'workflow_code' => 'nullable|string|max:50|exists:workflows,code',
             'code' => 'nullable|string|max:50|unique:guichets,code,' . $id,
             'libelle' => 'nullable|string|max:100',
@@ -54,14 +69,35 @@ class GuichetController extends Controller
             'is_form_active' => 'nullable|boolean',
         ]);
 
-        $guichet->update($validated);
-        return response()->json(['message' => 'Guichet updated successfully', 'data' => $guichet]);
+        if ($validation->fails()) {
+            return new JsonResponse([
+                'message' => 'Validation failed',
+                'errors' => $validation->errors()
+            ], 422);
+        }
+
+        try {
+            $guichet->update($validation->validated());
+            return response()->json(['message' => 'Guichet updated successfully', 'data' => $guichet]);
+        } catch (\Throwable $th) {
+            return new JsonResponse([
+                'message' => 'Guichet update failed',
+                'errors' => $th->getMessage()
+            ], 500);
+        }
     }
 
     public function destroy($id): JsonResponse
     {
         $guichet = Guichet::findOrFail($id);
-        $guichet->delete();
-        return response()->json(['message' => 'Guichet deleted successfully'], 204);
+        try {
+            $guichet->delete();
+            return response()->json(['message' => 'Guichet deleted successfully'], 204);
+        } catch (\Throwable $th) {
+            return new JsonResponse([
+                'message' => 'Guichet deletion failed',
+                'errors' => $th->getMessage()
+            ], 500);
+        }
     }
 }

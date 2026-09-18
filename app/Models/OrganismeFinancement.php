@@ -27,4 +27,9 @@ class OrganismeFinancement extends Model
     {
         return $this->belongsTo(Region::class, 'region_id');
     }
+
+    public function garanties()
+    {
+        return $this->hasMany(Garantie::class, 'organisme_id');
+    }
 }

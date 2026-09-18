@@ -9,9 +9,19 @@ use Illuminate\Support\Facades\Validator;
 
 class DecaissementsDeclarationController extends Controller
 {
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
         $declarations = DecaissementsDeclaration::with(['planDecaissement', 'ligneDecaissement', 'promoteur'])->get();
+
+        if ($request->has('plan_decaissement_id') && !empty($request->plan_decaissement_id)) 
+            $declarations = $declarations->where('plan_decaissement_id', $request->plan_decaissement_id);
+        if ($request->has('ligne_decaissement_id') && !empty($request->ligne_decaissement_id)) 
+            $declarations = $declarations->where('ligne_decaissement_id', $request->ligne_decaissement_id);
+        if ($request->has('promoteur_id') && !empty($request->promoteur_id)) 
+            $declarations = $declarations->where('promoteur_id', $request->promoteur_id);
+        if ($request->has('statut') && !empty($request->statut)) 
+            $declarations = $declarations->where('statut', $request->statut);
+
         return new JsonResponse([
             'message' => 'Déclarations de décaissement retrieved successfully',
             'data' => $declarations

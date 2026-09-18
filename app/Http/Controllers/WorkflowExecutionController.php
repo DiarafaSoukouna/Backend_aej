@@ -2,6 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Decaissement;
+use App\Models\LigneDecaissement;
+use App\Models\Recouvrement;
+use App\Models\Remboursement;
 use App\Models\WorkflowInstance;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -212,7 +216,7 @@ class WorkflowExecutionController extends Controller
 
         // Update ligne decaissements statut
         foreach ($validated['ligne_ids'] as $ligneId) {
-            $ligne = \App\Models\LigneDecaissement::find($ligneId);
+            $ligne = LigneDecaissement::find($ligneId);
             if ($ligne) {
                 $ligne->statut = 'VALIDE';
                 $ligne->save();
@@ -327,7 +331,7 @@ class WorkflowExecutionController extends Controller
 
         // Update decaissements statut
         foreach ($validated['decaissement_ids'] as $decaissementId) {
-            $decaissement = \App\Models\Decaissement::find($decaissementId);
+            $decaissement = Decaissement::find($decaissementId);
             if ($decaissement) {
                 $decaissement->statut = 'EXECUTE';
                 $decaissement->save();
@@ -370,7 +374,7 @@ class WorkflowExecutionController extends Controller
 
         // Update remboursements statut
         foreach ($validated['remboursement_ids'] as $remboursementId) {
-            $remboursement = \App\Models\Remboursement::find($remboursementId);
+            $remboursement = Remboursement::find($remboursementId);
             if ($remboursement) {
                 $remboursement->statut = 'PAYE';
                 $remboursement->save();
@@ -413,7 +417,7 @@ class WorkflowExecutionController extends Controller
 
         // Update recouvrements statut
         foreach ($validated['recouvrement_ids'] as $recouvrementId) {
-            $recouvrement = \App\Models\Recouvrement::find($recouvrementId);
+            $recouvrement = Recouvrement::find($recouvrementId);
             if ($recouvrement) {
                 $recouvrement->statut = 'RECUPERE';
                 $recouvrement->save();

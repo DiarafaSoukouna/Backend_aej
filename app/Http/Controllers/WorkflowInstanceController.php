@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\WorkflowInstance;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Validator;
 
 class WorkflowInstanceController extends Controller
 {
@@ -22,7 +23,7 @@ class WorkflowInstanceController extends Controller
 
     public function store(Request $request): JsonResponse
     {
-        $validated = $request->validate([
+        $validation = Validator::make($request->all(), [
             'micro_projet_id' => 'required|exists:micro_projets,id',
             'workflow_version' => 'required|string|max:20',
             'current_etape_code' => 'nullable|string|max:50|exists:workflow_etapes,code',
@@ -32,7 +33,14 @@ class WorkflowInstanceController extends Controller
             'completed_at' => 'nullable|date|after:started_at',
         ]);
 
-        $instance = WorkflowInstance::create($validated);
+        if ($validation->fails()) {
+            return response()->json([
+                'message' => 'Validation failed',
+                'errors' => $validation->errors()
+            ], 422);
+        }
+
+        $instance = WorkflowInstance::create($validation->validated());
         return response()->json(['message' => 'Instance created successfully', 'data' => $instance], 201);
     }
 
@@ -40,7 +48,7 @@ class WorkflowInstanceController extends Controller
     {
         $instance = WorkflowInstance::findOrFail($id);
 
-        $validated = $request->validate([
+        $validation = Validator::make($request->all(), [
             'micro_projet_id' => 'nullable|exists:micro_projets,id',
             'workflow_version' => 'nullable|exists:workflow_versions,code',
             'current_etape_code' => 'nullable|string|max:50|exists:workflow_etapes,code',
@@ -50,29 +58,64 @@ class WorkflowInstanceController extends Controller
             'completed_at' => 'nullable|date|after:started_at',
         ]);
 
-        $instance->update($validated);
-        return response()->json(['message' => 'Instance updated successfully', 'data' => $instance]);
+        if ($validation->fails()) {
+            return response()->json([
+                'message' => 'Validation failed',
+                'errors' => $validation->errors()
+            ], 422);
+        }
+
+        try {
+            $instance->update($validation->validated());
+            return response()->json(['message' => 'Instance updated successfully', 'data' => $instance]);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'message' => 'Instance updating failed',
+                'errors' => $th->getMessage()
+            ], 500);
+        }
     }
 
     public function patch(Request $request, $id): JsonResponse
     {
         $instance = WorkflowInstance::findOrFail($id);
 
-        $validated = $request->validate([
+        $validation = Validator::make($request->all(), [
             'current_etape_code' => 'nullable|string|max:50|exists:workflow_etapes,code',
             'next_etape_code' => 'nullable|string|max:50|exists:workflow_etapes,code',
             'statut' => 'nullable|in:EN_COURS,TERMINE,REJETE,ABANDONNE',
             'completed_at' => 'nullable|date|after:started_at',
         ]);
 
-        $instance->update(array_filter($validated));
-        return response()->json(['message' => 'Instance patched successfully', 'data' => $instance]);
+        if ($validation->fails()) {
+            return response()->json([
+                'message' => 'Validation failed',
+                'errors' => $validation->errors()
+            ], 422);
+        }
+
+        try {
+            $instance->update(array_filter($validation->validated()));
+            return response()->json(['message' => 'Instance patched successfully', 'data' => $instance]);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'message' => 'Instance patching failed',
+                'errors' => $th->getMessage()
+            ], 500);
+        }
     }
 
     public function destroy($id): JsonResponse
     {
         $instance = WorkflowInstance::findOrFail($id);
-        $instance->delete();
-        return response()->json(['message' => 'Instance deleted successfully'], 204);
+        try {
+            $instance->delete();
+            return response()->json(['message' => 'Instance deleted successfully'], 204);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'message' => 'Instance deletion failed',
+                'errors' => $th->getMessage()
+            ], 500);
+        }
     }
 }

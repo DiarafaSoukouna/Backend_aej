@@ -3,19 +3,30 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Personnel;
-use App\Models\Token;
-use App\Models\OtpCode;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\JsonResponse;
+use App\Models\Configuration;
+use App\Models\Personnel;
+use App\Models\OtpCode;
 use App\Services\MailService;
+use App\Services\WhatsAppService;
 
 
 class AuthController extends Controller
 {
 
-    public function login(Request $request, MailService $mailService): JsonResponse
+    private function initCookies($personnel)
+    {
+        $accessToken = $personnel->createToken('access-token', ['expires_at' => now()->addMinutes(30)])->plainTextToken;
+        $refreshToken = $personnel->createToken('refresh-token', ['expires_at' => now()->addDays(30)])->plainTextToken;
+        $accessCookie = cookie('accessToken', $accessToken, 30, '/', null, true, true, false, 'Lax');
+        $refreshCookie = cookie('refreshToken', $refreshToken, 60 * 24 * 30, '/', null, true, true, false, 'Lax');
+
+        return ['accessToken' => $accessCookie, 'refreshToken' => $refreshCookie];
+    }
+
+    public function login(Request $request): JsonResponse
     {
         $validation = Validator::make($request->all(), [
             'email' => 'required|string|email',
@@ -29,33 +40,180 @@ class AuthController extends Controller
             ], 422);
         }
 
-        $personnel = Personnel::with(['role', 'fonction', 'agence', 'organisme'])->where('email', $request->input('email'))->first();
+        try {
+            $email = $request->input('email');
+            $configuration = Configuration::first();
+            $maxAttempts = $configuration ? $configuration->nombre_tentatives_connexion : 5;
+            $blockDuration = $configuration ? $configuration->delai_inactivite_minutes : 15;
+            $blockKey = "login_block:{$email}";
+            $blockedUntilTimestamp = cache($blockKey);
 
-        if (!$personnel || !Hash::check($request->mot_de_passe, $personnel->mot_de_passe)) {
+            if ($blockedUntilTimestamp && is_numeric($blockedUntilTimestamp)) {
+                $blockedUntil = now()->createFromTimestamp((int)$blockedUntilTimestamp);
+
+                if (now()->lt($blockedUntil)) {
+                    $retryAfter = now()->diffInSeconds($blockedUntil);
+                    return new JsonResponse([
+                        'message' => 'Trop de tentatives. Compte temporairement bloqué.',
+                        'tentative_restant' => 0,
+                        'retry_after' => $retryAfter
+                    ], 423);
+                } else {
+                    cache()->forget($blockKey);
+                }
+            }
+
+            $personnel = Personnel::where('email', $email)->first();
+            $dureeOTP = $configuration ? $configuration->delai_code_otp_minutes : 0;
+            $configOTP = $dureeOTP > 0 ? true : false;
+
+            if (!$personnel || !Hash::check($request->mot_de_passe, $personnel->mot_de_passe)) {
+                $attemptsKey = "login_attempts:{$email}";
+                $attempts = cache($attemptsKey, 0) + 1;
+                cache([$attemptsKey => $attempts], now()->addMinutes($blockDuration));
+                $remainingAttempts = $maxAttempts - $attempts;
+
+                if ($remainingAttempts <= 0) {
+                    $blockUntilTimestamp = (string)now()->addMinutes($blockDuration)->timestamp;
+                    cache([$blockKey => $blockUntilTimestamp], now()->addMinutes($blockDuration));
+                    cache()->forget($attemptsKey);
+
+                    return new JsonResponse([
+                        'message' => 'Nombre maximum de tentatives atteint. Compte bloqué temporairement.',
+                        'tentative_restant' => 0,
+                        'retry_after' => $blockDuration * 60
+                    ], 423);
+                }
+
+                return new JsonResponse([
+                    'message' => 'Identifiants invalides',
+                    'tentative_restant' => $remainingAttempts
+                ], 401);
+            }
+
+            $attemptsKey = "login_attempts:{$email}";
+            cache()->forget($attemptsKey);
+            cache()->forget($blockKey);
+
+            if (!$configOTP) {
+                $cookies = $this->initCookies($personnel);
+
+                return new JsonResponse([
+                    'message' => 'Utilisateur connecté avec succès.',
+                    'user_id' => $personnel->id
+                ], 200)
+                    ->withCookie($cookies['accessToken'])
+                    ->withCookie($cookies['refreshToken']);
+            }
+
             return new JsonResponse([
-                'message' => 'Identifiants invalides'
-            ], 401);
+                'message' => 'Identifiants valides. Veuillez envoyer le code OTP.',
+                'user_id' => $personnel->id,
+                'has_phone' => !empty($personnel->telephone),
+                'otp_required' => $configOTP,
+            ], 200);
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'message' => 'Erreur lors de la connexion',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function sendOtp(Request $request, MailService $mailService, WhatsAppService $whatsappService): JsonResponse
+    {
+        $validation = Validator::make($request->all(), [
+            'email' => 'required|string|email',
+            'mode' => 'required|in:MAIL,WHATSAPP',
+        ]);
+
+        if ($validation->fails()) {
+            return new JsonResponse([
+                'message' => 'Validation failed',
+                'errors' => $validation->errors()
+            ], 422);
         }
 
-        try {
-            $otpCode = str_pad(rand(0, 999999), 6, '0', STR_PAD_LEFT);
-            OtpCode::where('personnel_id', $personnel->id)->where('used', false)->update(['used' => true]);
+        $personnel = Personnel::where('email', $request->input('email'))->first();
+        $configuration = Configuration::first();
+        $dureeOTP = $configuration ? $configuration->delai_code_otp_minutes : 15;
 
+        if (!$personnel) {
+            return new JsonResponse([
+                'message' => 'Utilisateur non trouvé'
+            ], 404);
+        }
+
+        $mode = $request->input('mode');
+        try {
+            $recentOtp = OtpCode::where('personnel_id', $personnel->id)
+                ->where('mode', $mode)
+                ->where('created_at', '>=', now()->subSeconds(60))
+                ->latest()
+                ->first();
+
+            if ($recentOtp) {
+                $remainingSeconds = max(1, 60 - now()->diffInSeconds($recentOtp->created_at));
+
+                return new JsonResponse([
+                    'message' => "Veuillez patienter {$remainingSeconds} secondes avant de demander un nouveau code.",
+                    'retry_after' => $remainingSeconds
+                ], 429);
+            }
+
+            $otpCountLastHour = OtpCode::where('personnel_id', $personnel->id)
+                ->where('mode', $mode)
+                ->where('created_at', '>=', now()->subHour())
+                ->count();
+
+            if ($otpCountLastHour >= 5) {
+                return new JsonResponse([
+                    'message' => 'Trop de demandes de codes OTP. Veuillez réessayer dans une heure.'
+                ], 429);
+            }
+
+            $otpCode = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+
+            OtpCode::where('personnel_id', $personnel->id)->where('used', false)->update(['used' => true]);
             OtpCode::create([
                 'personnel_id' => $personnel->id,
                 'code' => Hash::make($otpCode),
-                'expires_at' => now()->addMinutes(15),
+                'mode' => $mode,
+                'expires_at' => now()->addMinutes($dureeOTP),
             ]);
+
+            if ($mode === 'WHATSAPP') {
+                if (!$whatsappService->isConfigured()) {
+                    return new JsonResponse([
+                        'message' => 'Service WhatsApp non configuré. Veuillez contacter l\'administrateur.'
+                    ], 500);
+                }
+
+                if (empty($personnel->telephone)) {
+                    return new JsonResponse([
+                        'message' => 'Numéro de téléphone non configuré pour ce compte.'
+                    ], 400);
+                }
+
+                $whatsappService->sendOtp($personnel->telephone, $otpCode);
+
+                return new JsonResponse([
+                    'message' => 'Code OTP envoyé via WhatsApp.',
+                    'user_id' => $personnel->id,
+                    'mode' => 'WHATSAPP',
+                ], 200);
+            }
 
             $mailService->sendOtpEmail($personnel->email, $otpCode);
 
             return new JsonResponse([
                 'message' => 'Code OTP envoyé à votre adresse email.',
-                'email' => $personnel->email,
+                'user_id' => $personnel->id,
+                'mode' => 'MAIL',
             ], 200);
         } catch (\Exception $e) {
             return new JsonResponse([
-                'message' => 'Erreur lors de l\'authentification',
+                'message' => 'Erreur lors de l\'envoi du code OTP',
                 'error' => $e->getMessage()
             ], 500);
         }
@@ -66,6 +224,7 @@ class AuthController extends Controller
         $validation = Validator::make($request->all(), [
             'email' => 'required|string|email',
             'code' => 'required|string|size:6',
+            'mode' => 'required|in:MAIL,WHATSAPP',
         ]);
 
         if ($validation->fails()) {
@@ -84,7 +243,12 @@ class AuthController extends Controller
                 ], 401);
             }
 
-            $otpCodes = OtpCode::where('personnel_id', $personnel->id)->where('used', false)->where('expires_at', '>', now())->get();
+            $mode = $request->input('mode');
+            $otpCodes = OtpCode::where('personnel_id', $personnel->id)
+                ->where('used', false)
+                ->where('expires_at', '>', now())
+                ->where('mode', $mode)
+                ->get();
 
             $validOtp = null;
             foreach ($otpCodes as $otp) {
@@ -101,13 +265,14 @@ class AuthController extends Controller
             }
 
             $validOtp->markAsUsed();
-            $token = $personnel->createToken('auth-token')->plainTextToken;
-            $cookie = cookie('accessToken', $token, 60 * 24 * 30, '/', null, true, true, false, 'Lax'); // 30 jours, HTTPS, HTTP only, SameSite Lax
+            $cookies = $this->initCookies($personnel);
 
             return new JsonResponse([
                 'message' => 'Code OTP validé, utilisateur connecté avec succès.',
-                'user_id' => $personnel->id,
-            ], 200)->withCookie($cookie);
+                'user_id' => $personnel->id
+            ], 200)
+                ->withCookie($cookies['accessToken'])
+                ->withCookie($cookies['refreshToken']);
         } catch (\Exception $e) {
             return new JsonResponse([
                 'message' => 'Erreur lors de la vérification du code OTP',
@@ -122,21 +287,22 @@ class AuthController extends Controller
 
         if ($token) {
             $tokenModel = \Laravel\Sanctum\PersonalAccessToken::findToken($token);
-            if ($tokenModel) {
-                $tokenModel->delete();
-            }
+            if ($tokenModel) $tokenModel->delete();
         }
 
-        $cookie = cookie('accessToken', null, -1, '/', null, true, true, false, 'Lax');
+        $accessToken = cookie('accessToken', null, -1, '/', null, true, true, false, 'Lax');
+        $refreshCookie = cookie('refreshToken', null, -1, '/', null, true, true, false, 'Lax');
 
         return response()->json([
             'Message' => 'Logout successful'
-        ], 200)->withCookie($cookie);
+        ], 200)
+            ->withCookie($accessToken)
+            ->withCookie($refreshCookie);
     }
 
     public function refresh(Request $request): JsonResponse
     {
-        $token = $request->bearerToken() ?? $request->cookie('accessToken') ?? $request->query('token');
+        $token = $request->bearerToken() ?? $request->cookie('refreshToken') ?? $request->query('token');
 
         if (!$token) {
             return new JsonResponse([
@@ -152,22 +318,29 @@ class AuthController extends Controller
             ], 401);
         }
 
-        $user = $tokenModel->tokenable;
+        if ($tokenModel->expires_at && $tokenModel->expires_at->isPast()) {
+            return new JsonResponse([
+                'message' => 'Token expiré'
+            ], 401);
+        }
 
-        if (!$user) {
+        $personnel = $tokenModel->tokenable;
+
+        if (!$personnel) {
             return new JsonResponse([
                 'message' => 'Utilisateur non trouvé'
             ], 401);
         }
 
         $tokenModel->delete();
-        $newToken = $user->createToken('auth-token')->plainTextToken;
-        $cookie = cookie('accessToken', $newToken, 60 * 24 * 30, '/', null, true, true, false, 'Lax');
+        $cookies = $this->initCookies($personnel);
 
         return new JsonResponse([
             'message' => 'Token refresh avec succès',
-            'data' => $user->load(['role', 'fonction', 'agence', 'organisme']),
-        ], 200)->withCookie($cookie);
+            'user_id' => $personnel->id,
+        ], 200)
+            ->withCookie($cookies['accessToken'])
+            ->withCookie($cookies['refreshToken']);
     }
 
     public function me(Request $request): JsonResponse
@@ -188,9 +361,9 @@ class AuthController extends Controller
             ], 401);
         }
 
-        $user = $tokenModel->tokenable;
+        $personnel = $tokenModel->tokenable;
 
-        if (!$user) {
+        if (!$personnel) {
             return new JsonResponse([
                 'message' => 'Utilisateur non trouvé'
             ], 401);
@@ -198,7 +371,8 @@ class AuthController extends Controller
 
         return new JsonResponse([
             'message' => 'Utilisateur récupéré avec succès',
-            'data' => $user->load(['role', 'fonction', 'agence', 'organisme']),
+            'data' => $personnel->load(['role', 'fonction', 'agence', 'organisme']),
+            'permissions' => $personnel->getAllPermissions(),
         ], 200);
     }
 }
