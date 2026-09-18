@@ -136,7 +136,6 @@ use App\Http\Controllers\AiReport\PeriodicBulletinController;
         Route::apiResource('formulaires-evaluation', FormulaireEvaluationController::class);
         Route::get('formulaires-evaluation/{formulaireEvaluation}', [FormulaireEvaluationController::class, 'show']);
         Route::apiResource('questions-evaluation', QuestionEvaluationController::class);
-        Route::get('questions-evaluation/{questionEvaluation}', [QuestionEvaluationController::class, 'show']);
         Route::apiResource('evaluations', EvaluationController::class);
         Route::post('evaluations/{evaluation}/responses', [EvaluationController::class, 'addResponse']);
         Route::get('evaluations/{evaluation}/responses', [EvaluationController::class, 'responses']);
@@ -280,8 +279,15 @@ use App\Http\Controllers\AiReport\PeriodicBulletinController;
             Route::get('organismes', [DashboardRapportController::class, 'statParOrganisme']);
             Route::get('secteurs', [DashboardRapportController::class, 'statParSecteur']);
             Route::get('sous-secteurs', [DashboardRapportController::class, 'statParSousSecteur']);
-            Route::get('annees', [DashboardRapportController::class, 'statFinancementParAnnee']);
-            Route::get('croises', [DashboardRapportController::class, 'statCroiseeVariables']);
+            // Route::get('annees', [DashboardRapportController::class, 'statFinancementParAnnee']);
+            // Route::get('croises', [DashboardRapportController::class, 'statCroiseeVariables']);
+
+            Route::get('organisme/{organisme_id}', [DashboardRapportController::class, 'rapportOrganisme']);
+            Route::get('guichets',     [DashboardRapportController::class, 'statParGuichet']);
+            Route::get('annees',       [DashboardRapportController::class, 'statParAnnee']);
+            Route::get('synthese',     [DashboardRapportController::class, 'synthese']);
+            Route::get('financier',    [DashboardRapportController::class, 'rapportFinancier']);
+            Route::get('remboursements/declinaison', [DashboardRapportController::class, 'declinaisonRemboursements']);
         });
     });
 

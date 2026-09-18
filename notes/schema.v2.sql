@@ -1127,7 +1127,7 @@ CREATE TABLE
 -- 17. FORMULAIRES & QUESTIONNAIRES
 -- ##############################################################
 CREATE TABLE
-    IF NOT EXISTS formulaires_evaluation (
+    IF NOT EXISTS formulaire_evaluations (
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
         micro_projet_id BIGINT UNSIGNED,
         code VARCHAR(50) NOT NULL UNIQUE,
