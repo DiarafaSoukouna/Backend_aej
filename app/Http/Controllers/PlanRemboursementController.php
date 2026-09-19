@@ -11,22 +11,31 @@ class PlanRemboursementController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $plans = PlanRemboursement::with(['microProjet', 'budget'])->get();
+        $plans = PlanRemboursement::with(['microProjet', 'budget', 'tableauAmortissements'])->get();
 
-        if ($request->has('micro_projet_id') && !empty($request->micro_projet_id)) 
-            $plans = $plans->where('micro_projet_id', $request->micro_projet_id);
-        if ($request->has('budget_id') && !empty($request->budget_id)) 
-            $plans = $plans->where('budget_id', $request->budget_id);
-        
-        return new JsonResponse(['message' => 'Plans remboursement retrieved successfully', 'data' => $plans], 200);
+        if ($request->filled('micro_projet_id')) {
+            $plans = $plans->where('micro_projet_id', (int) $request->micro_projet_id);
+        }
+        if ($request->filled('budget_id')) {
+            $plans = $plans->where('budget_id', (int) $request->budget_id);
+        }
+        if ($request->filled('decision')) {
+            $plans = $plans->where('decision', $request->decision);
+        }
+
+        return new JsonResponse([
+            'message' => 'Plans remboursement retrieved successfully',
+            'data' => $plans->values(),
+        ], 200);
     }
 
     public function show($id): JsonResponse
     {
-        $plan = PlanRemboursement::with(['microProjet', 'budget'])->find($id);
+        $plan = PlanRemboursement::with(['microProjet', 'budget', 'tableauAmortissements'])->find($id);
         if (!$plan) {
             return new JsonResponse(['message' => 'Plan remboursement not found'], 404);
         }
+
         return new JsonResponse(['message' => 'Plan remboursement retrieved successfully', 'data' => $plan], 200);
     }
 
@@ -35,14 +44,14 @@ class PlanRemboursementController extends Controller
         $validation = Validator::make($request->all(), [
             'micro_projet_id' => 'nullable|exists:micro_projets,id',
             'budget_id' => 'nullable|exists:budgets,id',
-            'echeance_mensuelle' => 'nullable|date',
-            'montant_echeance' => 'nullable|numeric',
-            'periode' => 'nullable|integer',
-            'capital_rembourse' => 'nullable|numeric',
-            'capital_restant' => 'nullable|numeric',
+            'date_ouverture' => 'nullable|date',
+            'decision' => 'nullable|in:EN_ATTENTE,APPROUVE,NON_APPROUVE',
+            'montant_credit' => 'nullable|numeric',
             'interets' => 'nullable|numeric',
-            'amortissement_capital' => 'nullable|numeric',
-            'justificatif_path' => 'nullable|string',
+            'duree_pret' => 'nullable|integer',
+            'duree_remboursement' => 'nullable|integer',
+            'fichier_amortissement' => 'nullable|string',
+            'fichier_convention' => 'nullable|string',
         ]);
 
         if ($validation->fails()) {
@@ -51,7 +60,11 @@ class PlanRemboursementController extends Controller
 
         try {
             $plan = PlanRemboursement::create($validation->validated());
-            return new JsonResponse(['message' => 'Plan remboursement created successfully', 'data' => $plan], 201);
+
+            return new JsonResponse([
+                'message' => 'Plan remboursement created successfully',
+                'data' => $plan->load(['microProjet', 'budget', 'tableauAmortissements']),
+            ], 201);
         } catch (\Exception $e) {
             return new JsonResponse(['message' => 'Error creating plan remboursement', 'error' => $e->getMessage()], 500);
         }
@@ -67,14 +80,14 @@ class PlanRemboursementController extends Controller
         $validation = Validator::make($request->all(), [
             'micro_projet_id' => 'nullable|exists:micro_projets,id',
             'budget_id' => 'nullable|exists:budgets,id',
-            'echeance_mensuelle' => 'nullable|date',
-            'montant_echeance' => 'nullable|numeric',
-            'periode' => 'nullable|integer',
-            'capital_rembourse' => 'nullable|numeric',
-            'capital_restant' => 'nullable|numeric',
+            'date_ouverture' => 'nullable|date',
+            'decision' => 'nullable|in:EN_ATTENTE,APPROUVE,NON_APPROUVE',
+            'montant_credit' => 'nullable|numeric',
             'interets' => 'nullable|numeric',
-            'amortissement_capital' => 'nullable|numeric',
-            'justificatif_path' => 'nullable|string',
+            'duree_pret' => 'nullable|integer',
+            'duree_remboursement' => 'nullable|integer',
+            'fichier_amortissement' => 'nullable|string',
+            'fichier_convention' => 'nullable|string',
         ]);
 
         if ($validation->fails()) {
@@ -83,7 +96,11 @@ class PlanRemboursementController extends Controller
 
         try {
             $plan->update($validation->validated());
-            return new JsonResponse(['message' => 'Plan remboursement updated successfully', 'data' => $plan], 200);
+
+            return new JsonResponse([
+                'message' => 'Plan remboursement updated successfully',
+                'data' => $plan->fresh(['microProjet', 'budget', 'tableauAmortissements']),
+            ], 200);
         } catch (\Exception $e) {
             return new JsonResponse(['message' => 'Error updating plan remboursement', 'error' => $e->getMessage()], 500);
         }
@@ -98,6 +115,7 @@ class PlanRemboursementController extends Controller
 
         try {
             $plan->delete();
+
             return new JsonResponse(['message' => 'Plan remboursement deleted successfully'], 200);
         } catch (\Exception $e) {
             return new JsonResponse(['message' => 'Error deleting plan remboursement', 'error' => $e->getMessage()], 500);

@@ -895,18 +895,35 @@ CREATE TABLE
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
         micro_projet_id BIGINT UNSIGNED,
         budget_id BIGINT UNSIGNED,
-        echeance_mensuelle DATE,
-        montant_echeance DECIMAL(18, 2),
+        date_ouverture DATE,
+        decision ENUM ('EN_ATTENTE', 'APPROUVE', 'NON_APPROUVE') DEFAULT 'EN_ATTENTE',
+        montant_credit DECIMAL(18, 2),
+        interets DECIMAL(18, 2),
+        duree_pret INT,
+        duree_remboursement INT,
+        fichier_amortissement TEXT,
+        fichier_convention TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        FOREIGN KEY (micro_projet_id) REFERENCES micro_projets (id) ON DELETE CASCADE,
+        FOREIGN KEY (budget_id) REFERENCES budgets (id) ON DELETE CASCADE
+    ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
+
+CREATE TABLE 
+    IF NOT EXISTS tableau_amortissements (
+        id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+        plan_remboursement_id BIGINT UNSIGNED,
         periode INT, -- Année
+        date_echeance DATE,
+        montant_echeance DECIMAL(18, 2),
         capital_rembourse DECIMAL(18, 2),
         capital_restant DECIMAL(18, 2),
         interets DECIMAL(18, 2),
         amortissement_capital DECIMAL(18, 2),
-        justificatif_path TEXT,
+        statut ENUM ('PAYE', 'PARTIEL', 'NON_PAYE') DEFAULT 'NON_PAYE',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        FOREIGN KEY (micro_projet_id) REFERENCES micro_projets (id) ON DELETE CASCADE,
-        FOREIGN KEY (budget_id) REFERENCES budgets (id) ON DELETE CASCADE,
+        FOREIGN KEY (plan_remboursement_id) REFERENCES plan_remboursements (id)
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
 CREATE TABLE 

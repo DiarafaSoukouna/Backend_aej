@@ -12,23 +12,20 @@ class PlanRemboursement extends Model
     protected $fillable = [
         'micro_projet_id',
         'budget_id',
-        'echeance_mensuelle',
-        'montant_echeance',
-        'periode',
-        'capital_rembourse',
-        'capital_restant',
+        'date_ouverture',
+        'decision',
+        'montant_credit',
         'interets',
-        'amortissement_capital',
-        'justificatif_path',
+        'duree_pret',
+        'duree_remboursement',
+        'fichier_amortissement',
+        'fichier_convention',
     ];
 
     protected $casts = [
-        'echeance_mensuelle' => 'date',
-        'montant_echeance' => 'decimal:2',
-        'capital_rembourse' => 'decimal:2',
-        'capital_restant' => 'decimal:2',
+        'date_ouverture' => 'date',
+        'montant_credit' => 'decimal:2',
         'interets' => 'decimal:2',
-        'amortissement_capital' => 'decimal:2',
     ];
 
     public function microProjet()
@@ -39,6 +36,11 @@ class PlanRemboursement extends Model
     public function budget()
     {
         return $this->belongsTo(Budget::class, 'budget_id');
+    }
+
+    public function tableauAmortissements()
+    {
+        return $this->hasMany(TableauAmortissement::class, 'plan_remboursement_id');
     }
 
     public function remboursements()

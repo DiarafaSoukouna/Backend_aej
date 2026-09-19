@@ -210,7 +210,8 @@ Tables disponibles et leurs colonnes principales :
 promoteurs: id, nom, prenom, matriculeaej, email, telephone, sexe_id, lieuhabitation_id, statut, created_at
 micro_projets: id, code, intitule, promoteur_id, organisme_id, secteur_id, montant_total, statut, stade_projet, type_projet, date_certification, created_at
 budgets: id, micro_projet_id, intitule, montant_accorde, date_accord, source, statut, devise, deblocage, date_deblocage
-plan_remboursements: id, micro_projet_id, budget_id, echeance_mensuelle, montant_echeance, periode, capital_rembourse, capital_restant, interets
+plan_remboursements: id, micro_projet_id, budget_id, date_ouverture, decision, montant_credit, interets, duree_pret, duree_remboursement, fichier_amortissement, fichier_convention
+tableau_amortissements: id, plan_remboursement_id, periode, date_echeance, montant_echeance, capital_rembourse, capital_restant, interets, amortissement_capital, statut
 remboursements: id, plan_remboursement_id, promoteur_id, montant_echu, montant_paye, montant_impaye, penalites, date_paiement, statut
 recouvrements: id, micro_projet_id, plan_remboursement_id, montant, date_recouvrement, mode_recouvrement, statut
 decaissements: id, budget_id, micro_projet_id, montant, date_decaissement, statut
