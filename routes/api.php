@@ -185,6 +185,7 @@ use App\Http\Controllers\AiReport\PeriodicBulletinController;
         Route::apiResource('plan-decaissements', PlanDecaissementController::class);
         Route::apiResource('plan-remboursements', PlanRemboursementController::class);
         Route::apiResource('tableau-amortissements', TableauAmortissementController::class);
+        Route::post('tableau-amortissements/multiple', [TableauAmortissementController::class, 'storeMultiple']);
         Route::apiResource('lots-transmission', LotTransmissionController::class);
         Route::apiResource('lots-importation', LotImportationController::class);
         Route::apiResource('lots-micro-projets', LotMicroProjetController::class);

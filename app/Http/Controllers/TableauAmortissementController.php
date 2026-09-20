@@ -122,4 +122,39 @@ class TableauAmortissementController extends Controller
             return new JsonResponse(['message' => 'Error deleting tableau amortissement', 'error' => $e->getMessage()], 500);
         }
     }
+
+    public function storeMultiple(Request $request): JsonResponse
+    {
+        $validation = Validator::make($request->all(), [
+            'lignes' => 'required|array|min:1',
+            'lignes.*.plan_remboursement_id' => 'nullable|exists:plan_remboursements,id',
+            'lignes.*.periode' => 'nullable|integer',
+            'lignes.*.date_echeance' => 'nullable|date',
+            'lignes.*.montant_echeance' => 'nullable|numeric',
+            'lignes.*.capital_rembourse' => 'nullable|numeric',
+            'lignes.*.capital_restant' => 'nullable|numeric',
+            'lignes.*.interets' => 'nullable|numeric',
+            'lignes.*.amortissement_capital' => 'nullable|numeric',
+            'lignes.*.statut' => 'nullable|in:PAYE,PARTIEL,NON_PAYE',
+        ]);
+
+        if ($validation->fails()) {
+            return new JsonResponse(['message' => 'Validation failed', 'errors' => $validation->errors()], 422);
+        }
+
+        try {
+            $lignes = [];
+            foreach ($request->lignes as $ligneData) {
+                $lignes[] = TableauAmortissement::create($ligneData);
+            }
+
+            return new JsonResponse([
+                'message' => 'Tableau amortissements created successfully',
+                'data' => $lignes,
+                'count' => count($lignes),
+            ], 201);
+        } catch (\Exception $e) {
+            return new JsonResponse(['message' => 'Error creating tableau amortissements', 'error' => $e->getMessage()], 500);
+        }
+    }
 }
