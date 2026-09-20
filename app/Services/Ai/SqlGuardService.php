@@ -26,6 +26,7 @@ class SqlGuardService
         'micro_projets',
         'budgets',
         'plan_remboursements',
+        'tableau_amortissements',
         'remboursements',
         'remboursements_declarations',
         'decaissements',
