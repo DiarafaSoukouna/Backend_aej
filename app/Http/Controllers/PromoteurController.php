@@ -19,7 +19,8 @@ class PromoteurController extends Controller
         $filters = [
             'tranche_age', 'sexe_id', 'agenceregionale_id', 'secteuractivite_id',
             'soussecteuractivite_id', 'niveauetude_id', 'typepieceidentite_id', 'statut',
-            'paysnationalite_id', 'situationmatrimoniale_id', 'typesituationhandicap_id'
+            'paysnationalite_id', 'situationmatrimoniale_id', 'typesituationhandicap_id',
+            'matriculeaej'
         ];
 
         foreach ($filters as $filter) {
@@ -33,7 +34,6 @@ class PromoteurController extends Controller
                   ->orWhere('prenom', 'like', "%{$search}%")
                   ->orWhere('email', 'like', "%{$search}%")
                   ->orWhere('telephone', 'like', "%{$search}%")
-                  ->orWhere('matriculeaej', 'like', "%{$search}%")
                   ->orWhere('numerocni', 'like', "%{$search}%")
                   ->orWhere('numerocmu', 'like', "%{$search}%")
                   ->orWhere('numerocnps', 'like', "%{$search}%");
