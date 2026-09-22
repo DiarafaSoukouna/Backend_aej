@@ -323,13 +323,25 @@ Route::prefix('dashboard')->group(function () {
         // --- Rapport individuel par organisme ---
         Route::get('organisme/{organisme_id}', [DashboardRapportController::class, 'rapportOrganisme']);
 
-        // --- Nouveaux rapports ---
+        // --- Rapports par guichet, année ---
         Route::get('guichets',     [DashboardRapportController::class, 'statParGuichet']);
         Route::get('annees',       [DashboardRapportController::class, 'statParAnnee']);
+
+        // --- Rapports géographiques ---
+        Route::get('regions',      [DashboardRapportController::class, 'statParRegion']);
+        Route::get('departements', [DashboardRapportController::class, 'statParDepartement']);
+        Route::get('communes',     [DashboardRapportController::class, 'statParCommune']);
+
+        // --- Rapports par nature et stade ---
+        Route::get('natures',      [DashboardRapportController::class, 'statParNature']);
+        Route::get('stades',       [DashboardRapportController::class, 'statParStade']);
+
+        // --- Synthèse et financier ---
         Route::get('synthese',     [DashboardRapportController::class, 'synthese']);
         Route::get('financier',    [DashboardRapportController::class, 'rapportFinancier']);
         Route::get('remboursements/declinaison', [DashboardRapportController::class, 'declinaisonRemboursements']);
     });
+
 });
 
 // =============================================================================

@@ -51,16 +51,16 @@ class DashboardRapportController extends Controller
         if ($request->filled('genre')) {
             $genre = strtolower($request->genre);
             if ($genre === 'femme') {
-                $query->where(function ($q) {
-                    $q->where(DB::raw('LOWER(sexes.libelle)'), 'like', '%femme%')
-                      ->orWhere(DB::raw('LOWER(sexes.libelle)'), '=', 'f');
-                });
+                $query->where('promoteurs.sexe_id', 2);
             } elseif ($genre === 'homme') {
-                $query->where(function ($q) {
-                    $q->where(DB::raw('LOWER(sexes.libelle)'), 'not like', '%femme%')
-                      ->where(DB::raw('LOWER(sexes.libelle)'), '!=', 'f');
-                });
+                $query->where('promoteurs.sexe_id', 1);
             }
+        }
+        if ($request->filled('type_projet')) {
+            $query->where('micro_projets.type_projet', strtoupper($request->type_projet));
+        }
+        if ($request->filled('stade_projet')) {
+            $query->where('micro_projets.stade_projet', strtoupper($request->stade_projet));
         }
     }
 
@@ -114,12 +114,11 @@ class DashboardRapportController extends Controller
 
         $query = MicroProjet::query()
             ->join('promoteurs', 'micro_projets.promoteur_id', '=', 'promoteurs.id')
-            ->leftJoin('sexes', 'promoteurs.sexe_id', '=', 'sexes.id')
             ->where('micro_projets.organisme_id', $organisme_id)
             ->selectRaw('
                 COUNT(DISTINCT micro_projets.id) as nombre_projets,
                 COUNT(DISTINCT micro_projets.promoteur_id) as nombre_beneficiaires,
-                COUNT(DISTINCT CASE WHEN LOWER(sexes.libelle) LIKE "%femme%" OR LOWER(sexes.libelle) = "f" THEN micro_projets.promoteur_id END) as nombre_femmes,
+                COUNT(DISTINCT CASE WHEN promoteurs.sexe_id = 2 THEN micro_projets.promoteur_id END) as nombre_femmes,
                 COALESCE(SUM(micro_projets.montant_total), 0) as montant_total_financement
             ');
 
@@ -191,12 +190,11 @@ class DashboardRapportController extends Controller
             'organisme_financements.sigle',
             DB::raw('COUNT(DISTINCT micro_projets.id) as nombre_projets'),
             DB::raw('COUNT(DISTINCT micro_projets.promoteur_id) as nombre_promoteurs'),
-            DB::raw('COUNT(DISTINCT CASE WHEN LOWER(sexes.libelle) LIKE "%femme%" OR LOWER(sexes.libelle) = "f" THEN micro_projets.promoteur_id END) as nombre_femmes'),
+            DB::raw('COUNT(DISTINCT CASE WHEN promoteurs.sexe_id = 2 THEN micro_projets.promoteur_id END) as nombre_femmes'),
             DB::raw('COALESCE(SUM(micro_projets.montant_total), 0) as montant_total_financement')
         )
             ->join('promoteurs', 'micro_projets.promoteur_id', '=', 'promoteurs.id')
             ->join('organisme_financements', 'micro_projets.organisme_id', '=', 'organisme_financements.id')
-            ->leftJoin('sexes', 'promoteurs.sexe_id', '=', 'sexes.id')
             ->whereNotNull('micro_projets.organisme_id')
             ->groupBy('organisme_financements.id', 'organisme_financements.nom', 'organisme_financements.sigle')
             ->orderBy('montant_total_financement', 'desc');
@@ -207,14 +205,18 @@ class DashboardRapportController extends Controller
 
         $montant_global = $organismes->sum('montant_total_financement');
 
-        // Emplois créés par organisme
+        // Emplois créés par organisme (avec les mêmes filtres)
         $emplois_par_organisme = DB::table('embauches')
             ->join('micro_projets', 'embauches.micro_projet_id', '=', 'micro_projets.id')
             ->whereNotNull('micro_projets.organisme_id')
             ->select('micro_projets.organisme_id', DB::raw('COUNT(embauches.id) as total_emplois'))
-            ->groupBy('micro_projets.organisme_id')
-            ->get()
-            ->keyBy('organisme_id');
+            ->groupBy('micro_projets.organisme_id');
+        if ($request->filled('annee'))        { $emplois_par_organisme->whereYear('micro_projets.created_at', $request->annee); }
+        if ($request->filled('guichet_id'))   { $emplois_par_organisme->where('micro_projets.guichet_id', $request->guichet_id); }
+        if ($request->filled('statut'))       { $emplois_par_organisme->where('micro_projets.statut', $request->statut); }
+        if ($request->filled('type_projet'))  { $emplois_par_organisme->where('micro_projets.type_projet', strtoupper($request->type_projet)); }
+        if ($request->filled('stade_projet')) { $emplois_par_organisme->where('micro_projets.stade_projet', strtoupper($request->stade_projet)); }
+        $emplois_par_organisme = $emplois_par_organisme->get()->keyBy('organisme_id');
 
         $data = $organismes->map(function ($organisme) use ($montant_global, $emplois_par_organisme) {
             $montant_financement = (float) $organisme->montant_total_financement;
@@ -279,7 +281,6 @@ class DashboardRapportController extends Controller
         )
             ->join('promoteurs', 'micro_projets.promoteur_id', '=', 'promoteurs.id')
             ->join('agences_regionales', 'promoteurs.agenceregionale_id', '=', 'agences_regionales.id')
-            ->leftJoin('sexes', 'promoteurs.sexe_id', '=', 'sexes.id')
             ->groupBy('agences_regionales.id', 'agences_regionales.nom')
             ->orderBy('montant_total_financement', 'desc');
 
@@ -305,14 +306,19 @@ class DashboardRapportController extends Controller
             $decaisse_par_agence = collect();
         }
 
-        // Emplois créés par agence (via promoteurs.agenceregionale_id)
+        // Emplois créés par agence (avec les mêmes filtres)
         $emplois_par_agence = DB::table('embauches')
             ->join('micro_projets', 'embauches.micro_projet_id', '=', 'micro_projets.id')
             ->join('promoteurs', 'micro_projets.promoteur_id', '=', 'promoteurs.id')
             ->select('promoteurs.agenceregionale_id as agence_id', DB::raw('COUNT(embauches.id) as total_emplois'))
-            ->groupBy('promoteurs.agenceregionale_id')
-            ->get()
-            ->keyBy('agence_id');
+            ->groupBy('promoteurs.agenceregionale_id');
+        if ($request->filled('annee'))        { $emplois_par_agence->whereYear('micro_projets.created_at', $request->annee); }
+        if ($request->filled('organisme_id')) { $emplois_par_agence->where('micro_projets.organisme_id', $request->organisme_id); }
+        if ($request->filled('guichet_id'))   { $emplois_par_agence->where('micro_projets.guichet_id', $request->guichet_id); }
+        if ($request->filled('statut'))       { $emplois_par_agence->where('micro_projets.statut', $request->statut); }
+        if ($request->filled('type_projet'))  { $emplois_par_agence->where('micro_projets.type_projet', strtoupper($request->type_projet)); }
+        if ($request->filled('stade_projet')) { $emplois_par_agence->where('micro_projets.stade_projet', strtoupper($request->stade_projet)); }
+        $emplois_par_agence = $emplois_par_agence->get()->keyBy('agence_id');
 
         $data = $agences->map(function ($agence) use ($decaisse_par_agence, $emplois_par_agence) {
             $montant_financement = (float) $agence->montant_total_financement;
@@ -365,12 +371,11 @@ class DashboardRapportController extends Controller
             'guichets.code',
             DB::raw('COUNT(DISTINCT micro_projets.id) as nombre_projets'),
             DB::raw('COUNT(DISTINCT micro_projets.promoteur_id) as nombre_beneficiaires'),
-            DB::raw('COUNT(DISTINCT CASE WHEN LOWER(sexes.libelle) LIKE "%femme%" OR LOWER(sexes.libelle) = "f" THEN micro_projets.promoteur_id END) as nombre_femmes'),
+            DB::raw('COUNT(DISTINCT CASE WHEN promoteurs.sexe_id = 2 THEN micro_projets.promoteur_id END) as nombre_femmes'),
             DB::raw('COALESCE(SUM(micro_projets.montant_total), 0) as montant_total_financement')
         )
             ->join('promoteurs', 'micro_projets.promoteur_id', '=', 'promoteurs.id')
             ->join('guichets', 'micro_projets.guichet_id', '=', 'guichets.id')
-            ->leftJoin('sexes', 'promoteurs.sexe_id', '=', 'sexes.id')
             ->whereNotNull('micro_projets.guichet_id')
             ->groupBy('guichets.id', 'guichets.libelle', 'guichets.code')
             ->orderBy('montant_total_financement', 'desc');
@@ -379,14 +384,18 @@ class DashboardRapportController extends Controller
 
         $guichets = $query->get();
 
-        // Emplois créés par guichet
+        // Emplois créés par guichet (avec les mêmes filtres)
         $emplois_par_guichet = DB::table('embauches')
             ->join('micro_projets', 'embauches.micro_projet_id', '=', 'micro_projets.id')
             ->whereNotNull('micro_projets.guichet_id')
             ->select('micro_projets.guichet_id', DB::raw('COUNT(embauches.id) as total_emplois'))
-            ->groupBy('micro_projets.guichet_id')
-            ->get()
-            ->keyBy('guichet_id');
+            ->groupBy('micro_projets.guichet_id');
+        if ($request->filled('annee'))        { $emplois_par_guichet->whereYear('micro_projets.created_at', $request->annee); }
+        if ($request->filled('organisme_id')) { $emplois_par_guichet->where('micro_projets.organisme_id', $request->organisme_id); }
+        if ($request->filled('statut'))       { $emplois_par_guichet->where('micro_projets.statut', $request->statut); }
+        if ($request->filled('type_projet'))  { $emplois_par_guichet->where('micro_projets.type_projet', strtoupper($request->type_projet)); }
+        if ($request->filled('stade_projet')) { $emplois_par_guichet->where('micro_projets.stade_projet', strtoupper($request->stade_projet)); }
+        $emplois_par_guichet = $emplois_par_guichet->get()->keyBy('guichet_id');
 
         $data = $guichets->map(function ($guichet) use ($emplois_par_guichet) {
             $nombre_beneficiaires = (int) $guichet->nombre_beneficiaires;
@@ -440,11 +449,10 @@ class DashboardRapportController extends Controller
             DB::raw('YEAR(micro_projets.created_at) as annee'),
             DB::raw('COUNT(DISTINCT micro_projets.id) as nombre_projets'),
             DB::raw('COUNT(DISTINCT micro_projets.promoteur_id) as nombre_beneficiaires'),
-            DB::raw('COUNT(DISTINCT CASE WHEN LOWER(sexes.libelle) LIKE "%femme%" OR LOWER(sexes.libelle) = "f" THEN micro_projets.promoteur_id END) as nombre_femmes'),
+            DB::raw('COUNT(DISTINCT CASE WHEN promoteurs.sexe_id = 2 THEN micro_projets.promoteur_id END) as nombre_femmes'),
             DB::raw('COALESCE(SUM(micro_projets.montant_total), 0) as montant_total_financement')
         )
             ->join('promoteurs', 'micro_projets.promoteur_id', '=', 'promoteurs.id')
-            ->leftJoin('sexes', 'promoteurs.sexe_id', '=', 'sexes.id')
             ->groupBy(DB::raw('YEAR(micro_projets.created_at)'))
             ->orderBy('annee', 'desc');
 
@@ -513,11 +521,10 @@ class DashboardRapportController extends Controller
             'secteurs.libelle as secteur_libelle',
             DB::raw('COUNT(DISTINCT micro_projets.id) as nombre_projets'),
             DB::raw('COUNT(DISTINCT micro_projets.promoteur_id) as nombre_beneficiaires'),
-            DB::raw('COUNT(DISTINCT CASE WHEN LOWER(sexes.libelle) LIKE "%femme%" OR LOWER(sexes.libelle) = "f" THEN micro_projets.promoteur_id END) as nombre_femmes'),
+            DB::raw('COUNT(DISTINCT CASE WHEN promoteurs.sexe_id = 2 THEN micro_projets.promoteur_id END) as nombre_femmes'),
             DB::raw('COALESCE(SUM(micro_projets.montant_total), 0) as montant_total_financement')
         )
             ->join('promoteurs', 'micro_projets.promoteur_id', '=', 'promoteurs.id')
-            ->leftJoin('sexes', 'promoteurs.sexe_id', '=', 'sexes.id')
             ->join('secteurs', 'promoteurs.secteuractivite_id', '=', 'secteurs.id')
             ->whereNotNull('promoteurs.secteuractivite_id')
             ->groupBy('secteurs.id', 'secteurs.nom', 'secteurs.libelle')
@@ -532,15 +539,20 @@ class DashboardRapportController extends Controller
         $secteurs = $query->get();
         $montant_global = $secteurs->sum('montant_total_financement');
 
-        // Emplois créés par secteur
+        // Emplois créés par secteur (avec les mêmes filtres)
         $emplois_par_secteur = DB::table('embauches')
             ->join('micro_projets', 'embauches.micro_projet_id', '=', 'micro_projets.id')
             ->join('promoteurs', 'micro_projets.promoteur_id', '=', 'promoteurs.id')
             ->whereNotNull('promoteurs.secteuractivite_id')
             ->select('promoteurs.secteuractivite_id as secteur_id', DB::raw('COUNT(embauches.id) as total_emplois'))
-            ->groupBy('promoteurs.secteuractivite_id')
-            ->get()
-            ->keyBy('secteur_id');
+            ->groupBy('promoteurs.secteuractivite_id');
+        if ($request->filled('annee'))        { $emplois_par_secteur->whereYear('micro_projets.created_at', $request->annee); }
+        if ($request->filled('organisme_id')) { $emplois_par_secteur->where('micro_projets.organisme_id', $request->organisme_id); }
+        if ($request->filled('guichet_id'))   { $emplois_par_secteur->where('micro_projets.guichet_id', $request->guichet_id); }
+        if ($request->filled('statut'))       { $emplois_par_secteur->where('micro_projets.statut', $request->statut); }
+        if ($request->filled('type_projet'))  { $emplois_par_secteur->where('micro_projets.type_projet', strtoupper($request->type_projet)); }
+        if ($request->filled('stade_projet')) { $emplois_par_secteur->where('micro_projets.stade_projet', strtoupper($request->stade_projet)); }
+        $emplois_par_secteur = $emplois_par_secteur->get()->keyBy('secteur_id');
 
         $data = $secteurs->map(function ($secteur) use ($montant_global, $emplois_par_secteur) {
             $montant_financement  = (float) $secteur->montant_total_financement;
@@ -603,11 +615,10 @@ class DashboardRapportController extends Controller
             'secteurs.nom as secteur',
             DB::raw('COUNT(DISTINCT micro_projets.id) as nombre_projets'),
             DB::raw('COUNT(DISTINCT micro_projets.promoteur_id) as nombre_beneficiaires'),
-            DB::raw('COUNT(DISTINCT CASE WHEN LOWER(sexes.libelle) LIKE "%femme%" OR LOWER(sexes.libelle) = "f" THEN micro_projets.promoteur_id END) as nombre_femmes'),
+            DB::raw('COUNT(DISTINCT CASE WHEN promoteurs.sexe_id = 2 THEN micro_projets.promoteur_id END) as nombre_femmes'),
             DB::raw('COALESCE(SUM(micro_projets.montant_total), 0) as montant_total_financement')
         )
             ->join('promoteurs', 'micro_projets.promoteur_id', '=', 'promoteurs.id')
-            ->leftJoin('sexes', 'promoteurs.sexe_id', '=', 'sexes.id')
             ->join('sous_secteurs', 'promoteurs.soussecteuractivite_id', '=', 'sous_secteurs.id')
             ->join('secteurs', 'sous_secteurs.secteur_id', '=', 'secteurs.id')
             ->whereNotNull('promoteurs.soussecteuractivite_id')
@@ -626,15 +637,20 @@ class DashboardRapportController extends Controller
         $sous_secteurs = $query->get();
         $montant_global = $sous_secteurs->sum('montant_total_financement');
 
-        // Emplois créés par sous-secteur
+        // Emplois créés par sous-secteur (avec les mêmes filtres)
         $emplois_par_ss = DB::table('embauches')
             ->join('micro_projets', 'embauches.micro_projet_id', '=', 'micro_projets.id')
             ->join('promoteurs', 'micro_projets.promoteur_id', '=', 'promoteurs.id')
             ->whereNotNull('promoteurs.soussecteuractivite_id')
             ->select('promoteurs.soussecteuractivite_id as sous_secteur_id', DB::raw('COUNT(embauches.id) as total_emplois'))
-            ->groupBy('promoteurs.soussecteuractivite_id')
-            ->get()
-            ->keyBy('sous_secteur_id');
+            ->groupBy('promoteurs.soussecteuractivite_id');
+        if ($request->filled('annee'))        { $emplois_par_ss->whereYear('micro_projets.created_at', $request->annee); }
+        if ($request->filled('organisme_id')) { $emplois_par_ss->where('micro_projets.organisme_id', $request->organisme_id); }
+        if ($request->filled('guichet_id'))   { $emplois_par_ss->where('micro_projets.guichet_id', $request->guichet_id); }
+        if ($request->filled('statut'))       { $emplois_par_ss->where('micro_projets.statut', $request->statut); }
+        if ($request->filled('type_projet'))  { $emplois_par_ss->where('micro_projets.type_projet', strtoupper($request->type_projet)); }
+        if ($request->filled('stade_projet')) { $emplois_par_ss->where('micro_projets.stade_projet', strtoupper($request->stade_projet)); }
+        $emplois_par_ss = $emplois_par_ss->get()->keyBy('sous_secteur_id');
 
         $data = $sous_secteurs->map(function ($ss) use ($montant_global, $emplois_par_ss) {
             $montant_financement  = (float) $ss->montant_total_financement;
@@ -694,11 +710,10 @@ class DashboardRapportController extends Controller
         // --- Agrégat principal ---
         $query = DB::table('micro_projets')
             ->join('promoteurs', 'micro_projets.promoteur_id', '=', 'promoteurs.id')
-            ->leftJoin('sexes', 'promoteurs.sexe_id', '=', 'sexes.id')
             ->selectRaw('
                 COUNT(DISTINCT micro_projets.id) as nombre_projets,
                 COUNT(DISTINCT micro_projets.promoteur_id) as nombre_beneficiaires,
-                COUNT(DISTINCT CASE WHEN LOWER(sexes.libelle) LIKE "%femme%" OR LOWER(sexes.libelle) = "f" THEN micro_projets.promoteur_id END) as nombre_femmes,
+                COUNT(DISTINCT CASE WHEN promoteurs.sexe_id = 2 THEN micro_projets.promoteur_id END) as nombre_femmes,
                 COALESCE(SUM(micro_projets.montant_total), 0) as montant_total_financement
             ');
 
@@ -716,8 +731,7 @@ class DashboardRapportController extends Controller
         // --- Emplois créés : même filtres, comptage direct via embauches ---
         $emploisQuery = DB::table('embauches')
             ->join('micro_projets', 'embauches.micro_projet_id', '=', 'micro_projets.id')
-            ->join('promoteurs', 'micro_projets.promoteur_id', '=', 'promoteurs.id')
-            ->leftJoin('sexes', 'promoteurs.sexe_id', '=', 'sexes.id');
+            ->join('promoteurs', 'micro_projets.promoteur_id', '=', 'promoteurs.id');
 
         $this->applyRawFilters($emploisQuery, $request);
 
@@ -774,7 +788,6 @@ class DashboardRapportController extends Controller
         // --- Agrégat financement en SQL (évite de charger toutes les lignes en mémoire) ---
         $finQuery = DB::table('micro_projets')
             ->join('promoteurs', 'micro_projets.promoteur_id', '=', 'promoteurs.id')
-            ->leftJoin('sexes', 'promoteurs.sexe_id', '=', 'sexes.id')
             ->selectRaw('COALESCE(SUM(micro_projets.montant_total), 0) as montant_total_financement');
 
         $this->applyRawFilters($finQuery, $request);
@@ -787,7 +800,6 @@ class DashboardRapportController extends Controller
             ->join('plan_remboursements', 'remboursements.plan_remboursement_id', '=', 'plan_remboursements.id')
             ->join('micro_projets', 'plan_remboursements.micro_projet_id', '=', 'micro_projets.id')
             ->join('promoteurs', 'micro_projets.promoteur_id', '=', 'promoteurs.id')
-            ->leftJoin('sexes', 'promoteurs.sexe_id', '=', 'sexes.id')
             ->selectRaw('
                 COALESCE(SUM(remboursements.montant_paye), 0)   as montant_rembourse,
                 COALESCE(SUM(remboursements.montant_impaye), 0) as montant_impaye,
@@ -833,7 +845,7 @@ class DashboardRapportController extends Controller
     public function declinaisonRemboursements(Request $request): JsonResponse
     {
         $dimension          = $request->input('dimension', 'agence');
-        $dimensions_valides = ['agence', 'organisme', 'annee', 'secteur', 'genre'];
+        $dimensions_valides = ['agence', 'organisme', 'annee', 'secteur', 'genre', 'guichet'];
 
         if (! in_array($dimension, $dimensions_valides)) {
             return response()->json([
@@ -871,6 +883,19 @@ class DashboardRapportController extends Controller
                         COALESCE(SUM(micro_projets.montant_total), 0) as montant_total_financement
                     ')
                     ->groupBy('organisme_financements.nom');
+                break;
+
+            case 'guichet':
+                $projetsQuery
+                    ->join('guichets', 'micro_projets.guichet_id', '=', 'guichets.id')
+                    ->whereNotNull('micro_projets.guichet_id')
+                    ->selectRaw('
+                        guichets.libelle as label,
+                        COUNT(DISTINCT micro_projets.id) as nombre_projets,
+                        COUNT(DISTINCT micro_projets.promoteur_id) as nombre_beneficiaires,
+                        COALESCE(SUM(micro_projets.montant_total), 0) as montant_total_financement
+                    ')
+                    ->groupBy('guichets.libelle');
                 break;
 
             case 'annee':
@@ -946,6 +971,19 @@ class DashboardRapportController extends Controller
                     ->groupBy('organisme_financements.nom');
                 break;
 
+            case 'guichet':
+                $rembQuery
+                    ->join('guichets', 'micro_projets.guichet_id', '=', 'guichets.id')
+                    ->whereNotNull('micro_projets.guichet_id')
+                    ->selectRaw('
+                        guichets.libelle as label,
+                        COALESCE(SUM(remboursements.montant_paye), 0)   as montant_rembourse,
+                        COALESCE(SUM(remboursements.montant_impaye), 0) as montant_impaye,
+                        COALESCE(SUM(remboursements.montant_echu), 0)   as montant_echu
+                    ')
+                    ->groupBy('guichets.libelle');
+                break;
+
             case 'annee':
                 $rembQuery
                     ->selectRaw('
@@ -981,6 +1019,7 @@ class DashboardRapportController extends Controller
                     ->groupByRaw('COALESCE(sexes.libelle, "Non renseigné")');
                 break;
         }
+
 
         $this->applyRawFilters($rembQuery, $request);
         $remb_data = $rembQuery->get()->keyBy('label');
@@ -1055,16 +1094,394 @@ class DashboardRapportController extends Controller
         if ($request->filled('genre')) {
             $genre = strtolower($request->genre);
             if ($genre === 'femme') {
-                $query->where(function ($q) {
-                    $q->where(DB::raw('LOWER(sexes.libelle)'), 'like', '%femme%')
-                      ->orWhere(DB::raw('LOWER(sexes.libelle)'), '=', 'f');
-                });
+                $query->where('promoteurs.sexe_id', 2);
             } elseif ($genre === 'homme') {
-                $query->where(function ($q) {
-                    $q->where(DB::raw('LOWER(sexes.libelle)'), 'not like', '%femme%')
-                      ->where(DB::raw('LOWER(sexes.libelle)'), '!=', 'f');
-                });
+                $query->where('promoteurs.sexe_id', 1);
             }
         }
+        if ($request->filled('type_projet')) {
+            $query->where('micro_projets.type_projet', strtoupper($request->type_projet));
+        }
+        if ($request->filled('stade_projet')) {
+            $query->where('micro_projets.stade_projet', strtoupper($request->stade_projet));
+        }
+    }
+
+    // =========================================================================
+    // 11. RAPPORT PAR RÉGION
+    // =========================================================================
+
+    /**
+     * GET /api/dashboard/rapport/regions
+     *
+     * Chaîne : micro_projets.commune_id → communes.ville_id → villes.departement_id
+     *          → departements.region_id → regions
+     * Filtres : annee, agence_id, organisme_id, guichet_id, statut, genre,
+     *           type_projet, stade_projet, region_id
+     */
+    public function statParRegion(Request $request): JsonResponse
+    {
+        $query = MicroProjet::select(
+            'regions.id as region_id',
+            'regions.nom as region',
+            DB::raw('COUNT(DISTINCT micro_projets.id) as nombre_projets'),
+            DB::raw('COUNT(DISTINCT micro_projets.promoteur_id) as nombre_beneficiaires'),
+            DB::raw('COUNT(DISTINCT CASE WHEN promoteurs.sexe_id = 2 THEN micro_projets.promoteur_id END) as nombre_femmes'),
+            DB::raw('COALESCE(SUM(micro_projets.montant_total), 0) as montant_total_financement')
+        )
+            ->join('promoteurs', 'micro_projets.promoteur_id', '=', 'promoteurs.id')
+            ->join('communes', 'micro_projets.commune_id', '=', 'communes.id')
+            ->join('villes', 'communes.ville_id', '=', 'villes.id')
+            ->join('departements', 'villes.departement_id', '=', 'departements.id')
+            ->join('regions', 'departements.region_id', '=', 'regions.id')
+            ->whereNotNull('micro_projets.commune_id')
+            ->groupBy('regions.id', 'regions.nom')
+            ->orderBy('montant_total_financement', 'desc');
+
+        $this->applyFilters($query, $request);
+
+        if ($request->filled('region_id')) {
+            $query->where('regions.id', $request->region_id);
+        }
+
+        $rows = $query->get();
+
+        $emplois = DB::table('embauches')
+            ->join('micro_projets', 'embauches.micro_projet_id', '=', 'micro_projets.id')
+            ->join('communes', 'micro_projets.commune_id', '=', 'communes.id')
+            ->join('villes', 'communes.ville_id', '=', 'villes.id')
+            ->join('departements', 'villes.departement_id', '=', 'departements.id')
+            ->whereNotNull('micro_projets.commune_id')
+            ->select('departements.region_id', DB::raw('COUNT(embauches.id) as total_emplois'))
+            ->groupBy('departements.region_id');
+        if ($request->filled('annee'))        { $emplois->whereYear('micro_projets.created_at', $request->annee); }
+        if ($request->filled('organisme_id')) { $emplois->where('micro_projets.organisme_id', $request->organisme_id); }
+        if ($request->filled('guichet_id'))   { $emplois->where('micro_projets.guichet_id', $request->guichet_id); }
+        $emplois = $emplois->get()->keyBy('region_id');
+
+        $data = $rows->map(function ($row) use ($emplois) {
+            $nombre_beneficiaires = (int) $row->nombre_beneficiaires;
+            $nombre_femmes        = (int) $row->nombre_femmes;
+            $pourcentage_femmes   = $nombre_beneficiaires > 0
+                ? round(($nombre_femmes / $nombre_beneficiaires) * 100, 2) : 0;
+
+            return [
+                'region_id'                 => $row->region_id,
+                'region'                    => $row->region,
+                'nombre_projets'            => (int) $row->nombre_projets,
+                'nombre_beneficiaires'      => $nombre_beneficiaires,
+                'nombre_femmes'             => $nombre_femmes,
+                'pourcentage_femmes'        => $pourcentage_femmes,
+                'montant_total_financement' => (float) $row->montant_total_financement,
+                'nombre_emplois_crees'      => isset($emplois[$row->region_id]) ? (int) $emplois[$row->region_id]->total_emplois : 0,
+            ];
+        });
+
+        return response()->json([
+            'data'  => $data,
+            'total' => [
+                'nombre_projets'            => $data->sum('nombre_projets'),
+                'nombre_beneficiaires'      => $data->sum('nombre_beneficiaires'),
+                'nombre_femmes'             => $data->sum('nombre_femmes'),
+                'montant_total_financement' => $data->sum('montant_total_financement'),
+                'nombre_emplois_crees'      => $data->sum('nombre_emplois_crees'),
+            ],
+        ]);
+    }
+
+    // =========================================================================
+    // 12. RAPPORT PAR DÉPARTEMENT
+    // =========================================================================
+
+    /**
+     * GET /api/dashboard/rapport/departements
+     *
+     * Filtres : annee, agence_id, organisme_id, guichet_id, statut, genre,
+     *           type_projet, stade_projet, region_id, departement_id
+     */
+    public function statParDepartement(Request $request): JsonResponse
+    {
+        $query = MicroProjet::select(
+            'departements.id as departement_id',
+            'departements.nom as departement',
+            'regions.id as region_id',
+            'regions.nom as region',
+            DB::raw('COUNT(DISTINCT micro_projets.id) as nombre_projets'),
+            DB::raw('COUNT(DISTINCT micro_projets.promoteur_id) as nombre_beneficiaires'),
+            DB::raw('COUNT(DISTINCT CASE WHEN promoteurs.sexe_id = 2 THEN micro_projets.promoteur_id END) as nombre_femmes'),
+            DB::raw('COALESCE(SUM(micro_projets.montant_total), 0) as montant_total_financement')
+        )
+            ->join('promoteurs', 'micro_projets.promoteur_id', '=', 'promoteurs.id')
+            ->join('communes', 'micro_projets.commune_id', '=', 'communes.id')
+            ->join('villes', 'communes.ville_id', '=', 'villes.id')
+            ->join('departements', 'villes.departement_id', '=', 'departements.id')
+            ->join('regions', 'departements.region_id', '=', 'regions.id')
+            ->whereNotNull('micro_projets.commune_id')
+            ->groupBy('departements.id', 'departements.nom', 'regions.id', 'regions.nom')
+            ->orderBy('montant_total_financement', 'desc');
+
+        $this->applyFilters($query, $request);
+
+        if ($request->filled('region_id'))      { $query->where('departements.region_id', $request->region_id); }
+        if ($request->filled('departement_id')) { $query->where('departements.id', $request->departement_id); }
+
+        $rows = $query->get();
+
+        $emplois = DB::table('embauches')
+            ->join('micro_projets', 'embauches.micro_projet_id', '=', 'micro_projets.id')
+            ->join('communes', 'micro_projets.commune_id', '=', 'communes.id')
+            ->join('villes', 'communes.ville_id', '=', 'villes.id')
+            ->whereNotNull('micro_projets.commune_id')
+            ->select('villes.departement_id', DB::raw('COUNT(embauches.id) as total_emplois'))
+            ->groupBy('villes.departement_id');
+        if ($request->filled('annee'))        { $emplois->whereYear('micro_projets.created_at', $request->annee); }
+        if ($request->filled('organisme_id')) { $emplois->where('micro_projets.organisme_id', $request->organisme_id); }
+        if ($request->filled('guichet_id'))   { $emplois->where('micro_projets.guichet_id', $request->guichet_id); }
+        $emplois = $emplois->get()->keyBy('departement_id');
+
+        $data = $rows->map(function ($row) use ($emplois) {
+            $nombre_beneficiaires = (int) $row->nombre_beneficiaires;
+            $nombre_femmes        = (int) $row->nombre_femmes;
+            $pourcentage_femmes   = $nombre_beneficiaires > 0
+                ? round(($nombre_femmes / $nombre_beneficiaires) * 100, 2) : 0;
+
+            return [
+                'departement_id'            => $row->departement_id,
+                'departement'               => $row->departement,
+                'region_id'                 => $row->region_id,
+                'region'                    => $row->region,
+                'nombre_projets'            => (int) $row->nombre_projets,
+                'nombre_beneficiaires'      => $nombre_beneficiaires,
+                'nombre_femmes'             => $nombre_femmes,
+                'pourcentage_femmes'        => $pourcentage_femmes,
+                'montant_total_financement' => (float) $row->montant_total_financement,
+                'nombre_emplois_crees'      => isset($emplois[$row->departement_id]) ? (int) $emplois[$row->departement_id]->total_emplois : 0,
+            ];
+        });
+
+        return response()->json([
+            'data'  => $data,
+            'total' => [
+                'nombre_projets'            => $data->sum('nombre_projets'),
+                'nombre_beneficiaires'      => $data->sum('nombre_beneficiaires'),
+                'nombre_femmes'             => $data->sum('nombre_femmes'),
+                'montant_total_financement' => $data->sum('montant_total_financement'),
+                'nombre_emplois_crees'      => $data->sum('nombre_emplois_crees'),
+            ],
+        ]);
+    }
+
+    // =========================================================================
+    // 13. RAPPORT PAR COMMUNE
+    // =========================================================================
+
+    /**
+     * GET /api/dashboard/rapport/communes
+     *
+     * Filtres : annee, agence_id, organisme_id, guichet_id, statut, genre,
+     *           type_projet, stade_projet, region_id, departement_id, commune_id
+     */
+    public function statParCommune(Request $request): JsonResponse
+    {
+        $query = MicroProjet::select(
+            'communes.id as commune_id',
+            'communes.nom as commune',
+            'departements.id as departement_id',
+            'departements.nom as departement',
+            DB::raw('COUNT(DISTINCT micro_projets.id) as nombre_projets'),
+            DB::raw('COUNT(DISTINCT micro_projets.promoteur_id) as nombre_beneficiaires'),
+            DB::raw('COUNT(DISTINCT CASE WHEN promoteurs.sexe_id = 2 THEN micro_projets.promoteur_id END) as nombre_femmes'),
+            DB::raw('COALESCE(SUM(micro_projets.montant_total), 0) as montant_total_financement')
+        )
+            ->join('promoteurs', 'micro_projets.promoteur_id', '=', 'promoteurs.id')
+            ->join('communes', 'micro_projets.commune_id', '=', 'communes.id')
+            ->join('villes', 'communes.ville_id', '=', 'villes.id')
+            ->join('departements', 'villes.departement_id', '=', 'departements.id')
+            ->join('regions', 'departements.region_id', '=', 'regions.id')
+            ->whereNotNull('micro_projets.commune_id')
+            ->groupBy('communes.id', 'communes.nom', 'departements.id', 'departements.nom')
+            ->orderBy('montant_total_financement', 'desc');
+
+        $this->applyFilters($query, $request);
+
+        if ($request->filled('region_id'))      { $query->where('departements.region_id', $request->region_id); }
+        if ($request->filled('departement_id')) { $query->where('departements.id', $request->departement_id); }
+        if ($request->filled('commune_id'))     { $query->where('communes.id', $request->commune_id); }
+
+        $rows = $query->get();
+
+        $emplois = DB::table('embauches')
+            ->join('micro_projets', 'embauches.micro_projet_id', '=', 'micro_projets.id')
+            ->whereNotNull('micro_projets.commune_id')
+            ->select('micro_projets.commune_id', DB::raw('COUNT(embauches.id) as total_emplois'))
+            ->groupBy('micro_projets.commune_id');
+        if ($request->filled('annee'))        { $emplois->whereYear('micro_projets.created_at', $request->annee); }
+        if ($request->filled('organisme_id')) { $emplois->where('micro_projets.organisme_id', $request->organisme_id); }
+        if ($request->filled('guichet_id'))   { $emplois->where('micro_projets.guichet_id', $request->guichet_id); }
+        $emplois = $emplois->get()->keyBy('commune_id');
+
+        $data = $rows->map(function ($row) use ($emplois) {
+            $nombre_beneficiaires = (int) $row->nombre_beneficiaires;
+            $nombre_femmes        = (int) $row->nombre_femmes;
+            $pourcentage_femmes   = $nombre_beneficiaires > 0
+                ? round(($nombre_femmes / $nombre_beneficiaires) * 100, 2) : 0;
+
+            return [
+                'commune_id'                => $row->commune_id,
+                'commune'                   => $row->commune,
+                'departement_id'            => $row->departement_id,
+                'departement'               => $row->departement,
+                'nombre_projets'            => (int) $row->nombre_projets,
+                'nombre_beneficiaires'      => $nombre_beneficiaires,
+                'nombre_femmes'             => $nombre_femmes,
+                'pourcentage_femmes'        => $pourcentage_femmes,
+                'montant_total_financement' => (float) $row->montant_total_financement,
+                'nombre_emplois_crees'      => isset($emplois[$row->commune_id]) ? (int) $emplois[$row->commune_id]->total_emplois : 0,
+            ];
+        });
+
+        return response()->json([
+            'data'  => $data,
+            'total' => [
+                'nombre_projets'            => $data->sum('nombre_projets'),
+                'nombre_beneficiaires'      => $data->sum('nombre_beneficiaires'),
+                'nombre_femmes'             => $data->sum('nombre_femmes'),
+                'montant_total_financement' => $data->sum('montant_total_financement'),
+                'nombre_emplois_crees'      => $data->sum('nombre_emplois_crees'),
+            ],
+        ]);
+    }
+
+    // =========================================================================
+    // 14. RAPPORT PAR NATURE (type_projet : INDIVIDUEL / COLLECTIF)
+    // =========================================================================
+
+    /**
+     * GET /api/dashboard/rapport/natures
+     *
+     * Filtres : annee, agence_id, organisme_id, guichet_id, statut, genre,
+     *           stade_projet, type_projet (pour filtrer sur une nature spécifique)
+     */
+    public function statParNature(Request $request): JsonResponse
+    {
+        $query = MicroProjet::select(
+            'micro_projets.type_projet as nature',
+            DB::raw('COUNT(DISTINCT micro_projets.id) as nombre_projets'),
+            DB::raw('COUNT(DISTINCT micro_projets.promoteur_id) as nombre_beneficiaires'),
+            DB::raw('COUNT(DISTINCT CASE WHEN promoteurs.sexe_id = 2 THEN micro_projets.promoteur_id END) as nombre_femmes'),
+            DB::raw('COALESCE(SUM(micro_projets.montant_total), 0) as montant_total_financement')
+        )
+            ->join('promoteurs', 'micro_projets.promoteur_id', '=', 'promoteurs.id')
+            ->groupBy('micro_projets.type_projet')
+            ->orderBy('nombre_projets', 'desc');
+
+        $this->applyFilters($query, $request);
+
+        $rows = $query->get();
+
+        $emplois = DB::table('embauches')
+            ->join('micro_projets', 'embauches.micro_projet_id', '=', 'micro_projets.id')
+            ->select('micro_projets.type_projet', DB::raw('COUNT(embauches.id) as total_emplois'))
+            ->groupBy('micro_projets.type_projet');
+        if ($request->filled('annee'))        { $emplois->whereYear('micro_projets.created_at', $request->annee); }
+        if ($request->filled('organisme_id')) { $emplois->where('micro_projets.organisme_id', $request->organisme_id); }
+        if ($request->filled('guichet_id'))   { $emplois->where('micro_projets.guichet_id', $request->guichet_id); }
+        if ($request->filled('statut'))       { $emplois->where('micro_projets.statut', $request->statut); }
+        $emplois = $emplois->get()->keyBy('type_projet');
+
+        $data = $rows->map(function ($row) use ($emplois) {
+            $nombre_beneficiaires = (int) $row->nombre_beneficiaires;
+            $nombre_femmes        = (int) $row->nombre_femmes;
+            $pourcentage_femmes   = $nombre_beneficiaires > 0
+                ? round(($nombre_femmes / $nombre_beneficiaires) * 100, 2) : 0;
+
+            return [
+                'nature'                    => $row->nature,
+                'nombre_projets'            => (int) $row->nombre_projets,
+                'nombre_beneficiaires'      => $nombre_beneficiaires,
+                'nombre_femmes'             => $nombre_femmes,
+                'pourcentage_femmes'        => $pourcentage_femmes,
+                'montant_total_financement' => (float) $row->montant_total_financement,
+                'nombre_emplois_crees'      => isset($emplois[$row->nature]) ? (int) $emplois[$row->nature]->total_emplois : 0,
+            ];
+        });
+
+        return response()->json([
+            'data'  => $data,
+            'total' => [
+                'nombre_projets'            => $data->sum('nombre_projets'),
+                'nombre_beneficiaires'      => $data->sum('nombre_beneficiaires'),
+                'nombre_femmes'             => $data->sum('nombre_femmes'),
+                'montant_total_financement' => $data->sum('montant_total_financement'),
+                'nombre_emplois_crees'      => $data->sum('nombre_emplois_crees'),
+            ],
+        ]);
+    }
+
+    // =========================================================================
+    // 15. RAPPORT PAR STADE (stade_projet : CREATION / DEVELOPPEMENT)
+    // =========================================================================
+
+    /**
+     * GET /api/dashboard/rapport/stades
+     *
+     * Filtres : annee, agence_id, organisme_id, guichet_id, statut, genre,
+     *           type_projet, stade_projet (pour filtrer sur un stade spécifique)
+     */
+    public function statParStade(Request $request): JsonResponse
+    {
+        $query = MicroProjet::select(
+            'micro_projets.stade_projet as stade',
+            DB::raw('COUNT(DISTINCT micro_projets.id) as nombre_projets'),
+            DB::raw('COUNT(DISTINCT micro_projets.promoteur_id) as nombre_beneficiaires'),
+            DB::raw('COUNT(DISTINCT CASE WHEN promoteurs.sexe_id = 2 THEN micro_projets.promoteur_id END) as nombre_femmes'),
+            DB::raw('COALESCE(SUM(micro_projets.montant_total), 0) as montant_total_financement')
+        )
+            ->join('promoteurs', 'micro_projets.promoteur_id', '=', 'promoteurs.id')
+            ->groupBy('micro_projets.stade_projet')
+            ->orderBy('nombre_projets', 'desc');
+
+        $this->applyFilters($query, $request);
+
+        $rows = $query->get();
+
+        $emplois = DB::table('embauches')
+            ->join('micro_projets', 'embauches.micro_projet_id', '=', 'micro_projets.id')
+            ->select('micro_projets.stade_projet', DB::raw('COUNT(embauches.id) as total_emplois'))
+            ->groupBy('micro_projets.stade_projet');
+        if ($request->filled('annee'))        { $emplois->whereYear('micro_projets.created_at', $request->annee); }
+        if ($request->filled('organisme_id')) { $emplois->where('micro_projets.organisme_id', $request->organisme_id); }
+        if ($request->filled('guichet_id'))   { $emplois->where('micro_projets.guichet_id', $request->guichet_id); }
+        if ($request->filled('statut'))       { $emplois->where('micro_projets.statut', $request->statut); }
+        $emplois = $emplois->get()->keyBy('stade_projet');
+
+        $data = $rows->map(function ($row) use ($emplois) {
+            $nombre_beneficiaires = (int) $row->nombre_beneficiaires;
+            $nombre_femmes        = (int) $row->nombre_femmes;
+            $pourcentage_femmes   = $nombre_beneficiaires > 0
+                ? round(($nombre_femmes / $nombre_beneficiaires) * 100, 2) : 0;
+
+            return [
+                'stade'                     => $row->stade,
+                'nombre_projets'            => (int) $row->nombre_projets,
+                'nombre_beneficiaires'      => $nombre_beneficiaires,
+                'nombre_femmes'             => $nombre_femmes,
+                'pourcentage_femmes'        => $pourcentage_femmes,
+                'montant_total_financement' => (float) $row->montant_total_financement,
+                'nombre_emplois_crees'      => isset($emplois[$row->stade]) ? (int) $emplois[$row->stade]->total_emplois : 0,
+            ];
+        });
+
+        return response()->json([
+            'data'  => $data,
+            'total' => [
+                'nombre_projets'            => $data->sum('nombre_projets'),
+                'nombre_beneficiaires'      => $data->sum('nombre_beneficiaires'),
+                'nombre_femmes'             => $data->sum('nombre_femmes'),
+                'montant_total_financement' => $data->sum('montant_total_financement'),
+                'nombre_emplois_crees'      => $data->sum('nombre_emplois_crees'),
+            ],
+        ]);
     }
 }
+
