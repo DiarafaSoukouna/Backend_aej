@@ -12,12 +12,14 @@ class PlanDecaissement extends Model
         'compte_financement_id',
         'montant_planifie',
         'date_prevue',
+        'statut',
         'justificatif_path',
     ];
 
     protected $casts = [
         'montant_planifie' => 'decimal:2',
         'date_prevue' => 'date',
+        'statut' => 'string',
     ];
 
     public function microProjet()

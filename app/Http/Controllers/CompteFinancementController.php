@@ -107,6 +107,40 @@ class CompteFinancementController extends Controller
 
     }
 
+    public function patch(Request $request, $id): JsonResponse
+    {
+        $compte = CompteFinancement::find($id);
+        if (!$compte) {
+            return new JsonResponse(['message' => 'Compte financement not found'], 404);
+        }
+
+        $validation = Validator::make($request->all(), [
+            'micro_projet_id' => 'nullable|exists:micro_projets,id',
+            'organisme_id' => 'nullable|exists:organisme_financements,id',
+            'budget_id' => 'nullable|exists:budgets,id|unique:compte_financements,budget_id,' . $id,
+            'etat_ouverture' => 'nullable|in:OUVERT,FERME,NON_OUVERT',
+            'avis_partenaire' => 'nullable|in:ACCORDE,AJOURNE,REJETE',
+            'montant_accorde' => 'nullable|numeric',
+            'duree_pret' => 'nullable|integer',
+            'duree_remboursement' => 'nullable|integer',
+            'taux_interet' => 'nullable|numeric',
+            'date_ouverture' => 'nullable|date',
+            'lieu_ouverture' => 'nullable|string|max:100',
+            'observations' => 'nullable|string',
+        ]);
+
+        if ($validation->fails()) {
+            return new JsonResponse(['message' => 'Validation failed', 'errors' => $validation->errors()], 422);
+        }
+
+        try {
+            $compte->update(array_filter($validation->validated()));
+            return new JsonResponse(['message' => 'Compte financement patched successfully', 'data' => $compte], 200);
+        } catch (\Exception $e) {
+            return new JsonResponse(['message' => 'Error patching compte financement', 'error' => $e->getMessage()], 500);
+        }
+    }
+
     public function destroy($id): JsonResponse
     {
         $compte = CompteFinancement::findOrFail($id);
