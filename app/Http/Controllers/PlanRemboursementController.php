@@ -105,6 +105,38 @@ class PlanRemboursementController extends Controller
             return new JsonResponse(['message' => 'Error updating plan remboursement', 'error' => $e->getMessage()], 500);
         }
     }
+    
+    public function patch(Request $request, $id): JsonResponse
+    {
+        $plan = PlanRemboursement::find($id);
+        if (!$plan) {
+            return new JsonResponse(['message' => 'Plan remboursement not found'], 404);
+        }
+
+        $validation = Validator::make($request->all(), [
+            'micro_projet_id' => 'nullable|exists:micro_projets,id',
+            'budget_id' => 'nullable|exists:budgets,id',
+            'date_ouverture' => 'nullable|date',
+            'decision' => 'nullable|in:EN_ATTENTE,APPROUVE,NON_APPROUVE',
+            'montant_credit' => 'nullable|numeric',
+            'interets' => 'nullable|numeric',
+            'duree_pret' => 'nullable|integer',
+            'duree_remboursement' => 'nullable|integer',
+            'fichier_amortissement' => 'nullable|string',
+            'fichier_convention' => 'nullable|string',
+        ]);
+
+        if ($validation->fails()) {
+            return new JsonResponse(['message' => 'Validation failed', 'errors' => $validation->errors()], 422);
+        }
+
+        try {
+            $plan->update(array_filter($validation->validated()));
+            return new JsonResponse(['message' => 'Plan remboursement patched successfully', 'data' => $plan], 200);
+        } catch (\Exception $e) {
+            return new JsonResponse(['message' => 'Error patching plan remboursement', 'error' => $e->getMessage()], 500);
+        }
+    }
 
     public function destroy($id): JsonResponse
     {
