@@ -9,10 +9,30 @@ use Illuminate\Support\Facades\Validator;
 
 class VisitePhotoController extends Controller
 {
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        $photos = VisitePhoto::with(['exploitation', 'prisePar'])->get();
-        return response()->json(['message' => 'Photos retrieved successfully', 'data' => $photos]);
+        $query = VisitePhoto::with(['exploitation', 'prisePar']);
+
+        $filters = ['exploitation_id', 'prise_par_id'];
+        foreach ($filters as $filter) {
+            if ($request->filled($filter)) $query->where($filter, $request->input($filter));
+        }
+
+        $perPage = $request->get('per_page', 15);
+        $photos = $query->paginate($perPage);
+        
+        return response()->json([
+            'message' => 'Photos retrieved successfully', 
+            'data' => $photos->items(),
+            'pagination' => [
+                'current_page' => $photos->currentPage(),
+                'per_page' => $photos->perPage(),
+                'total' => $photos->total(),
+                'last_page' => $photos->lastPage(),
+                'from' => $photos->firstItem(),
+                'to' => $photos->lastItem(),
+            ],
+        ]);
     }
 
     public function show($id): JsonResponse
