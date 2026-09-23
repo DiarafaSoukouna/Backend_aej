@@ -200,6 +200,19 @@ class DocumentController extends Controller
     }
 
     /**
+     * Afficher un document par chemin
+     */
+    public function pathDocuments($path): JsonResponse
+    {
+        $document = Document::where('path', $path)->firstOrFail();
+        
+        return new JsonResponse([
+            'message' => 'Document récupéré avec succès',
+            'data' => $document
+        ], 200);
+    }
+
+    /**
      * Supprimer un document
      */
     public function deleteDocument($id): JsonResponse

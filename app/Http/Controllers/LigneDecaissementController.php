@@ -25,7 +25,7 @@ class LigneDecaissementController extends Controller
 
     public function show($id): JsonResponse
     {
-        $ligne = LigneDecaissement::with(['planDecaissement'])->find($id);
+        $ligne = LigneDecaissement::with(['planDecaissement', 'executionLignes'])->find($id);
         if (!$ligne) {
             return new JsonResponse(['message' => 'Ligne decaissement not found'], 404);
         }

@@ -852,6 +852,20 @@ CREATE TABLE
         FOREIGN KEY (plan_decaissement_id) REFERENCES plan_decaissements (id) ON DELETE CASCADE
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
+CREATE TABLE
+    IF NOT EXISTS execution_ligne_decaissements (
+        id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+        ligne_decaissement_id BIGINT UNSIGNED,
+        statut ENUM ('VALIDE', 'NON_VALIDE'),
+        mode_decaisse ENUM ('CHEQUE', 'VIREMENT'),
+        date_decaisse DATE,
+        justificatif_path TEXT,
+        observations TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        FOREIGN KEY (ligne_decaissement_id) REFERENCES ligne_decaissements(id) ON DELETE CASCADE
+    ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
+
 CREATE TABLE 
     IF NOT EXISTS decaissements_declarations (
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -867,7 +881,7 @@ CREATE TABLE
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         FOREIGN KEY(plan_decaissement_id) REFERENCES plan_decaissements(id),
-        FOREIGN KEY (ligne_decaissement_id) REFERENCES ligne_decaissememts(id),
+        FOREIGN KEY (ligne_decaissement_id) REFERENCES ligne_decaissements(id),
         FOREIGN KEY(promoteur_id) REFERENCES promoteurs(id)
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
@@ -876,7 +890,6 @@ CREATE TABLE
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
         numero_decaissement VARCHAR(100),
         plan_decaissement_id BIGINT UNSIGNED,
-        ligne_decaissement_id BIGINT UNSIGNED,
         agence_id BIGINT UNSIGNED,
         montant_decaisse DECIMAL(18, 2),
         date_decaissement DATE,
@@ -887,7 +900,6 @@ CREATE TABLE
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         FOREIGN KEY (plan_decaissement_id) REFERENCES plan_decaissements (id),
-        FOREIGN KEY (ligne_decaissement_id) REFERENCES ligne_decaissememts(id),
         FOREIGN KEY (agence_id) REFERENCES agences_regionales (id)
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
