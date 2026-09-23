@@ -11,12 +11,10 @@ class DecaissementController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $decaissements = Decaissement::with(['planDecaissement', 'ligneDecaissement', 'agence'])->get();
+        $decaissements = Decaissement::with(['planDecaissement', 'agence'])->get();
 
         if ($request->has('plan_decaissement_id') && !empty($request->plan_decaissement_id))
             $decaissements = $decaissements->where('plan_decaissement_id', $request->plan_decaissement_id);
-        if ($request->has('ligne_decaissement_id') && !empty($request->ligne_decaissement_id))
-            $decaissements = $decaissements->where('ligne_decaissement_id', $request->ligne_decaissement_id);
         if ($request->has('agence_id') && !empty($request->agence_id))
             $decaissements = $decaissements->where('agence_id', $request->agence_id);
         if ($request->has('statut') && !empty($request->statut))
@@ -30,7 +28,7 @@ class DecaissementController extends Controller
 
     public function show($id): JsonResponse
     {
-        $decaissement = Decaissement::with(['planDecaissement', 'ligneDecaissement', 'agence'])->find($id);
+        $decaissement = Decaissement::with(['planDecaissement', 'agence'])->find($id);
         if (!$decaissement) {
             return new JsonResponse(['Message' => 'Decaissement not found'], 404);
         }
@@ -44,7 +42,6 @@ class DecaissementController extends Controller
     {
         $validation = Validator::make($request->all(), [
             'plan_decaissement_id' => 'nullable|exists:plan_decaissements,id',
-            'ligne_decaissement_id' => 'nullable|exists:ligne_decaissements,id',
             'agence_id' => 'nullable|exists:agences_regionales,id',
             'montant_decaisse' => 'nullable|numeric',
             'date_decaissement' => 'nullable|date',
@@ -85,7 +82,6 @@ class DecaissementController extends Controller
 
         $validation = Validator::make($request->all(), [
             'plan_decaissement_id' => 'nullable|exists:plan_decaissements,id',
-            'ligne_decaissement_id' => 'nullable|exists:ligne_decaissements,id',
             'agence_id' => 'nullable|exists:agences_regionales,id',
             'montant_decaisse' => 'nullable|numeric',
             'date_decaissement' => 'nullable|date',
@@ -125,6 +121,8 @@ class DecaissementController extends Controller
         }
 
         $validation = Validator::make($request->all(), [
+            'plan_decaissement_id' => 'nullable|exists:plan_decaissements,id',
+            'agence_id' => 'nullable|exists:agences_regionales,id',
             'montant_decaisse' => 'nullable|numeric',
             'date_decaissement' => 'nullable|date',
             'reference_banque' => 'nullable|string',

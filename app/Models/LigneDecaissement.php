@@ -35,9 +35,9 @@ class LigneDecaissement extends Model
         return $this->belongsTo(PlanDecaissement::class, 'plan_decaissement_id');
     }
 
-    public function decaissements()
+    public function executionLignes()
     {
-        return $this->hasMany(Decaissement::class, 'ligne_decaissement_id');
+        return $this->hasMany(ExecutionLigneDecaissement::class, 'ligne_decaissement_id');
     }
 
     public function decaissementsDeclarations()
