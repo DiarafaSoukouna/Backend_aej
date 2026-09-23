@@ -185,4 +185,50 @@ class TransactionController extends Controller
             ], 500);
         }
     }
+
+    public function storeMultiple(Request $request): JsonResponse
+    {
+        $validation = Validator::make($request->all(), [
+            'transactions' => 'required|array|min:1',
+            'transactions.*.micro_projet_id' => 'nullable|exists:micro_projets,id',
+            'transactions.*.promoteur_id' => 'nullable|exists:promoteurs,id',
+            'transactions.*.categorie_id' => 'required|exists:categories_transactions,id',
+            'transactions.*.libelle' => 'required|string|max:200',
+            'transactions.*.type' => 'required|in:RECETTE,DEPENSE',
+            'transactions.*.montant' => 'required|numeric',
+            'transactions.*.statut' => 'sometimes|in:BROUILLON,SOUMIS,VALIDE,REJETE,ANNULE',
+            'transactions.*.mode_paiement' => 'nullable|in:ESPECES,BANQUE,MOBILE_MONEY,CHEQUE,AUTRE',
+            'transactions.*.reference' => 'nullable|string|max:50',
+            'transactions.*.justificatif_path' => 'nullable|string',
+            'transactions.*.observations' => 'nullable|string',
+            'transactions.*.date' => 'required|date',
+            'transactions.*.saisi_par' => 'nullable|exists:personnels,id',
+        ]);
+
+        if ($validation->fails()) {
+            return new JsonResponse([
+                'message' => 'Validation failed',
+                'errors' => $validation->errors()
+            ], 422);
+        }
+
+        try {
+            $transactions = [];
+            foreach ($request->transactions as $transactionData) {
+                $transactions[] = Transaction::create($transactionData);
+            }
+
+            return new JsonResponse([
+                'message' => 'Transactions created successfully',
+                'data' => $transactions,
+                'count' => count($transactions)
+            ], 201);
+
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'message' => 'Error creating transactions',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 }
