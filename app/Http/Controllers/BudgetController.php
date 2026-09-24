@@ -188,4 +188,51 @@ class BudgetController extends Controller
             ], 500);
         }
     }
+
+    public function storeMultiple(Request $request): JsonResponse
+    {
+        $validation = Validator::make($request->all(), [
+            'budgets' => 'required|array|min:1',
+            'budgets.*.micro_projet_id' => 'required|exists:micro_projets,id',
+            'budgets.*.intitule' => 'required|string|max:100',
+            'budgets.*.montant_accorde' => 'required|numeric',
+            'budgets.*.date_accord' => 'nullable|date',
+            'budgets.*.source' => 'nullable|string|max:100',
+            'budgets.*.devise' => 'required|string|max:10',
+            'budgets.*.statut' => 'required|in:EN_ATTENTE,APPROUVE,NON_APPROUVE',
+            'budgets.*.deblocage' => 'required|in:OUI,NON',
+            'budgets.*.date_deblocage' => 'nullable|date',
+            'budgets.*.signature_convention' => 'required|in:SIGNEE,NON_SIGNEE',
+            'budgets.*.date_signature' => 'nullable|date',
+            'budgets.*.reception_acte_credit' => 'required|in:OUI,NON,PARTIEL',
+            'budgets.*.date_reception' => 'nullable|date',
+            'budgets.*.observations' => 'nullable|string',
+            'budgets.*.valide_par' => 'nullable|exists:personnels,id',
+        ]);
+
+        if ($validation->fails()) {
+            return new JsonResponse([
+                'message' => 'Validation failed',
+                'errors' => $validation->errors()
+            ], 422);
+        }
+
+        try {
+            $budgets = [];
+            foreach ($request->budgets as $budgetData) {
+                $budgets[] = Budget::create($budgetData);
+            }
+
+            return new JsonResponse([
+                'message' => 'Budgets created successfully',
+                'data' => $budgets,
+                'count' => count($budgets)
+            ], 201);
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'message' => 'Error creating budgets',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 }
