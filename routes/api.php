@@ -7,6 +7,8 @@ use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\DirectionController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\FonctionController;
+use App\Http\Controllers\NiveauHierarchieController;
+use App\Http\Controllers\StructureController;
 use App\Http\Controllers\ConfigurationController;
 use App\Http\Controllers\TypeEntrepriseController;
 use App\Http\Controllers\TypeEmploiController;
@@ -109,9 +111,11 @@ use App\Http\Controllers\AiReport\PeriodicBulletinController;
     // Routes protégées par token
     // Route::middleware('verifyToken')->group(function () {
         // Paramètres
-        Route::apiResource('directions', DirectionController::class);
-        Route::apiResource('services', ServiceController::class);
+        Route::apiResource('niveau-hierarchies', NiveauHierarchieController::class);
+        Route::apiResource('structures', StructureController::class);
+        Route::patch('structures/{id}', [StructureController::class, 'patch']);
         Route::apiResource('fonctions', FonctionController::class);
+        Route::patch('fonctions/{id}', [FonctionController::class, 'patch']);
         Route::apiResource('type-entreprises', TypeEntrepriseController::class);
         Route::apiResource('type-organismes', TypeOrganismeController::class);
         Route::apiResource('type-emplois', TypeEmploiController::class);

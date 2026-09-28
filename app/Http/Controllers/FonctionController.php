@@ -9,14 +9,18 @@ use Illuminate\Support\Facades\Validator;
 
 class FonctionController extends Controller
 {
-    public function index(): JsonResponse 
+    public function index(Request $request): JsonResponse
     {
-        $fonctions = Fonction::all();
+        $fonctions = Fonction::with(['structure'])->get();
+
+        if ($request->has('structure_id') && !empty($request->structure_id))
+            $fonctions = $fonctions->where('structure_id', $request->structure_id);
+
         return new JsonResponse(["Message" => "Fonctions récupérées avec succès", "data" => $fonctions], 200);
     }
     public function show($id): JsonResponse
     {
-        $fonction = Fonction::find($id);
+        $fonction = Fonction::with(['structure'])->find($id);
         if (!$fonction) {
             return new JsonResponse(["Message" => "Fonction non trouvée"], 404);
         }
@@ -26,9 +30,9 @@ class FonctionController extends Controller
     {
         $validation = Validator::make($request->all(), [
             'nom' => 'required|string|max:255',
-            'code' => 'required|string|max:255|unique:fonctions',
+            'code' => 'required|string|max:255|unique:fonctions,code',
             'description' => 'nullable|string',
-            'service_id' => 'required|exists:services,id',
+            'structure_id' => 'nullable|exists:structures,id',
         ]);
         if ($validation->fails()) {
             return new JsonResponse(["Message" => "Validation échouée", "errors" => $validation->errors()], 422);
@@ -51,7 +55,7 @@ class FonctionController extends Controller
             'nom' => 'sometimes|required|string|max:255',
             'code' => 'sometimes|required|string|max:255|unique:fonctions,code,'.$id,
             'description' => 'nullable|string',
-            'service_id' => 'sometimes|required|exists:services,id',
+            'structure_id' => 'nullable|exists:structures,id',
         ]);
         if ($validation->fails()) {
             return new JsonResponse(["Message" => "Validation échouée", "errors" => $validation->errors()], 422);
@@ -76,6 +80,32 @@ class FonctionController extends Controller
         } catch (\Exception $e) {
             return new JsonResponse(["Message" => "Erreur lors de la suppression de la fonction", "error" => $e->getMessage()], 500);
 
+        }
+    }
+
+    public function patch(Request $request, $id): JsonResponse
+    {
+        $fonction = Fonction::find($id);
+        if (!$fonction) {
+            return new JsonResponse(["Message" => "Fonction non trouvée"], 404);
+        }
+
+        $validation = Validator::make($request->all(), [
+            'nom' => 'nullable|string|max:255',
+            'code' => 'nullable|string|max:255|unique:fonctions,code,'.$id,
+            'description' => 'nullable|string',
+            'structure_id' => 'nullable|exists:structures,id',
+        ]);
+
+        if ($validation->fails()) {
+            return new JsonResponse(["Message" => "Validation échouée", "errors" => $validation->errors()], 422);
+        }
+
+        try{
+            $fonction->update(array_filter($validation->validated()));
+            return new JsonResponse(["Message" => "Fonction patchée avec succès", "data" => $fonction], 200);
+        } catch (\Exception $e) {
+            return new JsonResponse(["Message" => "Erreur lors du patch de la fonction", "error" => $e->getMessage()], 500);
         }
     }
 }

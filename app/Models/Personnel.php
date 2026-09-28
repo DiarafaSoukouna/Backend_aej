@@ -10,19 +10,21 @@ class Personnel extends Authenticatable
 {
       use HasApiTokens;
     protected $fillable = [
-        'nom', 
+        'nom',
         'prenom',
         'email',
         'telephone',
         'adresse',
-        'role_id',
         'is_active',
+        'role_id',
         'agence_id',
         'fonction_id',
+        'structure_id',
         'organisme_id',
+        'type_utilisateur',
         'mot_de_passe',
         'remember_token'
-        
+
     ];
       protected $hidden = [
 
@@ -97,7 +99,12 @@ class Personnel extends Authenticatable
     {
         return $this->belongsTo(Fonction::class);
     }
-    
+
+    public function structure()
+    {
+        return $this->belongsTo(Structure::class);
+    }
+
     public function organisme()
     {
         return $this->belongsTo(OrganismeFinancement::class);

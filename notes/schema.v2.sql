@@ -113,36 +113,55 @@ CREATE TABLE
         FOREIGN KEY (secteur_activite_id) REFERENCES secteurs_activites (id) ON DELETE CASCADE
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
--- Via API Indisponible
 CREATE TABLE
-    IF NOT EXISTS directions (
+    IF NOT EXISTS niveau_hierarchie (
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-        nom VARCHAR(255) NOT NULL,
-        code VARCHAR(255) NOT NULL UNIQUE,
-        description TEXT NULL
+        libelle VARCHAR(150) NOT NULL, -- Directions, Sous-Directions, Services, Sous-services
+        niveau INT UNIQUE,
+        description TEXT
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
--- Via API Indisponible
 CREATE TABLE
-    IF NOT EXISTS services (
+    IF NOT EXISTS structures (
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
         nom VARCHAR(255) NOT NULL,
         code VARCHAR(255) NOT NULL UNIQUE,
         description TEXT NULL,
-        direction_id BIGINT UNSIGNED,
-        FOREIGN KEY (direction_id) REFERENCES directions (id) ON DELETE CASCADE
+        niveau_id BIGINT UNSIGNED,
+        parent_id BIGINT UNSIGNED,
+        FOREIGN KEY (niveau_id) REFERENCES niveau_hierarchie (id) ON DELETE CASCADE,
+        FOREIGN KEY (parent_id) REFERENCES structures (id) ON DELETE CASCADE
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
--- Via API Indisponible
 CREATE TABLE
     IF NOT EXISTS fonctions (
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
         nom VARCHAR(255) NOT NULL,
         code VARCHAR(255) NOT NULL UNIQUE,
         description TEXT NULL,
-        service_id BIGINT UNSIGNED,
-        FOREIGN KEY (service_id) REFERENCES services (id) ON DELETE CASCADE
+        structure_id BIGINT UNSIGNED,
+        FOREIGN KEY (structure_id) REFERENCES structures (id) ON DELETE CASCADE
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
+
+-- -- Via API Indisponible
+-- CREATE TABLE
+--     IF NOT EXISTS directions (
+--         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+--         nom VARCHAR(255) NOT NULL,
+--         code VARCHAR(255) NOT NULL UNIQUE,
+--         description TEXT NULL
+--     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
+
+-- -- Via API Indisponible
+-- CREATE TABLE
+--     IF NOT EXISTS services (
+--         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+--         nom VARCHAR(255) NOT NULL,
+--         code VARCHAR(255) NOT NULL UNIQUE,
+--         description TEXT NULL,
+--         direction_id BIGINT UNSIGNED,
+--         FOREIGN KEY (direction_id) REFERENCES directions (id) ON DELETE CASCADE
+--     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
 -- ##############################################################
 -- 4. ENTREPRISES & ORGANISMES
@@ -268,14 +287,16 @@ CREATE TABLE
         type_utilisateur ENUM ('interne', 'externe') DEFAULT 'interne',
         role_id BIGINT UNSIGNED,
         fonction_id BIGINT UNSIGNED,
+        structure_id BIGINT UNSIGNED,
         agence_id BIGINT UNSIGNED,
         organisme_id BIGINT UNSIGNED,
-        statut TINYINT (1) NOT NULL DEFAULT 1,
+        is_active TINYINT (1) NOT NULL DEFAULT 1,
         remember_token VARCHAR(100),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         FOREIGN KEY (role_id) REFERENCES roles (id),
         FOREIGN KEY (fonction_id) REFERENCES fonctions (id),
+        FOREIGN KEY (structure_id) REFERENCES structures (id),
         FOREIGN KEY (agence_id) REFERENCES agences_regionales (id),
         FOREIGN KEY (organisme_id) REFERENCES organisme_financements (id)
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;

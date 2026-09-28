@@ -16,13 +16,13 @@ class PersonnelController extends Controller
 {
     public function index(): JsonResponse
     {
-        $personnels = Personnel::with('role', 'fonction', 'agence', 'organisme')->get();
+        $personnels = Personnel::with('role', 'fonction', 'structure', 'agence', 'organisme')->get();
         return new JsonResponse(['Message' => 'Personnel list retrieved successfully', 'data' => $personnels], 200);
     }
 
     public function show($id): JsonResponse
     {
-        $personnel = Personnel::with('role', 'agence', 'fonction', 'organisme')->find($id);
+        $personnel = Personnel::with('role', 'agence', 'fonction', 'structure', 'organisme')->find($id);
         if (!$personnel) {
             return new JsonResponse(['Message' => 'Personnel not found'], 404);
         }
@@ -38,9 +38,13 @@ class PersonnelController extends Controller
             'telephone' => 'nullable|string|max:20',
             'adresse' => 'nullable|string|max:255',
             'mot_de_passe' => 'nullable|string|min:8',
-            'role_id' => 'required|exists:roles,id',
             'is_active' => 'boolean',
+            'role_id' => 'required|exists:roles,id',
             'fonction_id' => 'required|exists:fonctions,id',
+            'structure_id' => 'nullable|exists:structures,id',
+            'type_utilisateur' => 'nullable|in:interne,externe',
+            'agence_id' => 'nullable|exists:agences_regionales,id',
+            'organisme_id' => 'nullable|exists:organisme_financements,id',
         ]);
 
         if ($validation->fails()) {
@@ -97,9 +101,13 @@ class PersonnelController extends Controller
             'email' => 'sometimes|required|string|email|max:255|unique:personnels,email,' . $id,
             'telephone' => 'nullable|string|max:20',
             'adresse' => 'nullable|string|max:255',
-            'role_id' => 'sometimes|required|exists:roles,id',
             'is_active' => 'boolean',
+            'role_id' => 'sometimes|required|exists:roles,id',
             'fonction_id' => 'sometimes|required|exists:fonctions,id',
+            'structure_id' => 'nullable|exists:structures,id',
+            'type_utilisateur' => 'nullable|in:interne,externe',
+            'agence_id' => 'nullable|exists:agences_regionales,id',
+            'organisme_id' => 'nullable|exists:organisme_financements,id',
         ]);
 
         if ($validation->fails()) {
