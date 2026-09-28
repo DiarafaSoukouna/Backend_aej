@@ -11,7 +11,7 @@ class StructureController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $structures = Structure::with(['niveauHierarchie', 'parent', 'children', 'fonctions', 'personnels'])->get();
+        $structures = Structure::with(['niveauHierarchie', 'parent'])->get();
 
         if ($request->has('niveau_id') && !empty($request->niveau_id))
             $structures = $structures->where('niveau_id', $request->niveau_id);

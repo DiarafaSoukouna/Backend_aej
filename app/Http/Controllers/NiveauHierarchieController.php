@@ -24,7 +24,7 @@ class NiveauHierarchieController extends Controller
 
     public function show($id): JsonResponse
     {
-        $niveau = NiveauHierarchie::with(['parent', 'children', 'structures'])->find($id);
+        $niveau = NiveauHierarchie::with(['structures'])->find($id);
         if (!$niveau) {
             return new JsonResponse(['message' => 'Niveau hierarchie not found'], 404);
         }
