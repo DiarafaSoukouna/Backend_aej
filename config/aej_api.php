@@ -26,7 +26,6 @@ return [
         'agences_regionales' => '/list-agence-regionale',
         'projet_parameters' => '/load-projet-parameter',
         'lieu_habitations' => '/lieu-habitations',
-        'communes' => '/communes-old',
         'sexes' => '/sexes',
         'pays' => '/pays',
     ],

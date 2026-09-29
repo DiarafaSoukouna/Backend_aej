@@ -244,7 +244,7 @@ CREATE TABLE
         email VARCHAR(180) NOT NULL UNIQUE,
         telephone VARCHAR(20),
         mot_de_passe VARCHAR(255) NOT NULL,
-        type_utilisateur ENUM ('interne', 'externe') DEFAULT 'interne',
+         ENUM ('interne', 'externe') DEFAULT 'interne',
         role_id BIGINT NOT NULL,
         organisme_id BIGINT NULL, -- rattachement à une organisme
         statut TINYINT (1) NOT NULL DEFAULT 1,

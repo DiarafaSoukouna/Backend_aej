@@ -9,24 +9,23 @@ class Departement extends Model
 {
     use HasFactory;
 
+    protected $table = 'departements';
+
     protected $fillable = [
         'region_id',
         'code',
         'nom',
     ];
 
+    public $timestamps = false;
+
     public function region()
     {
-        return $this->belongsTo(Region::class, 'region_id');
+        return $this->belongsTo(Region::class);
     }
 
-    public function villes()
+    public function sousPrefectures()
     {
-        return $this->hasMany(Ville::class, 'departement_id');
-    }
-
-    public function zonesIntervention()
-    {
-        return $this->hasMany(ZoneIntervention::class, 'departement_id');
+        return $this->hasMany(SousPrefecture::class);
     }
 }

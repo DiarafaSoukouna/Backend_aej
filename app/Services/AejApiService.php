@@ -11,7 +11,6 @@ use App\DTO\SecteurDTO;
 use App\DTO\SousSecteurDTO;
 use App\DTO\NiveauEtudeDTO;
 use App\DTO\AgenceRegionaleDTO;
-use App\DTO\ProjetParameterDTO;
 use App\DTO\SexeDTO;
 use App\DTO\LieuHabitationDTO;
 use App\DTO\PaysDTO;
@@ -220,13 +219,6 @@ class AejApiService
         return TypeSituationHandicapDTO::fromArrayCollection($data);
     }
 
-    public function getCommunes(): array
-    {
-        $endpoint = config('aej_api.endpoints.communes');
-        $data = $this->makeRequest($endpoint);
-        return CommuneDTO::fromArrayCollection($data);
-    }
-
     public function getDivisionRegionale(): array
     {
         $endpoint = config('aej_api.endpoints.projet_parameters');
@@ -234,6 +226,24 @@ class AejApiService
         $apiData = $data['parameter'] ?? [];
         $divisions = $apiData['divisions'] ?? [];
         return DivisionRegionaleDTO::fromArrayCollection($divisions);
+    }
+
+    public function getSousPrefectures(): array
+    {
+        $endpoint = config('aej_api.endpoints.projet_parameters');
+        $data = $this->makeRequest($endpoint);
+        $apiData = $data['parameter'] ?? [];
+        $sous_prefectures = $apiData['communes'] ?? [];
+        return CommuneDTO::fromArrayCollection($sous_prefectures);
+    }
+
+    public function getCommunes(): array
+    {
+        $endpoint = config('aej_api.endpoints.projet_parameters');
+        $data = $this->makeRequest($endpoint);
+        $apiData = $data['parameter'] ?? [];
+        $communes = $apiData['communes'] ?? [];
+        return CommuneDTO::fromArrayCollection($communes);
     }
 
     public function getVilles(): array
@@ -259,7 +269,6 @@ class AejApiService
             Cache::forget($this->cachePrefix . md5(config('aej_api.endpoints.lieu_habitations')));
             Cache::forget($this->cachePrefix . md5(config('aej_api.endpoints.pays')));
             Cache::forget($this->cachePrefix . md5(config('aej_api.endpoints.situations_handicaps')));
-            Cache::forget($this->cachePrefix . md5(config('aej_api.endpoints.communes')));
         }
     }
 }

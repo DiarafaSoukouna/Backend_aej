@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class NiveauEtude extends Model
 {
-    protected $table = 'niveaux_etudes';
+    protected $table = 'niveau_etude';
 
     protected $fillable = [
         'libelle',

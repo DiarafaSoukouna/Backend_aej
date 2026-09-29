@@ -257,7 +257,6 @@ CREATE TABLE IF NOT EXISTS personnels (
     email VARCHAR(180) NOT NULL UNIQUE,
     telephone VARCHAR(20),
     mot_de_passe VARCHAR(255) NOT NULL,
-    type_utilisateur ENUM('interne','externe') DEFAULT 'interne',
     role_id BIGINT NOT NULL,
     agence_id BIGINT NULL,           -- rattachement à une agence
     institution_id BIGINT NULL,

@@ -21,8 +21,9 @@ use App\Models\Sexe;
 use App\Models\LieuHabitation;
 use App\Models\Pays;
 use App\Models\TypeSituationHandicap;
-use App\Models\Commune;
 use App\Models\DivisionRegionale;
+use App\Models\SousPrefecture;
+use App\Models\Commune;
 use App\Models\Ville;
 
 class SyncAejReferentielsJob implements ShouldQueue
@@ -51,6 +52,7 @@ class SyncAejReferentielsJob implements ShouldQueue
                 'lieu_habitations' => $this->syncLieuHabitations($aejApiService),
                 'pays' => $this->syncPays($aejApiService),
                 'division_regionale' => $this->syncDivisionRegionale($aejApiService),
+                'sous_prefectures' => $this->syncSousPrefectures($aejApiService),
                 'villes' => $this->syncVilles($aejApiService),
                 'communes' => $this->syncCommunes($aejApiService),
                 'all' => $this->syncAll($aejApiService),
@@ -274,9 +276,7 @@ class SyncAejReferentielsJob implements ShouldQueue
                 $model->id = $item->id;
             }
             $model->nom = $item->nom;
-            $model->ville_id = $item->ville_id ?? null;
-            $model->divisionregionaleaej_id = $item->divisionregionaleaej_id ?? null;
-            $model->guichetemploi_id = $item->guichetemploi_id ?? null;
+            $model->sous_prefecture_id = $item->sous_prefecture_id ?? null;
             $model->code = $item->code ?? null;
             $model->synced_at = now();
             $model->save();
@@ -288,7 +288,7 @@ class SyncAejReferentielsJob implements ShouldQueue
     protected function syncDivisionRegionale(AejApiService $service): void
     {
         $data = $service->getDivisionRegionale();
-        
+
         foreach ($data as $item) {
             $model = DivisionRegionale::find($item->id);
             if (!$model) {
@@ -304,6 +304,26 @@ class SyncAejReferentielsJob implements ShouldQueue
         Log::info('Division regionale synchronized successfully');
     }
 
+    protected function syncSousPrefectures(AejApiService $service): void
+    {
+        $data = $service->getSousPrefectures();
+
+        foreach ($data as $item) {
+            $model = SousPrefecture::find($item->id);
+            if (!$model) {
+                $model = new SousPrefecture();
+                $model->id = $item->id;
+            }
+            $model->departement_id = $item->departement_id ?? null;
+            $model->code = $item->code ?? null;
+            $model->nom = $item->nom;
+            $model->synced_at = now();
+            $model->save();
+        }
+
+        Log::info('Sous prefectures synchronized successfully');
+    }
+
     protected function syncVilles(AejApiService $service): void
     {
         $data = $service->getVilles();
@@ -314,7 +334,7 @@ class SyncAejReferentielsJob implements ShouldQueue
                 $model = new Ville();
                 $model->id = $item->id;
             }
-            $model->departement_id = $item->departement_id ?? null;
+            $model->commune_id = $item->commune_id ?? null;
             $model->code = $item->code ?? null;
             $model->nom = $item->nom;
             $model->synced_at = now();
@@ -326,21 +346,19 @@ class SyncAejReferentielsJob implements ShouldQueue
 
     protected function syncAll(AejApiService $service): void
     {
-        // Sync parent tables first
         $this->syncTypesPiecesIdentites($service);
         $this->syncSituationsMatrimoniale($service);
         $this->syncSituationsHandicaps($service);
         $this->syncSecteurs($service);
+        $this->syncSousSecteurs($service);
         $this->syncNiveauxEtudes($service);
         $this->syncAgencesRegionales($service);
         $this->syncSexes($service);
         $this->syncPays($service);
         $this->syncDivisionRegionale($service);
-        $this->syncVilles($service);
-        
-        // Sync dependent tables after parents
-        $this->syncSousSecteurs($service);
+        $this->syncSousPrefectures($service);
         $this->syncCommunes($service);
+        $this->syncVilles($service);
         $this->syncLieuHabitations($service);
 
         Log::info('All AEJ referentiels synchronized successfully');

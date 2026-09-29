@@ -9,6 +9,11 @@ use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\FonctionController;
 use App\Http\Controllers\NiveauHierarchieController;
 use App\Http\Controllers\StructureController;
+use App\Http\Controllers\RegionController;
+use App\Http\Controllers\DepartementController;
+use App\Http\Controllers\SousPrefectureController;
+use App\Http\Controllers\VilleController;
+use App\Http\Controllers\CommuneController;
 use App\Http\Controllers\ConfigurationController;
 use App\Http\Controllers\TypeEntrepriseController;
 use App\Http\Controllers\TypeEmploiController;
@@ -113,17 +118,31 @@ use App\Http\Controllers\AiReport\PeriodicBulletinController;
         // Paramètres
         Route::apiResource('niveau-hierarchies', NiveauHierarchieController::class);
         Route::apiResource('structures', StructureController::class);
+        Route::post('structures/multiple', [StructureController::class, 'storeMultiple']);
         Route::patch('structures/{id}', [StructureController::class, 'patch']);
         Route::apiResource('fonctions', FonctionController::class);
+        Route::post('fonctions/multiple', [FonctionController::class, 'storeMultiple']);
         Route::patch('fonctions/{id}', [FonctionController::class, 'patch']);
         Route::apiResource('type-entreprises', TypeEntrepriseController::class);
         Route::apiResource('type-organismes', TypeOrganismeController::class);
         Route::apiResource('type-emplois', TypeEmploiController::class);
 
+        Route::apiResource('regions', RegionController::class);
+        Route::post('regions/multiple', [RegionController::class, 'storeMultiple']);
+        Route::apiResource('departements', DepartementController::class);
+        Route::post('departements/multiple', [DepartementController::class, 'storeMultiple']);
+        Route::apiResource('sous-prefectures', SousPrefectureController::class);
+        Route::post('sous-prefectures/multiple', [SousPrefectureController::class, 'storeMultiple']);
+        Route::apiResource('communes', CommuneController::class);
+        Route::post('communes/multiple', [CommuneController::class, 'storeMultiple']);
+        Route::apiResource('villes', VilleController::class);
+        Route::post('villes/multiple', [VilleController::class, 'storeMultiple']);
+
         // Gestion des utilisateurs
         Route::apiResource('permissions', PermissionController::class);
         Route::apiResource('roles', RoleController::class);
         Route::apiResource('personnels', PersonnelController::class);
+        Route::post('personnels/multiple', [PersonnelController::class, 'storeMultiple']);
         Route::apiResource('notifications', NotificationController::class);
         Route::put('notifications/{id}/mark-read', [NotificationController::class, 'markAsRead']);
         Route::get('notifications/personnel/{personnelId}', [NotificationController::class, 'getByPersonnel']);
@@ -242,15 +261,19 @@ use App\Http\Controllers\AiReport\PeriodicBulletinController;
         Route::get('secteurs', [AejApiController::class, 'getSecteurs']);
         Route::get('sous-secteurs', [AejApiController::class, 'getSousSecteurs']);
         Route::get('niveaux-etudes', [AejApiController::class, 'getNiveauxEtudes']);
-        Route::get('agences-regionales', [AejApiController::class, 'getAgencesRegionales']);
         Route::get('sexes', [AejApiController::class, 'getSexes']);
-        Route::get('lieu-habitations', [AejApiController::class, 'getLieuHabitations']);
         Route::get('pays', [AejApiController::class, 'getPays']);
         Route::get('situations-handicaps', [AejApiController::class, 'getSituationsHandicaps']);
-        Route::get('communes', [AejApiController::class, 'getCommunes']);
         Route::get('division-regionale', [AejApiController::class, 'getDivisionRegionale']);
-        Route::get('villes', [AejApiController::class, 'getVilles']);
+        Route::get('agences-regionales', [AejApiController::class, 'getAgencesRegionales']);
         Route::get('referentiels', [AejApiController::class, 'getAllReferentiels']);
+        Route::get('lieu-habitations', [AejApiController::class, 'getLieuHabitations']);
+
+        // Localités via API
+        // Route::get('regions', [AejApiController::class, 'getRegions']);
+        // Route::get('departements', [AejApiController::class, 'getDepartements']);
+        // Route::get('communes', [AejApiController::class, 'getCommunes']);
+        // Route::get('villes', [AejApiController::class, 'getVilles']);
 
         // Cache and sync routes
         Route::post('clear-cache', [AejApiController::class, 'clearCache']);

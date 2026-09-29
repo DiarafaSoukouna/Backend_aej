@@ -17,6 +17,8 @@ class Fonction extends Model
         'description',
         'structure_id',
     ];
+    
+    public $timestamps = false;
 
     public function structure()
     {

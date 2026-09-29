@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\NiveauHierarchie;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Validator;
@@ -62,6 +63,58 @@ class StructureController extends Controller
         } catch (\Exception $e) {
             return new JsonResponse([
                 'message' => 'Error creating structure',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function storeMultiple(Request $request): JsonResponse
+    {
+        $validation = Validator::make($request->all(), [
+            'structures' => 'required|array|min:1',
+            'structures.*.nom' => 'required|string|max:255',
+            'structures.*.code' => 'required|string|max:255|unique:structures',
+            'structures.*.description' => 'nullable|string',
+            'structures.*.niveau' => 'nullable|integer',
+            'structures.*.parent_code' => 'nullable|string',
+        ]);
+
+        if ($validation->fails()) {
+            return new JsonResponse([
+                'message' => 'Validation failed',
+                'errors' => $validation->errors()
+            ], 422);
+        }
+
+        try {
+            $structures = [];
+            foreach ($request->structures as $structuresData) {
+                $niveau_hierachic = NiveauHierarchie::where('niveau', $structuresData['niveau'])->first();
+                $structure = Structure::where('code', $structuresData['parent_code'])->first();
+
+                if (!$niveau_hierachic) {
+                    return new JsonResponse([
+                        'message' => 'Niveau not found for code: ' . $structuresData['niveau']
+                    ], 404);
+                }
+
+                $structuresData['niveau_id'] = $niveau_hierachic->id;
+                $structuresData['parent_id'] = $structure ? $structure->id : null;
+
+                unset($structuresData['niveau']);
+                unset($structuresData['parent_code']);
+
+                $structures[] = Structure::create($structuresData);
+            }
+
+            return new JsonResponse([
+                'message' => 'Structures created successfully',
+                'data' => $structures,
+                'count' => count($structures)
+            ], 201);
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'message' => 'Error creating structures',
                 'error' => $e->getMessage()
             ], 500);
         }

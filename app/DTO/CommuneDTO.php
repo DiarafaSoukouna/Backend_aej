@@ -7,9 +7,7 @@ class CommuneDTO
     public function __construct(
         public readonly int $id,
         public readonly string $nom,
-        public readonly ?int $ville_id,
-        public readonly ?int $divisionregionaleaej_id,
-        public readonly ?int $guichetemploi_id,
+        public readonly ?int $sous_prefecture_id,
         public readonly ?string $code,
     ) {}
 
@@ -18,9 +16,7 @@ class CommuneDTO
         return new self(
             id: $data['id'],
             nom: $data['nom'],
-            ville_id: $data['ville_id'] ?? null,
-            divisionregionaleaej_id: $data['divisionregionaleaej_id'] ?? null,
-            guichetemploi_id: $data['guichetemploi_id'] ?? null,
+            sous_prefecture_id: $data['sous_prefecture_id'] ?? null,
             code: $data['code'] ?? null,
         );
     }

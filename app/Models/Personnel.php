@@ -8,11 +8,13 @@ use Laravel\Sanctum\HasApiTokens;
 class Personnel extends Authenticatable
 
 {
-      use HasApiTokens;
+    use HasApiTokens;
     protected $fillable = [
         'nom',
         'prenom',
         'email',
+        'mot_de_passe',
+        'remember_token',
         'telephone',
         'adresse',
         'is_active',
@@ -20,20 +22,13 @@ class Personnel extends Authenticatable
         'agence_id',
         'fonction_id',
         'structure_id',
-        'organisme_id',
-        'type_utilisateur',
-        'mot_de_passe',
-        'remember_token'
-
+        'organisme_id'
     ];
-      protected $hidden = [
-
+    protected $hidden = [
         'mot_de_passe',
-
         'remember_token',
-
     ];
-          
+
     public function getAuthPassword(): string
     {
         return $this->mot_de_passe;
@@ -44,7 +39,7 @@ class Personnel extends Authenticatable
         return $this->belongsTo(Role::class);
     }
 
-     public function permissions()
+    public function permissions()
     {
         return $this->role ? $this->role->permissions : collect();
     }
@@ -54,32 +49,32 @@ class Personnel extends Authenticatable
         if (!$this->role) {
             return false;
         }
- 
+
         $permission = $this->role->permissions()->where('module', $module)->first();
- 
+
         if (!$permission) {
             return false;
         }
- 
+
         if ($permission->full_access) {
             return true;
         }
- 
+
         if ($action === null) {
             return $permission->autorise;
         }
- 
+
         $acces = json_decode($permission->acces, true) ?? [];
- 
+
         return in_array($action, $acces);
     }
- 
+
     public function getAllPermissions(): array
     {
         if (!$this->role) {
             return [];
         }
- 
+
         return $this->role->permissions->map(function ($permission) {
             return [
                 'module' => $permission->module,
@@ -89,12 +84,12 @@ class Personnel extends Authenticatable
             ];
         })->toArray();
     }
-    
+
     public function agence()
     {
         return $this->belongsTo(AgenceRegionale::class);
     }
-    
+
     public function fonction()
     {
         return $this->belongsTo(Fonction::class);

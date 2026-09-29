@@ -1,99 +1,142 @@
 {
-  "data": {
-    "id": 1,
-    "matricule": "PRJ-AGR-2026-00042",
-    "intitule": "Elevage de poulets de chair",
-    "description": "string",
-    "montant_total": 500000,
-    "type_guichet": {
-      "id": 1,
-      "code": "GUICHET_2_AGR_CLASSIC",
-      "libelle": "AGR Classique",
-      "description": "string",
-      "couleur": "#2E86C1",
-      "is_active": true,
-      "is_form_active": true
-    },
-    "etape": {
-      "id": 1,
-      "code": "SOUMIS",
-      "libelle": "Soumis",
-      "description": "string",
-      "order": 1,
-      "is_initial": true,
-      "is_final_success": false,
-      "is_final_failure": false
-    },
-    "statut": "soumis",
-    "secteur_activite": {
-      "id": 0,
-      "libelle": "Commerce"
-    },
-    "forme_juridique": {
-      "id": 0,
-      "libelle": "Entreprise Individuelle"
-    },
-    "commune": {
-      "id": 0,
-      "nom": "Cocody"
-    },
-    "attributs": [
-      {
-        "code": "NB_EMPLOIS_PREVUS",
-        "valeur": "5"
-      }
-    ],
-    "documents": [
-      {
-        "id": 0,
-        "nom_original": "business-plan.pdf",
-        "statut_validation": "en attente",
-        "type_document": {
-          "id": 0,
-          "code": "BUSINESS_PLAN",
-          "libelle": "Business Plan"
-        },
-        "created_at": "2026-08-01T21:32:06.276Z"
-      }
-    ],
-    "analyse": {
-      "id": 0,
-      "overall_score": 75.5,
-      "scores": {},
-      "strengths": [
-        "string"
-      ],
-      "weaknesses": [
-        "string"
-      ],
-      "recommendations": [
-        "string"
-      ],
-      "summary": "Projet viable avec un fort potentiel de croissance",
-      "status": "completed",
-      "analyzed_at": "2026-08-01T21:32:06.276Z"
-    },
-    "financement": {
-      "id": 0,
-      "montant_accorde": 500000,
-      "date_accord": "2026-03-01",
-      "source": "string",
-      "statut": "approuve",
-      "created_at": "2026-08-01T21:32:06.276Z"
-    },
-    "workflow_steps": [
-      {
+    "version 1.0": {
         "id": 1,
-        "code": "SOUMIS",
-        "libelle": "Soumis",
+        "matricule": "PRJ-AGR-2026-00042",
+        "intitule": "Elevage de poulets de chair",
         "description": "string",
-        "order": 1,
-        "is_initial": true,
-        "is_final_success": false,
-        "is_final_failure": false
-      }
-    ],
-    "created_at": "2026-08-01T21:32:06.276Z",
-    "updated_at": "2026-08-01T21:32:06.276Z"
-  }
+        "montant_total": 500000,
+        "type_guichet": {
+            "id": 1,
+            "code": "GUICHET_2_AGR_CLASSIC",
+            "libelle": "AGR Classique",
+            "description": "string",
+            "couleur": "#2E86C1",
+            "is_active": true,
+            "is_form_active": true
+        },
+        "etape": {
+            "id": 1,
+            "code": "SOUMIS",
+            "libelle": "Soumis",
+            "description": "string",
+            "order": 1,
+            "is_initial": true,
+            "is_final_success": false,
+            "is_final_failure": false
+        },
+        "statut": "soumis",
+        "secteur_activite": {
+            "id": 0,
+            "libelle": "Commerce"
+        },
+        "forme_juridique": {
+            "id": 0,
+            "libelle": "Entreprise Individuelle"
+        },
+        "commune": {
+            "id": 0,
+            "nom": "Cocody"
+        },
+        "attributs": [
+            {
+                "code": "NB_EMPLOIS_PREVUS",
+                "valeur": "5"
+            }
+        ],
+        "documents": [
+            {
+                "id": 0,
+                "nom_original": "business-plan.pdf",
+                "statut_validation": "en attente",
+                "type_document": {
+                    "id": 0,
+                    "code": "BUSINESS_PLAN",
+                    "libelle": "Business Plan"
+                },
+                "created_at": "2026-08-01T21:32:06.276Z"
+            }
+        ],
+        "analyse": {
+            "id": 0,
+            "overall_score": 75.5,
+            "scores": {},
+            "strengths": ["string"],
+            "weaknesses": ["string"],
+            "recommendations": ["string"],
+            "summary": "Projet viable avec un fort potentiel de croissance",
+            "status": "completed",
+            "analyzed_at": "2026-08-01T21:32:06.276Z"
+        },
+        "financement": {
+            "id": 0,
+            "montant_accorde": 500000,
+            "date_accord": "2026-03-01",
+            "source": "string",
+            "statut": "approuve",
+            "created_at": "2026-08-01T21:32:06.276Z"
+        },
+        "workflow_steps": [
+            {
+                "id": 1,
+                "code": "SOUMIS",
+                "libelle": "Soumis",
+                "description": "string",
+                "order": 1,
+                "is_initial": true,
+                "is_final_success": false,
+                "is_final_failure": false
+            }
+        ],
+        "created_at": "2026-08-01T21:32:06.276Z",
+        "updated_at": "2026-08-01T21:32:06.276Z"
+    },
+
+    "version 2.0": {
+        "id": 78246,
+        "matricule": "MEEPS-1786-1",
+        "intitule": "SAVON DJALYA",
+        "description": "BIOPHYT SARL EST UNE ENTREPRISE PHYTOSANITAIRE INNOVANTE SPÉCIALISÉE DANS LA PRODUCTION ET LA DISTRIBUTION DE PRODUITS BIOLOGIQUES DESTINÉS À LA PROTECTION DES CULTURES ET À L’HYGIÈNE DOMESTIQUE.\r\nNOTRE ACTIVITÉ CONSISTE À DÉVELOPPER DES SOLUTIONS EFFICACES, ACCESSIBLES ET RESPECTUEUSES DE L’ENVIRONNEMENT, ADAPTÉES AUX BESOINS DES AGRICULTEURS, MÉNAGES ET PROFESSIONNELS. À TRAVERS L’INNOVATION LOCALE, NOUS CONTRIBUONS À AMÉLIORER LA PRODUCTIVITÉ AGRICOLE TOUT EN PROMOUVANT UN CADRE DE VIE SAIN.",
+        "montant_total": 30000000,
+        "type_guichet": {
+            "id": 6,
+            "code": "GUICHET_4_MEPS",
+            "libelle": "Guichet 4 - Moyennes Entreprises et Projets Structurants (MEPS)",
+            "description": "Former, financer et encadrer des entreprises formelles relativement stables justifiant d'une existence minimum de deux années",
+            "couleur": null,
+            "is_active": true,
+            "is_form_active": true
+        },
+        "etape": {
+            "id": 100,
+            "code": "PENDING_ANALYST_ASSIGNMENT",
+            "libelle": "En attente d'affectation Analyste",
+            "description": "En attente d'affectation Analyste",
+            "order": 1,
+            "is_initial": true,
+            "is_final_success": false,
+            "is_final_failure": false
+        },
+        "promoteur": {
+            "id": 3208,
+            "numero_aej": "2319299981",
+            "nom_complet": "FETIGUE OUATTARA",
+            "email": "biophyt@hotmail.com",
+            "telephone": "0707576147"
+        },
+        "secteur_activite": {
+            "id": 4,
+            "libelle": "ACTIVITÉS DE FABRICATION"
+        },
+        "forme_juridique": {
+            "id": 1,
+            "libelle": "SARL (Société à Responsabilité Limitée)"
+        },
+        "commune": {
+            "id": 8,
+            "nom": "KOUMASSI"
+        },
+        "documents_count": 2,
+        "created_at": "2026-05-04T21:56:17+00:00",
+        "updated_at": "2026-05-05T09:30:02+00:00"
+    }
 }

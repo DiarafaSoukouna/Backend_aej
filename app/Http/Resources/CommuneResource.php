@@ -12,8 +12,8 @@ class CommuneResource extends JsonResource
         return [
             'id' => $this->id,
             'nom' => $this->nom,
-            'ville_id' => $this->ville_id,
-            'divisionregionaleaej_id' => $this->divisionregionaleaej_id,
+            'sous_prefecture_id' => $this->sous_prefecture_id,
+            'code' => $this->code,
         ];
     }
 }

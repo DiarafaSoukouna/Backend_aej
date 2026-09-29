@@ -11,7 +11,7 @@ class VilleResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'departement_id' => $this->departement_id,
+            'commune_id' => $this->commune_id,
             'code' => $this->code,
             'nom' => $this->nom,
         ];
