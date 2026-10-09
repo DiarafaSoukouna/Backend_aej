@@ -120,10 +120,10 @@ CREATE TABLE
 -- ##############################################################
 -- Via https://agenceemploijeunes.ci/api/v1.0/secteurs
 CREATE TABLE
-    IF NOT EXISTS secteurs_activites (
+    IF NOT EXISTS secteurs (
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
         nom VARCHAR(50) UNIQUE,
-        libelle VARCHAR(100) NOT NULL
+        libelle VARCHAR(100) NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         synced_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
@@ -131,14 +131,14 @@ CREATE TABLE
 
 -- Via https://agenceemploijeunes.ci/api/v1.0/sous-secteurs
 CREATE TABLE
-    IF NOT EXISTS sous_secteurs_activites (
+    IF NOT EXISTS sous_secteurs (
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
         secteur_activite_id BIGINT UNSIGNED,
         libelle VARCHAR(150) NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         synced_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        FOREIGN KEY (secteur_activite_id) REFERENCES secteurs_activites (id) ON DELETE RESTRICT
+        FOREIGN KEY (secteur_activite_id) REFERENCES secteurs (id) ON DELETE RESTRICT
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
 CREATE TABLE
@@ -556,7 +556,7 @@ CREATE TABLE
         titre VARCHAR(255) NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        FOREIGN KEY (secteur_id) REFERENCES secteurs_activites (id)
+        FOREIGN KEY (secteur_id) REFERENCES secteurs (id)
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
 CREATE TABLE
@@ -628,14 +628,14 @@ CREATE TABLE
     IF NOT EXISTS promoteurs (
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
         profile TEXT,
-        nom VARCHAR(100) NOT NULL,
-        prenom VARCHAR(100) NOT NULL,
+        nom VARCHAR(100),
+        prenom VARCHAR(100),
         email VARCHAR(180) UNIQUE,
-        telephone VARCHAR(20) NOT NULL UNIQUE,
+        telephone VARCHAR(50),
         tranche_age ENUM ('18_40', 'PLUS_40'),
-        datenaissance DATE NOT NULL,
+        datenaissance DATE,
         lieunaissance VARCHAR(150),
-        matriculeaej VARCHAR(50) UNIQUE,
+        matriculeaej VARCHAR(200) UNIQUE,
         numerocni VARCHAR(50) UNIQUE,
         numerocmu VARCHAR(50) UNIQUE,
         numerocnps VARCHAR(50) UNIQUE,
@@ -644,7 +644,7 @@ CREATE TABLE
         nomdupere VARCHAR(200),
         nomdelamere VARCHAR(200),
         sexe_id BIGINT UNSIGNED,
-        personnel_id BIGINT UNSIGNED,
+        personnel_id BIGINT UNSIGNED NOT NULL,
         lieuhabitation_id BIGINT UNSIGNED,
         agenceregionale_id BIGINT UNSIGNED,
         secteuractivite_id BIGINT UNSIGNED,
@@ -664,8 +664,8 @@ CREATE TABLE
         FOREIGN KEY (typepieceidentite_id) REFERENCES type_pieces_identite (id),
         FOREIGN KEY (niveauetude_id) REFERENCES niveau_etude (id),
         FOREIGN KEY (paysnationalite_id) REFERENCES pays (id),
-        FOREIGN KEY (secteuractivite_id) REFERENCES secteurs_activites (id),
-        FOREIGN KEY (soussecteuractivite_id) REFERENCES sous_secteurs_activites (id),
+        FOREIGN KEY (secteuractivite_id) REFERENCES secteurs (id),
+        FOREIGN KEY (soussecteuractivite_id) REFERENCES sous_secteurs (id),
         FOREIGN KEY (situationmatrimoniale_id) REFERENCES situation_matrimoniale (id),
         FOREIGN KEY (typesituationhandicap_id) REFERENCES types_situation_handicap (id)
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
@@ -678,7 +678,7 @@ CREATE TABLE
     IF NOT EXISTS micro_projets (
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
         code VARCHAR(50) UNIQUE,
-        intitule VARCHAR(100) NOT NULL,
+        intitule VARCHAR(200),
         matricule VARCHAR(50) UNIQUE,
         description TEXT,
         montant_total DECIMAL(15, 2) DEFAULT 0,
@@ -689,7 +689,7 @@ CREATE TABLE
         commune_id BIGINT UNSIGNED,
         agence_id BIGINT UNSIGNED,
         agence_imputation_id BIGINT UNSIGNED,
-        promoteur_id BIGINT UNSIGNED,
+        promoteur_id BIGINT UNSIGNED NOT NULL,
         stade_projet ENUM ('CREATION', 'DEVELOPPEMENT') DEFAULT 'CREATION',
         type_projet ENUM ('INDIVIDUEL', 'COLLECTIF') DEFAULT 'INDIVIDUEL',
         statut ENUM (
@@ -714,10 +714,11 @@ CREATE TABLE
         date_transmission_partenaire DATE,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        synced_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (dispositif_id) REFERENCES dispositifs (id) ON DELETE RESTRICT,
         FOREIGN KEY (organisme_id) REFERENCES organisme_financements (id) ON DELETE RESTRICT,
         FOREIGN KEY (guichet_id) REFERENCES guichets (id) ON DELETE RESTRICT,
-        FOREIGN KEY (secteur_id) REFERENCES secteurs_activites (id) ON DELETE RESTRICT,
+        FOREIGN KEY (secteur_id) REFERENCES secteurs (id) ON DELETE RESTRICT,
         FOREIGN KEY (commune_id) REFERENCES communes (id) ON DELETE RESTRICT,
         FOREIGN KEY (agence_id) REFERENCES agences_regionales (id) ON DELETE RESTRICT,
         FOREIGN KEY (agence_imputation_id) REFERENCES agences_regionales (id) ON DELETE RESTRICT,
@@ -807,7 +808,7 @@ CREATE TABLE
     IF NOT EXISTS budgets (
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
         micro_projet_id BIGINT UNSIGNED UNIQUE,
-        intitule VARCHAR(100) NOT NULL,
+        intitule VARCHAR(200) NOT NULL,
         montant_accorde DECIMAL(15, 2) NOT NULL,
         date_accord DATE,
         source VARCHAR(100),

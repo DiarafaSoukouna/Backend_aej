@@ -16,6 +16,27 @@ FROM information_schema.REFERENTIAL_CONSTRAINTS AS rc
 WHERE rc.CONSTRAINT_SCHEMA = 'c1apis03'
   AND rc.DELETE_RULE = 'RESTRICT';
 
+--##################################################################################
+--##################################################################################
+SELECT
+    rc.TABLE_NAME,
+    rc.CONSTRAINT_NAME,
+    kcu.COLUMN_NAME,
+    kcu.REFERENCED_TABLE_NAME,
+    kcu.REFERENCED_COLUMN_NAME,
+    rc.DELETE_RULE,
+    rc.UPDATE_RULE
+FROM information_schema.REFERENTIAL_CONSTRAINTS rc
+JOIN information_schema.KEY_COLUMN_USAGE kcu
+    ON rc.CONSTRAINT_SCHEMA = kcu.CONSTRAINT_SCHEMA
+    AND rc.CONSTRAINT_NAME = kcu.CONSTRAINT_NAME
+    AND rc.TABLE_NAME = kcu.TABLE_NAME
+WHERE rc.CONSTRAINT_SCHEMA = 'c1apis03'
+ORDER BY
+    rc.DELETE_RULE,
+    rc.TABLE_NAME,
+    rc.CONSTRAINT_NAME;
+
 
 --##################################################################################
 --##################################################################################
@@ -47,9 +68,9 @@ ORDER BY c.IS_NULLABLE, kcu.TABLE_NAME;
 -- Changer les regles "ON DELETE CASCADE" par "ON DELETE RESTRICT"
 DELIMITER $$
 
-DROP PROCEDURE IF EXISTS `convert_cascade_to_restrict`$$
+DROP PROCEDURE IF EXISTS `convert_delete_roles`$$
 
-CREATE PROCEDURE `convert_cascade_to_restrict`()
+CREATE PROCEDURE `convert_delete_roles`()
 BEGIN
     DECLARE done INT DEFAULT FALSE;
     DECLARE v_table VARCHAR(255);
@@ -115,9 +136,6 @@ BEGIN
             LEAVE read_loop;
         END IF;
 
-        /*
-         * 1. Supprimer l'ancienne FK
-         */
         SET @sql = CONCAT( 'ALTER TABLE `c1apis03`.`', v_table, '` DROP FOREIGN KEY `', v_constraint, '`');
 
         PREPARE stmt FROM @sql;
@@ -157,14 +175,21 @@ END$$
 
 DELIMITER ;
 
--- Exécution
-CALL convert_cascade_to_restrict();
-
--- Nettoyage
-DROP PROCEDURE IF EXISTS `convert_cascade_to_restrict`;
-
+CALL convert_delete_roles();
+DROP PROCEDURE IF EXISTS `convert_delete_roles`;
 
 --##################################################################################
+--##################################################################################
+ALTER TABLE nom_table
+DROP FOREIGN KEY nom_contrainte;
+
+ALTER TABLE nom_table
+ADD CONSTRAINT nom_contrainte
+FOREIGN KEY (colonne)
+REFERENCES table_parent(id)
+ON DELETE RESTRICT;
+
+
 --##################################################################################
 -- Verifier les regles "ON DELETE"
 SELECT DELETE_RULE, COUNT(*) AS nb

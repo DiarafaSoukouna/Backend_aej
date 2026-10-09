@@ -3,7 +3,8 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\JsonResponse;
-use App\Services\AejApiService;
+use Illuminate\Support\Facades\Log;
+
 use App\Http\Resources\TypePieceIdentiteResource;
 use App\Http\Resources\SituationMatrimonialeResource;
 use App\Http\Resources\SecteurResource;
@@ -18,6 +19,11 @@ use App\Http\Resources\CommuneResource;
 use App\Http\Resources\DivisionRegionaleResource;
 use App\Http\Resources\VilleResource;
 use App\Exceptions\AejApiException;
+
+use App\Jobs\SaveMicroProjetsJob;
+use App\Jobs\SyncMicroProjetsJob;
+use App\Services\AejApiService;
+
 use App\Models\Region;
 use App\Models\Departement;
 
@@ -300,7 +306,53 @@ class AejApiController extends Controller
                 'error' => $e->getMessage(),
             ], $e->getCode());
         }
-    }    
+    }
+
+    public function saveMicroProjets(): JsonResponse
+    {
+        try {
+            Log::info('Sauvegarde des micro projets');
+            $jobSave = new SaveMicroProjetsJob();
+            $jobSave->handle();
+
+            return new JsonResponse([
+                'message' => 'Micro projets saved successfully',
+                'note' => 'Save is complete. Check logs for detailed statistics.',
+            ], 202);
+        } catch (\Exception $e) {
+            Log::error('Error saving micro projets', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            return new JsonResponse([
+                'message' => 'Error saving micro projets',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function syncMicroProjets(): JsonResponse
+    {
+        try {
+            Log::info('Synchronisation micro projets job');
+            $jobSync = new SyncMicroProjetsJob();
+            $jobSync->handle();
+
+            return new JsonResponse([
+                'message' => 'Micro projets synchronisation successfully',
+                'note' => 'Synchronisation is complete. Check logs for detailed statistics.',
+            ], 202);
+        } catch (\Exception $e) {
+            Log::error('Error synchronizing micro projets', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            return new JsonResponse([
+                'message' => 'Error synchronizing micro projets',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
 
     public function clearCache(): JsonResponse
     {

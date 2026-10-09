@@ -32,10 +32,7 @@ class SyncAejReferentielsJob implements ShouldQueue
 
     public $tries = 1;
     public $timeout = 300;
-
-    public function __construct(
-        protected string $referentiel = 'all'
-    ) {}
+    public function __construct(protected string $referentiel = 'all') {}
 
     public function handle(AejApiService $aejApiService): void
     {
@@ -60,7 +57,7 @@ class SyncAejReferentielsJob implements ShouldQueue
             };
 
             $aejApiService->clearCache();
-
+            Log::info('SyncAejReferentielsJob completed successfully', ['referentiel' => $this->referentiel]);
         } catch (\Exception $e) {
             Log::error('AEJ Sync Job Error', [
                 'referentiel' => $this->referentiel,
@@ -73,7 +70,7 @@ class SyncAejReferentielsJob implements ShouldQueue
     protected function syncTypesPiecesIdentites(AejApiService $service): void
     {
         $data = $service->getTypesPiecesIdentites();
-        
+
         foreach ($data as $item) {
             $model = TypePieceIdentite::find($item->id);
             if (!$model) {
@@ -93,7 +90,7 @@ class SyncAejReferentielsJob implements ShouldQueue
     protected function syncSituationsMatrimoniale(AejApiService $service): void
     {
         $data = $service->getSituationsMatrimoniale();
-        
+
         foreach ($data as $item) {
             $model = SituationMatrimoniale::find($item->id);
             if (!$model) {
@@ -111,7 +108,7 @@ class SyncAejReferentielsJob implements ShouldQueue
     protected function syncSecteurs(AejApiService $service): void
     {
         $data = $service->getSecteurs();
-        
+
         foreach ($data as $item) {
             $model = Secteur::find($item->id);
             if (!$model) {
@@ -149,7 +146,7 @@ class SyncAejReferentielsJob implements ShouldQueue
     protected function syncNiveauxEtudes(AejApiService $service): void
     {
         $data = $service->getNiveauxEtudes();
-        
+
         foreach ($data as $item) {
             $model = NiveauEtude::find($item->id);
             if (!$model) {
@@ -167,7 +164,7 @@ class SyncAejReferentielsJob implements ShouldQueue
     protected function syncAgencesRegionales(AejApiService $service): void
     {
         $data = $service->getAgencesRegionales();
-        
+
         foreach ($data as $item) {
             $model = AgenceRegionale::find($item->id);
             if (!$model) {
@@ -194,7 +191,7 @@ class SyncAejReferentielsJob implements ShouldQueue
     protected function syncSexes(AejApiService $service): void
     {
         $data = $service->getSexes();
-        
+
         foreach ($data as $item) {
             $model = Sexe::find($item->id);
             if (!$model) {
@@ -231,7 +228,7 @@ class SyncAejReferentielsJob implements ShouldQueue
     protected function syncPays(AejApiService $service): void
     {
         $data = $service->getPays();
-        
+
         foreach ($data as $item) {
             $model = Pays::find($item->id);
             if (!$model) {
@@ -250,7 +247,7 @@ class SyncAejReferentielsJob implements ShouldQueue
     protected function syncSituationsHandicaps(AejApiService $service): void
     {
         $data = $service->getSituationsHandicaps();
-        
+
         foreach ($data as $item) {
             $model = TypeSituationHandicap::find($item->id);
             if (!$model) {
@@ -343,6 +340,7 @@ class SyncAejReferentielsJob implements ShouldQueue
 
         Log::info('Villes synchronized successfully');
     }
+
 
     protected function syncAll(AejApiService $service): void
     {

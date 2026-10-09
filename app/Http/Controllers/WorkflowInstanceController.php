@@ -9,10 +9,30 @@ use Illuminate\Support\Facades\Validator;
 
 class WorkflowInstanceController extends Controller
 {
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        $instances = WorkflowInstance::with(['microProjet', 'currentEtape', 'nextEtape', 'history', 'deliverables', 'comments'])->get();
-        return response()->json(['message' => 'Instances retrieved successfully', 'data' => $instances]);
+        $query = WorkflowInstance::with(['microProjet', 'currentEtape', 'nextEtape', 'history', 'deliverables', 'comments']);
+        $filters = ['micro_projet_id', 'workflow_version', 'current_etape_code', 'next_etape_code', 'statut'];
+
+        foreach ($filters as $filter) {
+            if ($request->filled($filter)) $query->where($filter, $request->input($filter));
+        }
+
+        $perPage = $request->get('per_page', 20);
+        $instances = $query->paginate($perPage);
+
+        return new JsonResponse([
+            'message' => 'Instances retrieved successfully',
+            'data' => $instances->items(),
+            'pagination' => [
+                'current_page' => $instances->currentPage(),
+                'per_page' => $instances->perPage(),
+                'total' => $instances->total(),
+                'last_page' => $instances->lastPage(),
+                'from' => $instances->firstItem(),
+                'to' => $instances->lastItem(),
+            ],
+        ], 200);
     }
 
     public function show($id): JsonResponse

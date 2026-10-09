@@ -11,11 +11,15 @@ return [
     */
 
     'base_url' => env('AEJ_API_BASE_URL', 'https://agenceemploijeunes.ci/api/v1.0'),
+    'backoffice_url' => env('AEJ_BACKOFFICE_URL', 'http://aejplateformetest.westeurope.cloudapp.azure.com/projets/api/v1/backoffice'),
     'api_key' => env('AEJ_API_KEY', null),
+    'backoffice_email' => env('AEJ_BACKOFFICE_EMAIL', 'user-mail'),
+    'backoffice_password' => env('AEJ_BACKOFFICE_PASSWORD', 'user-password'),
+    'backoffice_device_name' => env('AEJ_BACKOFFICE_DEVICE_NAME', 'test-warp'),
     'timeout' => env('AEJ_API_TIMEOUT', 30),
     'retry' => env('AEJ_API_RETRY', 3),
     'retry_delay' => env('AEJ_API_RETRY_DELAY', 100),
-    
+
     'endpoints' => [
         'types_pieces_identites' => '/types-pieces-identites',
         'situations_matrimoniale' => '/situations-matrimoniale',
@@ -28,6 +32,11 @@ return [
         'lieu_habitations' => '/lieu-habitations',
         'sexes' => '/sexes',
         'pays' => '/pays',
+    ],
+
+    'backoffice_endpoints' => [
+        'auth_login' => '/auth/login',
+        'micro_projets' => '/projets',
     ],
     
     'cache' => [

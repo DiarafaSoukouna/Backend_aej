@@ -30,7 +30,13 @@ use App\Exceptions\AejApiServerException;
 class AejApiService
 {
     protected string $baseUrl;
+    protected string $backofficeUrl;
     protected ?string $apiKey;
+    protected ?string $backofficeEmail;
+    protected ?string $backofficePassword;
+    protected ?string $backofficeDeviceName;
+    protected ?string $backofficeToken = null;
+    protected ?string $backofficeTokenExpiresAt = null;
     protected int $timeout;
     protected int $retry;
     protected int $retryDelay;
@@ -41,9 +47,13 @@ class AejApiService
     public function __construct()
     {
         $config = config('aej_api');
-        
+
         $this->baseUrl = $config['base_url'];
         $this->apiKey = $config['api_key'];
+        $this->backofficeUrl = $config['backoffice_url'];
+        $this->backofficeEmail = $config['backoffice_email'];
+        $this->backofficePassword = $config['backoffice_password'];
+        $this->backofficeDeviceName = $config['backoffice_device_name'];
         $this->timeout = $config['timeout'];
         $this->retry = $config['retry'];
         $this->retryDelay = $config['retry_delay'];
@@ -270,5 +280,156 @@ class AejApiService
             Cache::forget($this->cachePrefix . md5(config('aej_api.endpoints.pays')));
             Cache::forget($this->cachePrefix . md5(config('aej_api.endpoints.situations_handicaps')));
         }
+    }
+
+    protected function getBackofficeToken(): string
+    {
+        if ($this->backofficeToken && $this->backofficeTokenExpiresAt && now()->lt($this->backofficeTokenExpiresAt)) {
+            return $this->backofficeToken;
+        }
+
+        $endpoint = $this->backofficeUrl . config('aej_api.backoffice_endpoints.auth_login');
+        Log::info('Backoffice Authentication Attempt', [
+            'endpoint' => $endpoint,
+            'email' => $this->backofficeEmail,
+        ]);
+
+        try {
+            $response = Http::timeout($this->timeout)
+                ->retry($this->retry, $this->retryDelay)
+                ->post($endpoint, [
+                    'email' => $this->backofficeEmail,
+                    'password' => $this->backofficePassword,
+                    'device_name' => $this->backofficeDeviceName,
+                ]);
+
+            Log::info('Backoffice Authentication Response', [
+                'status' => $response->status(),
+                'body' => $response->body(),
+            ]);
+
+            if (!$response->successful()) {
+                Log::error('Backoffice Authentication Error', [
+                    'status' => $response->status(),
+                    'body' => $response->body(),
+                ]);
+                throw new AejApiAuthenticationException('Backoffice authentication failed');
+            }
+
+            $data = $response->json();
+
+            Log::info('Backoffice Authentication Data', ['data' => $data ]);
+            $this->backofficeToken = $data['token'] ?? null;
+            $this->backofficeTokenExpiresAt = isset($data['expires_at']) ? \Carbon\Carbon::parse($data['expires_at']) : null;
+
+            if (!$this->backofficeToken) {
+                Log::error('No token in response', [
+                    'data' => $data,
+                ]);
+                throw new AejApiAuthenticationException('No token received from backoffice');
+            }
+
+            Log::info('Backoffice Authentication Success', [
+                'token_length' => strlen($this->backofficeToken),
+                'expires_at' => $this->backofficeTokenExpiresAt,
+            ]);
+
+            return $this->backofficeToken;
+
+        } catch (\Exception $e) {
+            Log::error('Backoffice Authentication Exception', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            throw new AejApiException('Backoffice authentication error: ' . $e->getMessage(), 0, $e);
+        }
+    }
+
+    protected function makeBackofficeRequest(string $endpoint): array
+    {
+        try {
+            $token = $this->getBackofficeToken();
+
+            $response = Http::baseUrl($this->backofficeUrl)
+                ->timeout($this->timeout)
+                ->retry($this->retry, $this->retryDelay)
+                ->withHeaders([
+                    'Accept' => 'application/json',
+                    'Content-Type' => 'application/json',
+                    'Authorization' => 'Bearer ' . $token,
+                ])
+                ->get($endpoint);
+
+            $this->handleResponseErrors($response);
+
+            return $response->json();
+
+        } catch (\Illuminate\Http\Client\ConnectionException $e) {
+            Log::error('Backoffice API Connection Error', [
+                'endpoint' => $endpoint,
+                'error' => $e->getMessage(),
+            ]);
+            throw new AejApiUnavailableException('Backoffice API unavailable: ' . $e->getMessage(), 0, $e);
+
+        } catch (\Exception $e) {
+            if (str_contains($e->getMessage(), 'timeout') || str_contains($e->getMessage(), 'timed out')) {
+                Log::error('Backoffice API Timeout', [
+                    'endpoint' => $endpoint,
+                    'error' => $e->getMessage(),
+                ]);
+                throw new AejApiTimeoutException('Backoffice API request timeout', 0, $e);
+            }
+
+            Log::error('Backoffice API Error', [
+                'endpoint' => $endpoint,
+                'error' => $e->getMessage(),
+            ]);
+            throw new AejApiException('Backoffice API error: ' . $e->getMessage(), 0, $e);
+        }
+    }
+
+    public function getMicroProjets(): array
+    {
+        $endpoint = config('aej_api.backoffice_endpoints.micro_projets');
+        $perPage = 100;
+
+        // Récupérer la première page pour obtenir les métadonnées
+        $firstPageEndpoint = $endpoint . '?page=1&per_page=' . $perPage;
+        $response = $this->makeBackofficeRequest($firstPageEndpoint);
+
+        if (empty($response['data'])) {
+            return ['data' => [], 'meta' => ['total' => 0, 'pages' => 0, 'per_page' => $perPage]];
+        }
+
+        $lastPage = $response['meta']['last_page'] ?? 1;
+        $total = $response['meta']['total'] ?? 0;
+
+        Log::info('Micro projets pagination info', [
+            'total_records' => $total,
+            'total_pages' => $lastPage,
+            'per_page' => $perPage,
+        ]);
+
+        return [
+            'data' => $response['data'],
+            'meta' => [
+                'total' => $total,
+                'pages' => $lastPage,
+                'per_page' => $perPage,
+                'current_page' => 1,
+            ],
+        ];
+    }
+
+    public function getMicroProjetsPage(int $page, int $perPage = 100): array
+    {
+        $endpoint = config('aej_api.backoffice_endpoints.micro_projets');
+        $paginatedEndpoint = $endpoint . '?page=' . $page . '&per_page=' . $perPage;
+        $response = $this->makeBackofficeRequest($paginatedEndpoint);
+
+        return [
+            'data' => $response['data'] ?? [],
+            'meta' => $response['meta'] ?? [],
+        ];
     }
 }

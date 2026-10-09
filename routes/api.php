@@ -96,6 +96,7 @@ use App\Http\Controllers\AiReport\PeriodicBulletinController;
         Route::get('refresh', [AuthController::class, 'refresh']);
 
         Route::middleware('verifyToken')->group(function () {
+            // Initialiser le compteur de limiteur throttle
             Route::post('logout', [AuthController::class, 'logout']);
             Route::get('me', [AuthController::class, 'me']);
         });
@@ -152,10 +153,12 @@ use App\Http\Controllers\AiReport\PeriodicBulletinController;
         Route::apiResource('zones-intervention', ZoneInterventionController::class);
         Route::apiResource('dispositifs', DispositifController::class);
         Route::apiResource('guichets', GuichetController::class);
-        Route::get('promoteurs', [PromoteurController::class, 'index']);
-        Route::get('promoteurs/{id}', [PromoteurController::class, 'show']);
-        Route::get('projets', [MicroProjetController::class, 'index']);
-        Route::get('projets/{id}', [MicroProjetController::class, 'show']);
+        Route::apiResource('promoteurs', PromoteurController::class);
+        Route::post('promoteurs/multiple', [PromoteurController::class, 'storeMultiple']);
+        Route::patch('promoteurs/{id}', [PromoteurController::class, 'patch']);
+        Route::apiResource('projets', MicroProjetController::class);
+        Route::post('projets/multiple', [MicroProjetController::class, 'storeMultiple']);
+        Route::patch('projets/{id}', [MicroProjetController::class, 'patch']);
 
         // Formulaires d'évaluation
         Route::apiResource('formulaires-evaluation', FormulaireEvaluationController::class);
@@ -279,6 +282,8 @@ use App\Http\Controllers\AiReport\PeriodicBulletinController;
         Route::post('clear-cache', [AejApiController::class, 'clearCache']);
         Route::post('sync', [SyncAejController::class, 'sync']);
         Route::post('sync-all', [SyncAejController::class, 'syncAll']);
+        Route::post('save-micro-projets', [AejApiController::class, 'saveMicroProjets']);
+        Route::post('sync-micro-projets', [AejApiController::class, 'syncMicroProjets']);
     });
 
     // Dashboards (public)
@@ -341,6 +346,7 @@ use App\Http\Controllers\AiReport\PeriodicBulletinController;
 
         Route::prefix('global')->group(function () {
             Route::post('/',               [GlobalReportController::class, 'generate']);
+            Route::get('risk-profiles/pdf',[GlobalReportController::class, 'riskProfilesPdf']);
             Route::get('risk-profiles',    [GlobalReportController::class, 'riskProfiles']);
             Route::get('history',          [GlobalReportController::class, 'history']);
             Route::get('download/{logId}', [GlobalReportController::class, 'download']);

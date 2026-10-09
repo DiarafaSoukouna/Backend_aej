@@ -102,4 +102,9 @@ class Promoteur extends Model
     {
         return $this->hasMany(MicroProjet::class, 'promoteur_id');
     }
+
+    public function remboursements()
+    {
+        return $this->hasMany(Remboursement::class, 'promoteur_id');
+    }
 }

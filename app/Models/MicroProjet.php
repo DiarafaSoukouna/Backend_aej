@@ -27,6 +27,7 @@ class MicroProjet extends Model
         'geolocalisation',
         'date_certification',
         'date_transmission_partenaire',
+        'synced_at',
     ];
 
     protected $casts = [

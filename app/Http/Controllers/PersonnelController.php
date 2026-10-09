@@ -20,8 +20,28 @@ class PersonnelController extends Controller
 {
     public function index(): JsonResponse
     {
-        $personnels = Personnel::with('role', 'fonction', 'structure', 'agence', 'organisme')->get();
-        return new JsonResponse(['Message' => 'Personnel list retrieved successfully', 'data' => $personnels], 200);
+        $query = Personnel::with('role', 'fonction', 'structure', 'agence', 'organisme');
+        $filters = request()->only(['role_id', 'fonction_id', 'structure_id', 'agence_id', 'organisme_id', 'is_active']);
+
+        foreach ($filters as $key => $value) {
+            if (!empty($value)) $query->where($key, $value);
+        }
+
+        $perPage = request()->get('per_page', 20);
+        $personnels = $query->paginate($perPage);
+
+        return new JsonResponse([
+            'message' => 'Personnels retrieved successfully',
+            'data' => $personnels->items(),
+            'pagination' => [
+                'current_page' => $personnels->currentPage(),
+                'per_page' => $personnels->perPage(),
+                'total' => $personnels->total(),
+                'last_page' => $personnels->lastPage(),
+                'from' => $personnels->firstItem(),
+                'to' => $personnels->lastItem(),
+            ],
+        ], 200);
     }
 
     public function show($id): JsonResponse
@@ -98,7 +118,7 @@ class PersonnelController extends Controller
             'personnels.*.nom' => 'required|string|max:255',
             'personnels.*.prenom' => 'required|string|max:255',
             'personnels.*.email' => 'required|string|email|max:255',
-            'personnels.*.telephone' => 'nullable|string|max:20',
+            'personnels.*.telephone' => 'nullable|string|max:100',
             'personnels.*.adresse' => 'nullable|string|max:255',
             'personnels.*.role_code' => 'nullable|string',
             'personnels.*.fonction_code' => 'nullable|string',
@@ -176,10 +196,10 @@ class PersonnelController extends Controller
 
             if (!empty($tokensToCreate)) Token::insert($tokensToCreate);
 
-            foreach ($emailsToSend as $emailData) {
-                $mailService->sendWelcomeEmail($emailData['personnel']);
-                $mailService->sendSetupEmail($emailData['personnel'], $emailData['setup_url']);
-            }
+            // foreach ($emailsToSend as $emailData) {
+            //     $mailService->sendWelcomeEmail($emailData['personnel']);
+            //     $mailService->sendSetupEmail($emailData['personnel'], $emailData['setup_url']);
+            // }
 
             return new JsonResponse([
                 'message' => 'Personnels created successfully. Un email de configuration a été envoyé.',
