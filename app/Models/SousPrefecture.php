@@ -5,14 +5,14 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
-class Commune extends Model
+class SousPrefecture extends Model
 {
     use HasFactory;
 
-    protected $table = 'communes';
+    protected $table = 'sous_prefectures';
 
     protected $fillable = [
-        'sous_prefecture_id',
+        'departement_id',
         'code',
         'nom',
         'synced_at',
@@ -24,18 +24,13 @@ class Commune extends Model
 
     public $timestamps = false;
 
-    public function sousPrefecture()
+    public function departement()
     {
-        return $this->belongsTo(SousPrefecture::class);
+        return $this->belongsTo(Departement::class);
     }
 
-    public function villes()
+    public function communes()
     {
-        return $this->hasMany(Ville::class);
-    }
-
-    public function entreprises()
-    {
-        return $this->hasMany(Entreprise::class);
+        return $this->hasMany(Commune::class);
     }
 }

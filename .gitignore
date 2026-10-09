@@ -20,6 +20,8 @@
 /public/storage
 /storage/*.key
 /storage/pail
+/storage/data
+/notes/data
 /vendor
 /trash
 _ide_helper.php

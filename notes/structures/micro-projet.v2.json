@@ -1,0 +1,48 @@
+{
+    "id": 78243,
+    "matricule": "AGR-MS-105-1",
+    "intitule": "OBTENIR UN FINANCEMENT POUR RENFORCER MON ACTIVITÉ DE VENTE ET DE RÉPARATION DE TÉLÉPHONES PORTABLES, NOTAMMENT L’ACHAT DE NOUVEAUX TÉLÉPHONES ET ACCESSOIRES AFIN D’AUGMENTER MON STOCK ET AMÉLIORER MES REVENUS.",
+    "description": "Projet OBTENIR UN FINANCEMENT POUR RENFORCER MON ACTIVITÉ DE VENTE ET DE RÉPARATION DE TÉLÉPHONES PORTABLES, NOTAMMENT L’ACHAT DE NOUVEAUX TÉLÉPHONES ET ACCESSOIRES AFIN D’AUGMENTER MON STOCK ET AMÉLIORER MES REVENUS. dans le domaine COMMERCE",
+    "montant_total": 500000,
+    "type_guichet": {
+        "id": 4,
+        "code": "GUICHET_2_AGR_METIERS_SPORT",
+        "libelle": "Guichet 2 - AGR Métiers du Sport",
+        "description": "Programme de financement spécialisé pour les métiers du sport",
+        "couleur": null,
+        "is_active": true,
+        "is_form_active": true
+    },
+    "etape": {
+        "id": 34,
+        "code": "ENROLLED",
+        "libelle": "Inscrit",
+        "description": "Le promoteur a soumis son projet",
+        "order": 1,
+        "is_initial": true,
+        "is_final_success": false,
+        "is_final_failure": false
+    },
+    "promoteur": {
+        "id": 85834,
+        "numero_aej": "2626833421",
+        "nom_complet": "KOUCOUA JUDICAEL SOTAN",
+        "email": "sotanjudicael@gmail.com",
+        "telephone": "0757415426"
+    },
+    "secteur_activite": {
+        "id": 7,
+        "libelle": "COMMERCE"
+    },
+    "forme_juridique": {
+        "id": 5,
+        "libelle": "Entreprise Individuelle informelle"
+    },
+    "commune": {
+        "id": 396,
+        "nom": "BONOUA"
+    },
+    "documents_count": 0,
+    "created_at": "2026-04-29T00:55:03+00:00",
+    "updated_at": "2026-04-29T00:55:03+00:00"
+}

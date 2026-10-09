@@ -45,6 +45,7 @@ CREATE TABLE
 -- ##############################################################
 -- 2. DONNÉES GÉOGRAPHIQUES
 -- ##############################################################
+-- API AEJ indisponible
 CREATE TABLE
     IF NOT EXISTS regions (
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -53,6 +54,7 @@ CREATE TABLE
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
+-- API AEJ indisponible
 CREATE TABLE
     IF NOT EXISTS departements (
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -60,37 +62,57 @@ CREATE TABLE
         code VARCHAR(50) UNIQUE,
         nom VARCHAR(100) NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (region_id) REFERENCES regions (id) ON DELETE CASCADE
+        FOREIGN KEY (region_id) REFERENCES regions (id) ON DELETE RESTRICT
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
--- Via https://agenceemploijeunes.ci/api/v1.0/load-projet-parameter
+-- Via https://agenceemploijeunes.ci/api/v1.0/load-projet-parameter [data.sous_prefectures]
 CREATE TABLE
-    IF NOT EXISTS villes (
+    IF NOT EXISTS sous_prefectures (
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-        nom VARCHAR(100) NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
-
--- Via https://agenceemploijeunes.ci/api/v1.0/communes-old
-CREATE TABLE
-    IF NOT EXISTS communes (
-        id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-        ville_id BIGINT UNSIGNED,
-        divisionregionaleaej_id BIGINT UNSIGNED,
-        guichetemploi_id BIGINT UNSIGNED,
+        departement_id BIGINT UNSIGNED,
         code VARCHAR(50) UNIQUE,
         nom VARCHAR(100) NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (ville_id) REFERENCES villes (id) ON DELETE CASCADE,
-        FOREIGN KEY (divisionregionaleaej_id) REFERENCES division_regionale (id) ON DELETE CASCADE
+        synced_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        FOREIGN KEY (departement_id) REFERENCES departements (id) ON DELETE RESTRICT
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
--- Via https://agenceemploijeunes.ci/api/v1.0/load-projet-parameter
+-- Via https://agenceemploijeunes.ci/api/v1.0/load-projet-parameter [data.communes]
+CREATE TABLE
+    IF NOT EXISTS communes (
+        id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+        sous_prefecture_id  BIGINT UNSIGNED,
+        code VARCHAR(50) UNIQUE,
+        nom VARCHAR(100) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        synced_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        FOREIGN KEY (sous_prefecture_id ) REFERENCES sous_prefectures (id) ON DELETE RESTRICT
+    ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
+
+-- Via https://agenceemploijeunes.ci/api/v1.0/load-projet-parameter [data.villes]
+CREATE TABLE
+    IF NOT EXISTS villes (
+        id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+        commune_id BIGINT UNSIGNED,
+        code VARCHAR(50) UNIQUE,
+        nom VARCHAR(100) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        synced_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        FOREIGN KEY (commune_id) REFERENCES communes (id) ON DELETE RESTRICT
+    ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
+
+-- Via https://agenceemploijeunes.ci/api/v1.0/load-projet-parameter [data.divisions]
 CREATE TABLE
     IF NOT EXISTS division_regionale (
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
         code VARCHAR(50) UNIQUE,
         nom VARCHAR(100) NOT NULL
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        synced_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
 -- ##############################################################
@@ -98,50 +120,55 @@ CREATE TABLE
 -- ##############################################################
 -- Via https://agenceemploijeunes.ci/api/v1.0/secteurs
 CREATE TABLE
-    IF NOT EXISTS secteurs_activites (
+    IF NOT EXISTS secteurs (
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
         nom VARCHAR(50) UNIQUE,
-        libelle VARCHAR(100) NOT NULL
+        libelle VARCHAR(100) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        synced_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
 -- Via https://agenceemploijeunes.ci/api/v1.0/sous-secteurs
 CREATE TABLE
-    IF NOT EXISTS sous_secteurs_activites (
+    IF NOT EXISTS sous_secteurs (
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
         secteur_activite_id BIGINT UNSIGNED,
         libelle VARCHAR(150) NOT NULL,
-        FOREIGN KEY (secteur_activite_id) REFERENCES secteurs_activites (id) ON DELETE CASCADE
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        synced_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        FOREIGN KEY (secteur_activite_id) REFERENCES secteurs (id) ON DELETE RESTRICT
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
--- Via API Indisponible
 CREATE TABLE
-    IF NOT EXISTS directions (
+    IF NOT EXISTS niveau_hierarchie (
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-        nom VARCHAR(255) NOT NULL,
-        code VARCHAR(255) NOT NULL UNIQUE,
-        description TEXT NULL
+        libelle VARCHAR(150) NOT NULL, -- Directions, Sous-Directions, Services, Sous-services
+        niveau INT UNIQUE,
+        description TEXT
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
--- Via API Indisponible
 CREATE TABLE
-    IF NOT EXISTS services (
+    IF NOT EXISTS structures (
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
         nom VARCHAR(255) NOT NULL,
         code VARCHAR(255) NOT NULL UNIQUE,
         description TEXT NULL,
-        direction_id BIGINT UNSIGNED,
-        FOREIGN KEY (direction_id) REFERENCES directions (id) ON DELETE CASCADE
+        niveau_id BIGINT UNSIGNED,
+        parent_id BIGINT UNSIGNED,
+        FOREIGN KEY (niveau_id) REFERENCES niveau_hierarchie (id) ON DELETE RESTRICT,
+        FOREIGN KEY (parent_id) REFERENCES structures (id) ON DELETE RESTRICT
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
--- Via API Indisponible
 CREATE TABLE
     IF NOT EXISTS fonctions (
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
         nom VARCHAR(255) NOT NULL,
         code VARCHAR(255) NOT NULL UNIQUE,
         description TEXT NULL,
-        service_id BIGINT UNSIGNED,
-        FOREIGN KEY (service_id) REFERENCES services (id) ON DELETE CASCADE
+        structure_id BIGINT UNSIGNED,
+        FOREIGN KEY (structure_id) REFERENCES structures (id) ON DELETE RESTRICT
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
 -- ##############################################################
@@ -166,7 +193,7 @@ CREATE TABLE
         sigle VARCHAR(30),
         rccm VARCHAR(50) UNIQUE,
         ninea VARCHAR(50) UNIQUE,
-        type_entreprise_id BIGINT UNSIGNED NULL,
+        type_entreprise_id BIGINT UNSIGNED,
         adresse TEXT,
         contact VARCHAR(30),
         email VARCHAR(100),
@@ -204,7 +231,7 @@ CREATE TABLE
         region_id BIGINT UNSIGNED,
         created_at TIMESTAMP NULL,
         updated_at TIMESTAMP NULL,
-        FOREIGN KEY (type) REFERENCES type_organismes (id) ON DELETE CASCADE ON UPDATE CASCADE,
+        FOREIGN KEY (type) REFERENCES type_organismes (id) ON DELETE RESTRICT,
         FOREIGN KEY (region_id) REFERENCES regions (id)
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
@@ -223,8 +250,9 @@ CREATE TABLE
         email VARCHAR(100),
         chef_agence_id BIGINT UNSIGNED,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        synced_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        FOREIGN KEY (chef_agence_id) REFERENCES personnels (id) ON DELETE CASCADE
+        FOREIGN KEY (chef_agence_id) REFERENCES personnels (id) ON DELETE RESTRICT
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
 -- ##############################################################
@@ -251,7 +279,7 @@ CREATE TABLE
         full_access BOOLEAN,
         created_at DATETIME NOT NULL,
         updated_at DATETIME NOT NULL,
-        FOREIGN KEY (role_id) REFERENCES roles (id) ON DELETE CASCADE
+        FOREIGN KEY (role_id) REFERENCES roles (id) ON DELETE RESTRICT
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
 -- ##############################################################
@@ -265,17 +293,19 @@ CREATE TABLE
         email VARCHAR(180) NOT NULL UNIQUE,
         telephone VARCHAR(20),
         mot_de_passe VARCHAR(255) NOT NULL,
-        type_utilisateur ENUM ('interne', 'externe') DEFAULT 'interne',
+        mot_de_passe_change TINYINT (1) NOT NULL DEFAULT 0,
+        is_active TINYINT (1) NOT NULL DEFAULT 1,
+        remember_token VARCHAR(100),
         role_id BIGINT UNSIGNED,
         fonction_id BIGINT UNSIGNED,
+        structure_id BIGINT UNSIGNED,
         agence_id BIGINT UNSIGNED,
         organisme_id BIGINT UNSIGNED,
-        statut TINYINT (1) NOT NULL DEFAULT 1,
-        remember_token VARCHAR(100),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         FOREIGN KEY (role_id) REFERENCES roles (id),
         FOREIGN KEY (fonction_id) REFERENCES fonctions (id),
+        FOREIGN KEY (structure_id) REFERENCES structures (id),
         FOREIGN KEY (agence_id) REFERENCES agences_regionales (id),
         FOREIGN KEY (organisme_id) REFERENCES organisme_financements (id)
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
@@ -288,7 +318,7 @@ CREATE TABLE
         message TEXT NOT NULL,
         lue TINYINT (1) NOT NULL DEFAULT 0,
         created_at DATETIME NOT NULL,
-        FOREIGN KEY (personnel_id) REFERENCES personnels (id) ON DELETE CASCADE
+        FOREIGN KEY (personnel_id) REFERENCES personnels (id) ON DELETE RESTRICT
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
 CREATE TABLE 
@@ -301,7 +331,7 @@ CREATE TABLE
         expires_at DATETIME NOT NULL,
         created_at DATETIME NOT NULL,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        FOREIGN KEY (personnel_id) REFERENCES personnels (id) ON DELETE CASCADE
+        FOREIGN KEY (personnel_id) REFERENCES personnels (id) ON DELETE RESTRICT
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
 CREATE TABLE 
@@ -314,7 +344,7 @@ CREATE TABLE
         used TINYINT (1) NOT NULL DEFAULT 0,
         created_at DATETIME NOT NULL,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        FOREIGN KEY (personnel_id) REFERENCES personnels (id) ON DELETE CASCADE
+        FOREIGN KEY (personnel_id) REFERENCES personnels (id) ON DELETE RESTRICT
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
 -- ##############################################################
@@ -324,7 +354,10 @@ CREATE TABLE
 CREATE TABLE
     IF NOT EXISTS sexes (
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-        libelle VARCHAR(150) NOT NULL
+        libelle VARCHAR(150) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        synced_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
 -- Via https://agenceemploijeunes.ci/api/v1.0/lieu-habitations
@@ -333,6 +366,9 @@ CREATE TABLE
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
         nom VARCHAR(150) NOT NULL,
         ville_id BIGINT UNSIGNED,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        synced_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         FOREIGN KEY (ville_id) REFERENCES villes (id)
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
@@ -342,14 +378,20 @@ CREATE TABLE
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
         libelle VARCHAR(100) NOT NULL,
         description TEXT,
-        actif TINYINT(1) NOT NULL DEFAULT 1
+        actif TINYINT(1) NOT NULL DEFAULT 1,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        synced_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
 -- Via https://agenceemploijeunes.ci/api/v1.0/niveaux-etudes
 CREATE TABLE
     IF NOT EXISTS niveau_etude (
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-        libelle VARCHAR(150) NOT NULL
+        libelle VARCHAR(150) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        synced_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
 -- Via https://agenceemploijeunes.ci/api/v1.0/pays
@@ -357,21 +399,30 @@ CREATE TABLE
     IF NOT EXISTS pays (
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
         code_iso VARCHAR(10) UNIQUE,
-        nom VARCHAR(100) NOT NULL
+        nom VARCHAR(100) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        synced_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
 -- Via https://agenceemploijeunes.ci/api/v1.0/situations-handicaps
 CREATE TABLE
     IF NOT EXISTS types_situation_handicap (
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-        libelle VARCHAR(100) NOT NULL
+        libelle VARCHAR(100) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        synced_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
 -- Via https://agenceemploijeunes.ci/api/v1.0/situations-matrimoniale
 CREATE TABLE
     IF NOT EXISTS situation_matrimoniale (
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-        libelle VARCHAR(100) NOT NULL
+        libelle VARCHAR(100) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        synced_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
 -- ##############################################################
@@ -391,9 +442,9 @@ CREATE TABLE
 CREATE TABLE
     IF NOT EXISTS workflow_versions (
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-        workflow_code VARCHAR(50) NOT NULL,
+        workflow_code VARCHAR(50),
         version VARCHAR(20) NOT NULL DEFAULT '2026',
-        code VARCHAR(50) NOT NULL UNIQUE, -- GENERATE BY [workflow_code + '_' + VERSION] IF NOT EXISTS
+        code VARCHAR(50) UNIQUE, -- GENERATE BY [workflow_code + '_' + VERSION] IF NOT EXISTS
         name VARCHAR(150) NOT NULL,
         description TEXT,
         etape_start_code VARCHAR(50),
@@ -401,7 +452,7 @@ CREATE TABLE
         is_default BOOLEAN NOT NULL DEFAULT FALSE,
         created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        FOREIGN KEY (workflow_code) REFERENCES workflows (code) ON DELETE CASCADE,
+        FOREIGN KEY (workflow_code) REFERENCES workflows (code) ON DELETE RESTRICT,
         UNIQUE (workflow_code, version)
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
@@ -433,65 +484,65 @@ CREATE TABLE
 CREATE TABLE
     IF NOT EXISTS workflow_etapes (
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-        workflow_version VARCHAR(50) NOT NULL,
+        workflow_version VARCHAR(50),
         parent_etape_code VARCHAR(50),
         code VARCHAR(50) NOT NULL UNIQUE,
         name VARCHAR(200) NOT NULL,
         impact VARCHAR(50),
         statut VARCHAR(10) DEFAULT 'NON',
         description TEXT,
-        order INTEGER NOT NULL,
+        order INT NOT NULL,
         is_active BOOLEAN NOT NULL DEFAULT TRUE,
         valid_from DATE NOT NULL DEFAULT (CURRENT_DATE),
         valid_to DATE,
         created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        FOREIGN KEY (workflow_version) REFERENCES workflow_versions (code) ON DELETE CASCADE,
-        FOREIGN KEY (parent_etape_code) REFERENCES workflow_etapes (code) ON DELETE CASCADE
+        FOREIGN KEY (workflow_version) REFERENCES workflow_versions (code) ON DELETE RESTRICT,
+        FOREIGN KEY (parent_etape_code) REFERENCES workflow_etapes (code) ON DELETE RESTRICT
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
 CREATE TABLE
     IF NOT EXISTS workflow_etapes_sla (
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-        etape_code VARCHAR(50) NOT NULL,
-        duration_value INTEGER NOT NULL,
+        etape_code VARCHAR(50),
+        duration_value INT,
         duration_unit VARCHAR(20) NOT NULL DEFAULT 'JOURS',
         description TEXT,
         CHECK (duration_unit IN ('HEURES', 'JOURS', 'SEMAINES', 'MOIS')),
-        FOREIGN KEY (etape_code) REFERENCES workflow_etapes (code) ON DELETE CASCADE
+        FOREIGN KEY (etape_code) REFERENCES workflow_etapes (code) ON DELETE RESTRICT
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
 CREATE TABLE
     IF NOT EXISTS workflow_etapes_roles (
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-        etape_code VARCHAR(50) NOT NULL,
-        role_code VARCHAR(50) NOT NULL,
+        etape_code VARCHAR(50),
+        role_code VARCHAR(50),
         action VARCHAR(50) NOT NULL,
-        FOREIGN KEY (etape_code) REFERENCES workflow_etapes (code) ON DELETE CASCADE,
-        FOREIGN KEY (role_code) REFERENCES workflow_roles (code) ON DELETE CASCADE,
+        FOREIGN KEY (etape_code) REFERENCES workflow_etapes (code) ON DELETE RESTRICT,
+        FOREIGN KEY (role_code) REFERENCES workflow_roles (code) ON DELETE RESTRICT,
         UNIQUE (etape_code, role_code)
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
 CREATE TABLE
     IF NOT EXISTS workflow_etapes_decision (
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-        etape_code VARCHAR(50) NOT NULL,
+        etape_code VARCHAR(50),
         code VARCHAR(50) NOT NULL,
         name VARCHAR(150) NOT NULL,
         description TEXT,
         outcomes TEXT, -- Pipe de code separe par |
-        FOREIGN KEY (etape_code) REFERENCES workflow_etapes (code) ON DELETE CASCADE,
+        FOREIGN KEY (etape_code) REFERENCES workflow_etapes (code) ON DELETE RESTRICT,
         UNIQUE(etape_code, code)
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
 CREATE TABLE
     IF NOT EXISTS workflow_etapes_deliverable (
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-        etape_code VARCHAR(50) NOT NULL,
-        deliverable_code VARCHAR(50) NOT NULL,
+        etape_code VARCHAR(50),
+        deliverable_code VARCHAR(50),
         is_required BOOLEAN NOT NULL DEFAULT TRUE,
-        FOREIGN KEY (etape_code) REFERENCES workflow_etapes (code) ON DELETE CASCADE,
-        FOREIGN KEY (deliverable_code) REFERENCES workflow_deliverables (code) ON DELETE CASCADE
+        FOREIGN KEY (etape_code) REFERENCES workflow_etapes (code) ON DELETE RESTRICT,
+        FOREIGN KEY (deliverable_code) REFERENCES workflow_deliverables (code) ON DELETE RESTRICT
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
 -- ##############################################################
@@ -505,7 +556,7 @@ CREATE TABLE
         titre VARCHAR(255) NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        FOREIGN KEY (secteur_id) REFERENCES secteurs_activites (id)
+        FOREIGN KEY (secteur_id) REFERENCES secteurs (id)
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
 CREATE TABLE
@@ -518,7 +569,7 @@ CREATE TABLE
         longitude DECIMAL(11, 8),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        FOREIGN KEY (projet_id) REFERENCES projets (id) ON DELETE CASCADE,
+        FOREIGN KEY (projet_id) REFERENCES projets (id) ON DELETE RESTRICT,
         FOREIGN KEY (departement_id) REFERENCES departements (id)
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
@@ -564,7 +615,7 @@ CREATE TABLE
         nbre_micro_projet_prevu INT DEFAULT 0,
         created_at DATETIME NOT NULL,
         updated_at DATETIME NOT NULL,
-        FOREIGN KEY (projet_id) REFERENCES projets (id) ON DELETE CASCADE,
+        FOREIGN KEY (projet_id) REFERENCES projets (id) ON DELETE RESTRICT,
         FOREIGN KEY (guichet_id) REFERENCES guichets (id),
         FOREIGN KEY (workflow_version) REFERENCES workflow_versions (code)
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
@@ -577,14 +628,14 @@ CREATE TABLE
     IF NOT EXISTS promoteurs (
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
         profile TEXT,
-        nom VARCHAR(100) NOT NULL,
-        prenom VARCHAR(100) NOT NULL,
+        nom VARCHAR(100),
+        prenom VARCHAR(100),
         email VARCHAR(180) UNIQUE,
-        telephone VARCHAR(20) NOT NULL UNIQUE,
+        telephone VARCHAR(50),
         tranche_age ENUM ('18_40', 'PLUS_40'),
-        datenaissance DATE NOT NULL,
+        datenaissance DATE,
         lieunaissance VARCHAR(150),
-        matriculeaej VARCHAR(50) UNIQUE,
+        matriculeaej VARCHAR(200) UNIQUE,
         numerocni VARCHAR(50) UNIQUE,
         numerocmu VARCHAR(50) UNIQUE,
         numerocnps VARCHAR(50) UNIQUE,
@@ -593,7 +644,7 @@ CREATE TABLE
         nomdupere VARCHAR(200),
         nomdelamere VARCHAR(200),
         sexe_id BIGINT UNSIGNED,
-        personnel_id BIGINT UNSIGNED,
+        personnel_id BIGINT UNSIGNED NOT NULL,
         lieuhabitation_id BIGINT UNSIGNED,
         agenceregionale_id BIGINT UNSIGNED,
         secteuractivite_id BIGINT UNSIGNED,
@@ -613,8 +664,8 @@ CREATE TABLE
         FOREIGN KEY (typepieceidentite_id) REFERENCES type_pieces_identite (id),
         FOREIGN KEY (niveauetude_id) REFERENCES niveau_etude (id),
         FOREIGN KEY (paysnationalite_id) REFERENCES pays (id),
-        FOREIGN KEY (secteuractivite_id) REFERENCES secteurs_activites (id),
-        FOREIGN KEY (soussecteuractivite_id) REFERENCES sous_secteurs_activites (id),
+        FOREIGN KEY (secteuractivite_id) REFERENCES secteurs (id),
+        FOREIGN KEY (soussecteuractivite_id) REFERENCES sous_secteurs (id),
         FOREIGN KEY (situationmatrimoniale_id) REFERENCES situation_matrimoniale (id),
         FOREIGN KEY (typesituationhandicap_id) REFERENCES types_situation_handicap (id)
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
@@ -627,7 +678,7 @@ CREATE TABLE
     IF NOT EXISTS micro_projets (
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
         code VARCHAR(50) UNIQUE,
-        intitule VARCHAR(100) NOT NULL,
+        intitule VARCHAR(200),
         matricule VARCHAR(50) UNIQUE,
         description TEXT,
         montant_total DECIMAL(15, 2) DEFAULT 0,
@@ -638,7 +689,7 @@ CREATE TABLE
         commune_id BIGINT UNSIGNED,
         agence_id BIGINT UNSIGNED,
         agence_imputation_id BIGINT UNSIGNED,
-        promoteur_id BIGINT UNSIGNED,
+        promoteur_id BIGINT UNSIGNED NOT NULL,
         stade_projet ENUM ('CREATION', 'DEVELOPPEMENT') DEFAULT 'CREATION',
         type_projet ENUM ('INDIVIDUEL', 'COLLECTIF') DEFAULT 'INDIVIDUEL',
         statut ENUM (
@@ -663,14 +714,15 @@ CREATE TABLE
         date_transmission_partenaire DATE,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        FOREIGN KEY (dispositif_id) REFERENCES dispositifs (id) ON DELETE CASCADE,
-        FOREIGN KEY (organisme_id) REFERENCES organisme_financements (id) ON DELETE CASCADE,
-        FOREIGN KEY (guichet_id) REFERENCES guichets (id) ON DELETE CASCADE,
-        FOREIGN KEY (secteur_id) REFERENCES secteurs_activites (id) ON DELETE CASCADE,
-        FOREIGN KEY (commune_id) REFERENCES communes (id) ON DELETE CASCADE,
-        FOREIGN KEY (agence_id) REFERENCES agences_regionales (id) ON DELETE CASCADE,
-        FOREIGN KEY (agence_imputation_id) REFERENCES agences_regionales (id) ON DELETE CASCADE,
-        FOREIGN KEY (promoteur_id) REFERENCES promoteurs (id) ON DELETE CASCADE
+        synced_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (dispositif_id) REFERENCES dispositifs (id) ON DELETE RESTRICT,
+        FOREIGN KEY (organisme_id) REFERENCES organisme_financements (id) ON DELETE RESTRICT,
+        FOREIGN KEY (guichet_id) REFERENCES guichets (id) ON DELETE RESTRICT,
+        FOREIGN KEY (secteur_id) REFERENCES secteurs (id) ON DELETE RESTRICT,
+        FOREIGN KEY (commune_id) REFERENCES communes (id) ON DELETE RESTRICT,
+        FOREIGN KEY (agence_id) REFERENCES agences_regionales (id) ON DELETE RESTRICT,
+        FOREIGN KEY (agence_imputation_id) REFERENCES agences_regionales (id) ON DELETE RESTRICT,
+        FOREIGN KEY (promoteur_id) REFERENCES promoteurs (id) ON DELETE RESTRICT
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
 -- ##############################################################
@@ -694,7 +746,7 @@ CREATE TABLE
         statut ENUM ('BROUILLON', 'TRANSMIS', 'TRAITE', 'REJETE') DEFAULT 'BROUILLON',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        FOREIGN KEY (organisme_id) REFERENCES organisme_financements (id) ON DELETE CASCADE,
+        FOREIGN KEY (organisme_id) REFERENCES organisme_financements (id) ON DELETE RESTRICT,
         FOREIGN KEY (guichet_id) REFERENCES guichets (id)
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
@@ -707,7 +759,7 @@ CREATE TABLE
         prenom_promoteur VARCHAR(100),
         montant_sollicite DECIMAL(15, 2) DEFAULT 0,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (micro_projet_id) REFERENCES micro_projets (id) ON DELETE CASCADE
+        FOREIGN KEY (micro_projet_id) REFERENCES micro_projets (id) ON DELETE RESTRICT
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
 CREATE TABLE
@@ -718,8 +770,8 @@ CREATE TABLE
         statut ENUM ('EN_ATTENTE', 'APPROUVE', 'NON_APPROUVE') DEFAULT 'EN_ATTENTE',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        FOREIGN KEY (lot_id) REFERENCES lots_transmission (id) ON DELETE CASCADE,
-        FOREIGN KEY (micro_projet_id) REFERENCES micro_projets (id) ON DELETE CASCADE
+        FOREIGN KEY (lot_id) REFERENCES lots_transmission (id) ON DELETE RESTRICT,
+        FOREIGN KEY (micro_projet_id) REFERENCES micro_projets (id) ON DELETE RESTRICT
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
 CREATE TABLE
@@ -729,7 +781,7 @@ CREATE TABLE
         auteur_id BIGINT UNSIGNED,
         content TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (micro_projet_id) REFERENCES micro_projets (id) ON DELETE CASCADE,
+        FOREIGN KEY (micro_projet_id) REFERENCES micro_projets (id) ON DELETE RESTRICT,
         FOREIGN KEY (auteur_id) REFERENCES personnels (id)
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
@@ -745,7 +797,7 @@ CREATE TABLE
         micro_projet_id BIGINT UNSIGNED,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        FOREIGN KEY (micro_projet_id) REFERENCES micro_projets (id) ON DELETE CASCADE,
+        FOREIGN KEY (micro_projet_id) REFERENCES micro_projets (id) ON DELETE RESTRICT,
         FOREIGN KEY (created_by) REFERENCES personnels (id)
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
@@ -756,7 +808,7 @@ CREATE TABLE
     IF NOT EXISTS budgets (
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
         micro_projet_id BIGINT UNSIGNED UNIQUE,
-        intitule VARCHAR(100) NOT NULL,
+        intitule VARCHAR(200) NOT NULL,
         montant_accorde DECIMAL(15, 2) NOT NULL,
         date_accord DATE,
         source VARCHAR(100),
@@ -772,7 +824,7 @@ CREATE TABLE
         valide_par BIGINT UNSIGNED,
         created_at DATETIME NOT NULL,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        FOREIGN KEY (micro_projet_id) REFERENCES micro_projets (id) ON DELETE CASCADE,
+        FOREIGN KEY (micro_projet_id) REFERENCES micro_projets (id) ON DELETE RESTRICT,
         FOREIGN KEY (valide_par) REFERENCES personnels (id)
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
@@ -793,9 +845,9 @@ CREATE TABLE
         observations TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        FOREIGN KEY (micro_projet_id) REFERENCES micro_projets (id) ON DELETE CASCADE,
-        FOREIGN KEY (organisme_id) REFERENCES organisme_financements (id) ON DELETE CASCADE,
-        -- FOREIGN KEY (budget_id) REFERENCES budgets (id) ON DELETE CASCADE
+        FOREIGN KEY (micro_projet_id) REFERENCES micro_projets (id) ON DELETE RESTRICT,
+        FOREIGN KEY (organisme_id) REFERENCES organisme_financements (id) ON DELETE RESTRICT,
+        -- FOREIGN KEY (budget_id) REFERENCES budgets (id) ON DELETE RESTRICT
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
 -- A SUPPRIMER
@@ -813,7 +865,7 @@ CREATE TABLE
 --         restructuration_pret ENUM ('OUI', 'NON') DEFAULT 'NON',
 --         capital_amorti DECIMAL(18, 2) DEFAULT 0,
 --         interets DECIMAL(18, 2) DEFAULT 0,
---         FOREIGN KEY (budget_id) REFERENCES budgets (id) ON DELETE CASCADE
+--         FOREIGN KEY (budget_id) REFERENCES budgets (id) ON DELETE RESTRICT
 --     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
 CREATE TABLE
@@ -828,9 +880,9 @@ CREATE TABLE
         statut ENUM ('EN_ATTENTE', 'APPROUVE', 'NON_APPROUVE') DEFAULT 'EN_ATTENTE',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        FOREIGN KEY (micro_projet_id) REFERENCES micro_projets (id) ON DELETE CASCADE,
-        FOREIGN KEY (budget_id) REFERENCES budgets (id) ON DELETE CASCADE,
-        FOREIGN KEY (compte_financement_id) REFERENCES compte_financements (id) ON DELETE CASCADE
+        FOREIGN KEY (micro_projet_id) REFERENCES micro_projets (id) ON DELETE RESTRICT,
+        FOREIGN KEY (budget_id) REFERENCES budgets (id) ON DELETE RESTRICT,
+        FOREIGN KEY (compte_financement_id) REFERENCES compte_financements (id) ON DELETE RESTRICT
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
 CREATE TABLE
@@ -849,7 +901,7 @@ CREATE TABLE
         observations TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        FOREIGN KEY (plan_decaissement_id) REFERENCES plan_decaissements (id) ON DELETE CASCADE
+        FOREIGN KEY (plan_decaissement_id) REFERENCES plan_decaissements (id) ON DELETE RESTRICT
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
 CREATE TABLE
@@ -863,15 +915,15 @@ CREATE TABLE
         observations TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        FOREIGN KEY (ligne_decaissement_id) REFERENCES ligne_decaissements(id) ON DELETE CASCADE
+        FOREIGN KEY (ligne_decaissement_id) REFERENCES ligne_decaissements(id) ON DELETE RESTRICT
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
 CREATE TABLE 
     IF NOT EXISTS decaissements_declarations (
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-        plan_decaissement_id BIGINT UNSIGNED NOT NULL,
+        plan_decaissement_id BIGINT UNSIGNED,
         ligne_decaissement_id BIGINT UNSIGNED,
-        promoteur_id BIGINT UNSIGNED NOT NULL,
+        promoteur_id BIGINT UNSIGNED,
         montant_declare DECIMAL(18,2) NOT NULL,
         date_declaree DATE,
         reference_banque VARCHAR(100),
@@ -918,8 +970,8 @@ CREATE TABLE
         fichier_convention TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        FOREIGN KEY (micro_projet_id) REFERENCES micro_projets (id) ON DELETE CASCADE,
-        FOREIGN KEY (budget_id) REFERENCES budgets (id) ON DELETE CASCADE
+        FOREIGN KEY (micro_projet_id) REFERENCES micro_projets (id) ON DELETE RESTRICT,
+        FOREIGN KEY (budget_id) REFERENCES budgets (id) ON DELETE RESTRICT
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
 CREATE TABLE 
@@ -971,8 +1023,8 @@ CREATE TABLE
         statut ENUM ('EN_ATTENTE', 'PAYE', 'PARTIEL', 'NON_PAYE') DEFAULT 'NON_PAYE',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        FOREIGN KEY (promoteur_id) REFERENCES promoteurs (id) ON DELETE CASCADE,
-        FOREIGN KEY (plan_remboursement_id) REFERENCES plan_remboursements (id) ON DELETE CASCADE
+        FOREIGN KEY (promoteur_id) REFERENCES promoteurs (id) ON DELETE RESTRICT,
+        FOREIGN KEY (plan_remboursement_id) REFERENCES plan_remboursements (id) ON DELETE RESTRICT
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
 CREATE TABLE 
@@ -988,9 +1040,9 @@ CREATE TABLE
         justificatif_path TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        FOREIGN KEY (micro_projet_id) REFERENCES micro_projets (id) ON DELETE CASCADE,
-        FOREIGN KEY (plan_remboursement_id) REFERENCES plan_remboursements (id) ON DELETE CASCADE,
-        FOREIGN KEY (agent_id) REFERENCES personnels (id) ON DELETE CASCADE
+        FOREIGN KEY (micro_projet_id) REFERENCES micro_projets (id) ON DELETE RESTRICT,
+        FOREIGN KEY (plan_remboursement_id) REFERENCES plan_remboursements (id) ON DELETE RESTRICT,
+        FOREIGN KEY (agent_id) REFERENCES personnels (id) ON DELETE RESTRICT
     )
 
 CREATE TABLE 
@@ -1003,8 +1055,8 @@ CREATE TABLE
         statut ENUM ('EN_ATTENTE', 'PAYE', 'PARTIEL', 'NON_PAYE') DEFAULT 'EN_ATTENTE',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        FOREIGN KEY (micro_projet_id) REFERENCES micro_projets (id) ON DELETE CASCADE,
-        FOREIGN KEY (organisme_id) REFERENCES organisme_financements (id) ON DELETE CASCADE
+        FOREIGN KEY (micro_projet_id) REFERENCES micro_projets (id) ON DELETE RESTRICT,
+        FOREIGN KEY (organisme_id) REFERENCES organisme_financements (id) ON DELETE RESTRICT
     )
 
 -- TRANSACTIONS BENEFICIAIRE (DEPENSES - RECETTES)
@@ -1018,7 +1070,7 @@ CREATE TABLE
         parent_id BIGINT UNSIGNED,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        FOREIGN KEY (parent_id) REFERENCES categories_transactions (id) ON DELETE CASCADE
+        FOREIGN KEY (parent_id) REFERENCES categories_transactions (id) ON DELETE RESTRICT
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
 CREATE TABLE
@@ -1051,9 +1103,9 @@ CREATE TABLE
         saisi_par BIGINT UNSIGNED,
         created_at DATETIME NOT NULL,
         updated_at DATETIME NOT NULL,
-        FOREIGN KEY (micro_projet_id) REFERENCES micro_projets (id) ON DELETE CASCADE,
-        FOREIGN KEY (promoteur_id) REFERENCES promoteurs (id) ON DELETE CASCADE,
-        FOREIGN KEY (categorie_id) REFERENCES categories_transactions (id) ON DELETE CASCADE,
+        FOREIGN KEY (micro_projet_id) REFERENCES micro_projets (id) ON DELETE RESTRICT,
+        FOREIGN KEY (promoteur_id) REFERENCES promoteurs (id) ON DELETE RESTRICT,
+        FOREIGN KEY (categorie_id) REFERENCES categories_transactions (id) ON DELETE RESTRICT,
         FOREIGN KEY (saisi_par) REFERENCES personnels (id)
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
@@ -1076,7 +1128,7 @@ CREATE TABLE
         agent_id BIGINT UNSIGNED,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        FOREIGN KEY (micro_projet_id) REFERENCES micro_projets (id) ON DELETE CASCADE,
+        FOREIGN KEY (micro_projet_id) REFERENCES micro_projets (id) ON DELETE RESTRICT,
         FOREIGN KEY (agent_id) REFERENCES personnels (id)
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
@@ -1088,7 +1140,7 @@ CREATE TABLE
         description VARCHAR(255),
         prise_le TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
         prise_par_id BIGINT UNSIGNED,
-        FOREIGN KEY (exploitation_id) REFERENCES exploitations (id) ON DELETE CASCADE,
+        FOREIGN KEY (exploitation_id) REFERENCES exploitations (id) ON DELETE RESTRICT,
         FOREIGN KEY (prise_par_id) REFERENCES personnels (id)
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
@@ -1103,7 +1155,7 @@ CREATE TABLE
         statut TINYINT (1) NOT NULL DEFAULT 1,
         created_at TIMESTAMP NULL,
         updated_at TIMESTAMP NULL,
-        FOREIGN KEY (micro_projet_id) REFERENCES micro_projets (id) ON DELETE CASCADE
+        FOREIGN KEY (micro_projet_id) REFERENCES micro_projets (id) ON DELETE RESTRICT
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
 CREATE TABLE
@@ -1113,7 +1165,7 @@ CREATE TABLE
         valeur VARCHAR(255) NOT NULL,
         created_at DATETIME NOT NULL,
         updated_at DATETIME NOT NULL,
-        FOREIGN KEY (indicateur_id) REFERENCES indicateurs (id) ON DELETE CASCADE
+        FOREIGN KEY (indicateur_id) REFERENCES indicateurs (id) ON DELETE RESTRICT
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
 CREATE TABLE
@@ -1124,8 +1176,8 @@ CREATE TABLE
         libelle VARCHAR(100) NOT NULL,
         created_at DATETIME NOT NULL,
         updated_at DATETIME NOT NULL,
-        FOREIGN KEY (micro_projet_id) REFERENCES micro_projets (id) ON DELETE CASCADE,
-        FOREIGN KEY (promoteur_id) REFERENCES promoteurs (id) ON DELETE CASCADE
+        FOREIGN KEY (micro_projet_id) REFERENCES micro_projets (id) ON DELETE RESTRICT,
+        FOREIGN KEY (promoteur_id) REFERENCES promoteurs (id) ON DELETE RESTRICT
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
 CREATE TABLE
@@ -1143,13 +1195,13 @@ CREATE TABLE
         promoteur_id BIGINT UNSIGNED,
         entreprise_id BIGINT UNSIGNED,
         micro_projet_id BIGINT UNSIGNED,
-        type_emploi_id BIGINT UNSIGNED NULL,
+        type_emploi_id BIGINT UNSIGNED,
         poste VARCHAR(200) NOT NULL,
         created_at DATETIME NOT NULL,
         updated_at DATETIME NOT NULL,
-        FOREIGN KEY (promoteur_id) REFERENCES promoteurs (id) ON DELETE CASCADE,
-        FOREIGN KEY (entreprise_id) REFERENCES entreprises (id) ON DELETE CASCADE,
-        FOREIGN KEY (micro_projet_id) REFERENCES micro_projets (id) ON DELETE CASCADE,
+        FOREIGN KEY (promoteur_id) REFERENCES promoteurs (id) ON DELETE RESTRICT,
+        FOREIGN KEY (entreprise_id) REFERENCES entreprises (id) ON DELETE RESTRICT,
+        FOREIGN KEY (micro_projet_id) REFERENCES micro_projets (id) ON DELETE RESTRICT,
         FOREIGN KEY (type_emploi_id) REFERENCES type_emplois (id)
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
@@ -1166,7 +1218,7 @@ CREATE TABLE
         actif TINYINT (1) NOT NULL DEFAULT 1,
         created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        FOREIGN KEY (micro_projet_id) REFERENCES micro_projets (id) ON DELETE CASCADE
+        FOREIGN KEY (micro_projet_id) REFERENCES micro_projets (id) ON DELETE RESTRICT
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
 CREATE TABLE
@@ -1180,7 +1232,7 @@ CREATE TABLE
         ordre SMALLINT NOT NULL DEFAULT 0,
         affichage BOOLEAN DEFAULT NULL,
         obligatoire TINYINT (1) NOT NULL DEFAULT 1,
-        FOREIGN KEY (formulaire_id) REFERENCES formulaires_evaluation (id) ON DELETE CASCADE ON UPDATE CASCADE
+        FOREIGN KEY (formulaire_id) REFERENCES formulaires_evaluation (id) ON DELETE RESTRICT
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
 CREATE TABLE
@@ -1194,7 +1246,7 @@ CREATE TABLE
         commentaire TEXT DEFAULT NULL,
         created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        FOREIGN KEY (formulaire_id) REFERENCES formulaires_evaluation (id) ON DELETE CASCADE ON UPDATE CASCADE,
+        FOREIGN KEY (formulaire_id) REFERENCES formulaires_evaluation (id) ON DELETE RESTRICT,
         FOREIGN KEY (evaluateur_id) REFERENCES personnels (id)
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
@@ -1204,8 +1256,8 @@ CREATE TABLE
         evaluation_id BIGINT UNSIGNED,
         question_id BIGINT UNSIGNED,
         reponse_texte TEXT DEFAULT NULL,
-        FOREIGN KEY (evaluation_id) REFERENCES evaluations (id) ON DELETE CASCADE ON UPDATE CASCADE,
-        FOREIGN KEY (question_id) REFERENCES questions_evaluation (id) ON DELETE CASCADE ON UPDATE CASCADE
+        FOREIGN KEY (evaluation_id) REFERENCES evaluations (id) ON DELETE RESTRICT,
+        FOREIGN KEY (question_id) REFERENCES questions_evaluation (id) ON DELETE RESTRICT
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
 -- ##############################################################
@@ -1215,7 +1267,7 @@ CREATE TABLE
     IF NOT EXISTS workflow_instance (
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
         micro_projet_id BIGINT UNSIGNED UNIQUE,
-        workflow_version VARCHAR(50) NOT NULL,
+        workflow_version VARCHAR(50),
         current_etape_code VARCHAR(50),
         next_etape_code VARCHAR(50),
         statut VARCHAR(20) NOT NULL DEFAULT 'EN_COURS' CHECK (
@@ -1223,7 +1275,7 @@ CREATE TABLE
         ),
         started_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
         completed_at TIMESTAMP NULL,
-        FOREIGN KEY (micro_projet_id) REFERENCES micro_projets (id) ON DELETE CASCADE,
+        FOREIGN KEY (micro_projet_id) REFERENCES micro_projets (id) ON DELETE RESTRICT,
         FOREIGN KEY (workflow_version) REFERENCES workflow_versions (code),
         FOREIGN KEY (current_etape_code) REFERENCES workflow_etapes (code),
         FOREIGN KEY (next_etape_code) REFERENCES workflow_etapes (code)
@@ -1233,13 +1285,13 @@ CREATE TABLE
     IF NOT EXISTS workflow_instance_history (
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
         workflow_instance_id BIGINT UNSIGNED,
-        etape_code VARCHAR(50) NOT NULL,
+        etape_code VARCHAR(50),
         role_code VARCHAR(50),
         acted_by BIGINT UNSIGNED,
         acted_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
         action TEXT,
         comment TEXT,
-        FOREIGN KEY (workflow_instance_id) REFERENCES workflow_instance (id) ON DELETE CASCADE,
+        FOREIGN KEY (workflow_instance_id) REFERENCES workflow_instance (id) ON DELETE RESTRICT,
         FOREIGN KEY (etape_code) REFERENCES workflow_etapes (code),
         FOREIGN KEY (role_code) REFERENCES roles (code),
         FOREIGN KEY (acted_by) REFERENCES personnels (id)
@@ -1249,7 +1301,7 @@ CREATE TABLE
     IF NOT EXISTS workflow_instance_deliverable (
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
         workflow_instance_id BIGINT UNSIGNED,
-        deliverable_code VARCHAR(50) NOT NULL,
+        deliverable_code VARCHAR(50),
         file_path TEXT,
         file_name VARCHAR(255),
         file_size BIGINT,
@@ -1257,7 +1309,7 @@ CREATE TABLE
         observations TEXT,
         produced_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
         produced_by_id BIGINT UNSIGNED,
-        FOREIGN KEY (workflow_instance_id) REFERENCES workflow_instance (id) ON DELETE CASCADE,
+        FOREIGN KEY (workflow_instance_id) REFERENCES workflow_instance (id) ON DELETE RESTRICT,
         FOREIGN KEY (deliverable_code) REFERENCES workflow_deliverables (code),
         FOREIGN KEY (produced_by_id) REFERENCES personnels (id)
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
@@ -1266,11 +1318,11 @@ CREATE TABLE
     IF NOT EXISTS workflow_instance_comment (
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
         workflow_instance_id BIGINT UNSIGNED,
-        etape_code VARCHAR(50) NOT NULL,
+        etape_code VARCHAR(50),
         commented_by_id BIGINT UNSIGNED,
         comment TEXT,
         created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (workflow_instance_id) REFERENCES workflow_instance (id) ON DELETE CASCADE,
+        FOREIGN KEY (workflow_instance_id) REFERENCES workflow_instance (id) ON DELETE RESTRICT,
         FOREIGN KEY (etape_code) REFERENCES workflow_etapes (code),
         FOREIGN KEY (commented_by_id) REFERENCES personnels (id)
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
@@ -1282,7 +1334,7 @@ CREATE TABLE
 CREATE TABLE
     IF NOT EXISTS workflow_categories_etapes (
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-        etape_code VARCHAR(50) NOT NULL,
+        etape_code VARCHAR(50),
         comment TEXT,
         created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (etape_code) REFERENCES workflow_etapes (code)

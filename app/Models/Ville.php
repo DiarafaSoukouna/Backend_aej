@@ -3,13 +3,16 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Ville extends Model
 {
+    use HasFactory;
+
     protected $table = 'villes';
 
     protected $fillable = [
-        'departement_id',
+        'commune_id',
         'code',
         'nom',
         'synced_at',
@@ -19,21 +22,10 @@ class Ville extends Model
         'synced_at' => 'datetime',
     ];
 
-    public $incrementing = false;
-    protected $keyType = 'int';
+    public $timestamps = false;
 
-    public function departement()
+    public function commune()
     {
-        return $this->belongsTo(Departement::class, 'departement_id');
-    }
-
-    public function communes()
-    {
-        return $this->hasMany(Commune::class, 'ville_id');
-    }
-
-    public function lieuxHabitation()
-    {
-        return $this->hasMany(LieuHabitation::class, 'ville_id');
+        return $this->belongsTo(Commune::class);
     }
 }

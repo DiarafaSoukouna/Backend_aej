@@ -3,9 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Models\WorkflowInstanceHistory;
+use App\Models\WorkflowEtape;
+use App\Models\WorkflowEtapeRole;
+use App\Models\Role;
+use App\Models\Personnel;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Validator;
+use App\Services\MailService;
+use Illuminate\Support\Facades\Log;
 
 class WorkflowInstanceHistoryController extends Controller
 {
@@ -21,17 +27,15 @@ class WorkflowInstanceHistoryController extends Controller
         return response()->json(['message' => 'History retrieved successfully', 'data' => $history]);
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(Request $request, MailService $mailService): JsonResponse
     {
         $validation = Validator::make($request->all(), [
             'workflow_instance_id' => 'required|exists:workflow_instance,id',
             'etape_code' => 'required|string|max:50|exists:workflow_etapes,code',
             'role_code' => 'nullable|string|max:50|exists:roles,code',
-            'action' => 'required|string|max:50',
             'comment' => 'nullable|string',
             'acted_by' => 'nullable|exists:personnels,id',
             'acted_at' => 'nullable|date',
-            'comments' => 'nullable|string',
         ]);
 
         if ($validation->fails()) {
@@ -42,8 +46,31 @@ class WorkflowInstanceHistoryController extends Controller
         }
 
         try {
-            $history = WorkflowInstanceHistory::create($validation->validated());
+            $etape = WorkflowEtape::where('code', $validation->validated()['etape_code'])->first();
+            $history = WorkflowInstanceHistory::create($validation->validated() + ['action' => $etape->name]);
             $history->workflowInstance->update(['current_etape_code' => $validation->validated()['etape_code']]);
+            
+            if ($etape) {
+                $etapeRoles = WorkflowEtapeRole::where('etape_code', $validation->validated()['etape_code'])->get();
+                
+                foreach ($etapeRoles as $etapeRole) {
+                    $role = Role::where('code', $etapeRole->role_code)->first();
+
+                    if ($role) {
+                        $personnels = Personnel::where('role_id', $role->id)->where('is_active', true)->get();
+                        
+                        foreach ($personnels as $personnel) {
+                            if ($personnel->email) {
+                                $mailService->sendWorkflowAlertEmail($personnel->email, [
+                                    'etape' => $etape->name,
+                                    'projet' => $history->workflowInstance->microProjet->intitule ?? 'Projet #' . $history->workflowInstance->micro_projet_id,
+                                    'action' => $etapeRole->action,
+                                ]);
+                            }
+                        }
+                    }
+                }
+            }
 
             return response()->json(['message' => 'History created successfully', 'data' => $history], 201);
         } catch (\Throwable $th) {

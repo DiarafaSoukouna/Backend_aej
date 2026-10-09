@@ -84,7 +84,14 @@ class MailService
         );
     }
 
+
+
+
+
+
     /**
+     * ###############################################################
+     * ###############################################################
      * Email de bienvenue.
      */
     public function sendWelcomeEmail($personnel)
@@ -107,6 +114,7 @@ class MailService
     }
 
     /**
+     * ###############################################################
      * Email de configuration de compte (token SETUP).
      */
     public function sendSetupEmail($personnel, string $setupUrl)
@@ -130,6 +138,7 @@ class MailService
     }
 
     /**
+     * ###############################################################
      * Email OTP.
      */
     public function sendOtpEmail(string $email, string $otp)
@@ -145,6 +154,7 @@ class MailService
     }
 
     /**
+     * ###############################################################
      * Réinitialisation du mot de passe.
      */
     public function sendPasswordResetEmail(string $email, string $resetUrl)
@@ -157,11 +167,15 @@ class MailService
     }
 
     /**
+     * ###############################################################
      * Alerte de sécurité.
      */
     public function sendSecurityAlert(string $email, string $message, ?string $actionUrl = null)
     {
-        $content = view('emails.account-alert', ['message' => $message, 'actionUrl' => $actionUrl])->render();
+        $content = view('emails.account-alert', [
+            'message' => $message,
+            'actionUrl' => $actionUrl,
+        ])->render();
 
         return $this->send($email, 'Alerte de sécurité – AEJ', $content, [
             'headerTitle' => 'Alerte de sécurité',
@@ -169,6 +183,7 @@ class MailService
     }
 
     /**
+     * ###############################################################
      * Rappel de paiement de garantie.
      */
     public function sendGarantieRappelEmail(string $email, array $garantieData)
@@ -183,6 +198,40 @@ class MailService
 
         return $this->send($email, 'Rappel de paiement de garantie', $content, [
             'headerTitle' => 'Rappel de paiement',
+        ]);
+    }
+
+     /**
+     * ###############################################################
+     * Alerte au promoteur pour ajout d'un projet.
+     */
+    public function sendProjetAlertEmail(string $email, array $projetData)
+    {
+        $content = view('emails.projet-alert', [
+            'intitule' => $projetData['intitule'],
+            'matricule' => $projetData['matricule'],
+            'montant' => $projetData['montant_total'],
+        ])->render();
+
+        return $this->send($email, 'Alerte de projet – AEJ', $content, [
+            'headerTitle' => 'Alerte de projet',
+        ]);
+    }
+
+    /**
+     * ###############################################################
+     * Alerte etape du workflow
+     */
+    public function sendWorkflowAlertEmail(string $email, array $workflowData)
+    {
+        $content = view('emails.workflow-alert', [
+            'etape' => $workflowData['etape'],
+            'projet' => $workflowData['projet'],
+            'action' => $workflowData['action'],
+        ])->render();
+
+        return $this->send($email, 'Alerte étape du workflow – AEJ', $content, [
+            'headerTitle' => 'Alerte étape du workflow',
         ]);
     }
 }

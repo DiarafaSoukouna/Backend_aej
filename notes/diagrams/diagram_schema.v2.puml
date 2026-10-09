@@ -200,7 +200,6 @@ package "6. Personnels" {
     nom
     prenom
     email
-    type_utilisateur
     statut
   }
 

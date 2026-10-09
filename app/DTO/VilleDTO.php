@@ -6,7 +6,7 @@ class VilleDTO
 {
     public function __construct(
         public readonly int $id,
-        public readonly ?int $departement_id,
+        public readonly ?int $commune_id,
         public readonly ?string $code,
         public readonly string $nom,
     ) {}
@@ -15,7 +15,7 @@ class VilleDTO
     {
         return new self(
             id: $data['id'],
-            departement_id: $data['departement_id'] ?? null,
+            commune_id: $data['commune_id'] ?? null,
             code: $data['code'] ?? null,
             nom: $data['nom'],
         );

@@ -7,6 +7,13 @@ use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\DirectionController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\FonctionController;
+use App\Http\Controllers\NiveauHierarchieController;
+use App\Http\Controllers\StructureController;
+use App\Http\Controllers\RegionController;
+use App\Http\Controllers\DepartementController;
+use App\Http\Controllers\SousPrefectureController;
+use App\Http\Controllers\VilleController;
+use App\Http\Controllers\CommuneController;
 use App\Http\Controllers\ConfigurationController;
 use App\Http\Controllers\TypeEntrepriseController;
 use App\Http\Controllers\TypeEmploiController;
@@ -89,6 +96,7 @@ use App\Http\Controllers\AiReport\PeriodicBulletinController;
         Route::get('refresh', [AuthController::class, 'refresh']);
 
         Route::middleware('verifyToken')->group(function () {
+            // Initialiser le compteur de limiteur throttle
             Route::post('logout', [AuthController::class, 'logout']);
             Route::get('me', [AuthController::class, 'me']);
         });
@@ -109,17 +117,33 @@ use App\Http\Controllers\AiReport\PeriodicBulletinController;
     // Routes protégées par token
     // Route::middleware('verifyToken')->group(function () {
         // Paramètres
-        Route::apiResource('directions', DirectionController::class);
-        Route::apiResource('services', ServiceController::class);
+        Route::apiResource('niveau-hierarchies', NiveauHierarchieController::class);
+        Route::apiResource('structures', StructureController::class);
+        Route::post('structures/multiple', [StructureController::class, 'storeMultiple']);
+        Route::patch('structures/{id}', [StructureController::class, 'patch']);
         Route::apiResource('fonctions', FonctionController::class);
+        Route::post('fonctions/multiple', [FonctionController::class, 'storeMultiple']);
+        Route::patch('fonctions/{id}', [FonctionController::class, 'patch']);
         Route::apiResource('type-entreprises', TypeEntrepriseController::class);
         Route::apiResource('type-organismes', TypeOrganismeController::class);
         Route::apiResource('type-emplois', TypeEmploiController::class);
+
+        Route::apiResource('regions', RegionController::class);
+        Route::post('regions/multiple', [RegionController::class, 'storeMultiple']);
+        Route::apiResource('departements', DepartementController::class);
+        Route::post('departements/multiple', [DepartementController::class, 'storeMultiple']);
+        Route::apiResource('sous-prefectures', SousPrefectureController::class);
+        Route::post('sous-prefectures/multiple', [SousPrefectureController::class, 'storeMultiple']);
+        Route::apiResource('communes', CommuneController::class);
+        Route::post('communes/multiple', [CommuneController::class, 'storeMultiple']);
+        Route::apiResource('villes', VilleController::class);
+        Route::post('villes/multiple', [VilleController::class, 'storeMultiple']);
 
         // Gestion des utilisateurs
         Route::apiResource('permissions', PermissionController::class);
         Route::apiResource('roles', RoleController::class);
         Route::apiResource('personnels', PersonnelController::class);
+        Route::post('personnels/multiple', [PersonnelController::class, 'storeMultiple']);
         Route::apiResource('notifications', NotificationController::class);
         Route::put('notifications/{id}/mark-read', [NotificationController::class, 'markAsRead']);
         Route::get('notifications/personnel/{personnelId}', [NotificationController::class, 'getByPersonnel']);
@@ -129,10 +153,12 @@ use App\Http\Controllers\AiReport\PeriodicBulletinController;
         Route::apiResource('zones-intervention', ZoneInterventionController::class);
         Route::apiResource('dispositifs', DispositifController::class);
         Route::apiResource('guichets', GuichetController::class);
-        Route::get('promoteurs', [PromoteurController::class, 'index']);
-        Route::get('promoteurs/{id}', [PromoteurController::class, 'show']);
-        Route::get('projets', [MicroProjetController::class, 'index']);
-        Route::get('projets/{id}', [MicroProjetController::class, 'show']);
+        Route::apiResource('promoteurs', PromoteurController::class);
+        Route::post('promoteurs/multiple', [PromoteurController::class, 'storeMultiple']);
+        Route::patch('promoteurs/{id}', [PromoteurController::class, 'patch']);
+        Route::apiResource('projets', MicroProjetController::class);
+        Route::post('projets/multiple', [MicroProjetController::class, 'storeMultiple']);
+        Route::patch('projets/{id}', [MicroProjetController::class, 'patch']);
 
         // Formulaires d'évaluation
         Route::apiResource('formulaires-evaluation', FormulaireEvaluationController::class);
@@ -238,20 +264,26 @@ use App\Http\Controllers\AiReport\PeriodicBulletinController;
         Route::get('secteurs', [AejApiController::class, 'getSecteurs']);
         Route::get('sous-secteurs', [AejApiController::class, 'getSousSecteurs']);
         Route::get('niveaux-etudes', [AejApiController::class, 'getNiveauxEtudes']);
-        Route::get('agences-regionales', [AejApiController::class, 'getAgencesRegionales']);
         Route::get('sexes', [AejApiController::class, 'getSexes']);
-        Route::get('lieu-habitations', [AejApiController::class, 'getLieuHabitations']);
         Route::get('pays', [AejApiController::class, 'getPays']);
         Route::get('situations-handicaps', [AejApiController::class, 'getSituationsHandicaps']);
-        Route::get('communes', [AejApiController::class, 'getCommunes']);
         Route::get('division-regionale', [AejApiController::class, 'getDivisionRegionale']);
-        Route::get('villes', [AejApiController::class, 'getVilles']);
+        Route::get('agences-regionales', [AejApiController::class, 'getAgencesRegionales']);
         Route::get('referentiels', [AejApiController::class, 'getAllReferentiels']);
+        Route::get('lieu-habitations', [AejApiController::class, 'getLieuHabitations']);
+
+        // Localités via API
+        // Route::get('regions', [AejApiController::class, 'getRegions']);
+        // Route::get('departements', [AejApiController::class, 'getDepartements']);
+        // Route::get('communes', [AejApiController::class, 'getCommunes']);
+        // Route::get('villes', [AejApiController::class, 'getVilles']);
 
         // Cache and sync routes
         Route::post('clear-cache', [AejApiController::class, 'clearCache']);
         Route::post('sync', [SyncAejController::class, 'sync']);
         Route::post('sync-all', [SyncAejController::class, 'syncAll']);
+        Route::post('save-micro-projets', [AejApiController::class, 'saveMicroProjets']);
+        Route::post('sync-micro-projets', [AejApiController::class, 'syncMicroProjets']);
     });
 
     // Dashboards (public)
@@ -314,6 +346,7 @@ use App\Http\Controllers\AiReport\PeriodicBulletinController;
 
         Route::prefix('global')->group(function () {
             Route::post('/',               [GlobalReportController::class, 'generate']);
+            Route::get('risk-profiles/pdf',[GlobalReportController::class, 'riskProfilesPdf']);
             Route::get('risk-profiles',    [GlobalReportController::class, 'riskProfiles']);
             Route::get('history',          [GlobalReportController::class, 'history']);
             Route::get('download/{logId}', [GlobalReportController::class, 'download']);

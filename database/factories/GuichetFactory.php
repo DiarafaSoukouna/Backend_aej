@@ -8,7 +8,7 @@ class GuichetFactory
     const Guichets = [
         'AGR_CLASSIQUE' => [
             [
-                'code' => 'GUI_AGR_CLASSIQUE',
+                'code' => 'GUICHET_AGR_CLASSIC',
                 'libelle' => 'AGR Classique',
                 'description' => 'Guichet pour les AGR classiques avec financement de 100,000 à 500,000 FCFA',
                 'couleur' => '#3498db',
@@ -20,7 +20,7 @@ class GuichetFactory
         ],
         'AGR_PLUS' => [
             [
-                'code' => 'GUI_AGR_PLUS',
+                'code' => 'GUICHET_AGR_PLUS',
                 'libelle' => 'AGR Plus',
                 'description' => 'Guichet pour les AGR Plus avec financement de 1,000,001 à 3,000,000 FCFA',
                 'couleur' => '#e74c3c',
@@ -32,7 +32,7 @@ class GuichetFactory
         ],
         'MPE' => [
             [
-                'code' => 'GUI_MPE',
+                'code' => 'GUICHET_MPE',
                 'libelle' => 'MPE',
                 'description' => 'Guichet MPE pour financement de 3,000,001 à 20,000,000 FCFA',
                 'couleur' => '#2ecc71',
@@ -44,7 +44,7 @@ class GuichetFactory
         ],
         'MEPS' => [
             [
-                'code' => 'GUI_MEPS',
+                'code' => 'GUICHET_MEPS',
                 'libelle' => 'MEPS',
                 'description' => 'Guichet MEPS pour financement de 20,000,001 à 100,000,000 FCFA',
                 'couleur' => '#f39c12',
@@ -56,7 +56,7 @@ class GuichetFactory
         ],
         'CAPITAL_INVEST' => [
             [
-                'code' => 'GUI_CAPITAL_INVEST',
+                'code' => 'GUICHET_CAPITAL_INVEST',
                 'libelle' => 'Capital Investissement',
                 'description' => 'Guichet pour le capital investissement avec financement supérieur à 100,000,000 FCFA',
                 'couleur' => '#9b59b6',
@@ -68,7 +68,7 @@ class GuichetFactory
         ],
         'MENTORAT' => [
             [
-                'code' => 'GUI_MENTORAT',
+                'code' => 'GUICHET_MENTORAT',
                 'libelle' => 'Mentorat',
                 'description' => 'Guichet pour le programme de mentorat',
                 'couleur' => '#1abc9c',
@@ -80,7 +80,7 @@ class GuichetFactory
         ],
         'PERMIS' => [
             [
-                'code' => 'GUI_PERMIS',
+                'code' => 'GUICHET_PERMIS',
                 'libelle' => 'Permis',
                 'description' => 'Guichet pour le programme de permis',
                 'couleur' => '#34495e',
@@ -92,7 +92,7 @@ class GuichetFactory
         ],
         'STARTUP_BOOST' => [
             [
-                'code' => 'GUI_STARTUP_BOOST',
+                'code' => 'GUICHET_STARTUP_BOOST',
                 'libelle' => 'Startup Boost',
                 'description' => 'Guichet pour les projets structurants et start-ups',
                 'couleur' => '#e67e22',
