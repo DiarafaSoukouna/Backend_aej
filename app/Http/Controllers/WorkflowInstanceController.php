@@ -64,6 +64,54 @@ class WorkflowInstanceController extends Controller
         return response()->json(['message' => 'Instance created successfully', 'data' => $instance], 201);
     }
 
+    public function storeMultiple(Request $request): JsonResponse
+    {
+        $validation = Validator::make($request->all(), [
+            'workflow_instances' => 'required|array|min:1',
+            'workflow_instances.*.micro_projet_id' => 'required|exists:micro_projets,id',
+            'workflow_instances.*.workflow_version' => 'required|string|max:20',
+            'workflow_instances.*.current_etape_code' => 'nullable|string|max:50|exists:workflow_etapes,code',
+            'workflow_instances.*.next_etape_code' => 'nullable|string|max:50|exists:workflow_etapes,code',
+            'workflow_instances.*.statut' => 'required|in:EN_COURS,TERMINE,REJETE,ABANDONNE',
+            'workflow_instances.*.started_at' => 'nullable|date',
+            'workflow_instances.*.completed_at' => 'nullable|date|after:started_at',
+        ]);
+
+        if ($validation->fails()) {
+            return response()->json([
+                'message' => 'Validation failed',
+                'errors' => $validation->errors()
+            ], 422);
+        }
+
+        try {
+            $microProjetIds = array_filter(array_unique(array_column($request->workflow_instances, 'micro_projet_id')));
+            $existingInstances = WorkflowInstance::whereIn('micro_projet_id', $microProjetIds)->pluck('micro_projet_id', 'micro_projet_id')->toArray();
+
+            $instances = [];
+            foreach ($request->workflow_instances as $instanceData) {
+                if (isset($existingInstances[$instanceData['micro_projet_id']])) {
+                    WorkflowInstance::where('micro_projet_id', $instanceData['micro_projet_id'])->update($instanceData);
+                    continue;
+                }
+
+                $instance = WorkflowInstance::create($instanceData);
+                $instances[] = $instance;
+            }
+
+            return response()->json([
+                'message' => 'Workflow instances created successfully',
+                'data' => $instances,
+                'total' => count($instances)
+            ], 201);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'message' => 'Error creating workflow instances',
+                'error' => $th->getMessage()
+            ], 500);
+        }
+    }
+
     public function update(Request $request, $id): JsonResponse
     {
         $instance = WorkflowInstance::findOrFail($id);

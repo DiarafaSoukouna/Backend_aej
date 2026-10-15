@@ -60,6 +60,39 @@ class LigneDecaissementController extends Controller
         }
     }
 
+    public function storeMultiple(Request $request): JsonResponse
+    {
+        $validation = Validator::make($request->all(), [
+            'ligne_decaissements' => 'required|array|min:1',
+            'ligne_decaissements.*.plan_decaissement_id' => 'nullable|exists:plan_decaissements,id',
+            'ligne_decaissements.*.numero_ligne' => 'nullable|integer',
+            'ligne_decaissements.*.object_ligne' => 'nullable|string|max:100',
+            'ligne_decaissements.*.montant_ligne' => 'nullable|numeric',
+            'ligne_decaissements.*.mode_decaisse' => 'nullable|in:CHEQUE,VIREMENT',
+            'ligne_decaissements.*.date_prevue' => 'nullable|date',
+            'ligne_decaissements.*.intitule_prestataire' => 'nullable|string|max:100',
+            'ligne_decaissements.*.numero_compte' => 'nullable|string|max:100',
+            'ligne_decaissements.*.contact' => 'nullable|string|max:100',
+            'ligne_decaissements.*.statut' => 'nullable|in:VALIDE,NON_VALIDE',
+            'ligne_decaissements.*.observations' => 'nullable|string',
+        ]);
+
+        if ($validation->fails()) {
+            return new JsonResponse(['message' => 'Validation failed', 'errors' => $validation->errors()], 422);
+        }
+
+        try {
+            $ligneDecaissements = [];
+            foreach ($request->ligne_decaissements as $ligneDecaissementData) {
+                $ligneDecaissements[] = LigneDecaissement::create($ligneDecaissementData);
+            }
+
+            return new JsonResponse(['message' => 'Ligne decaissement created successfully', 'data' => $ligneDecaissements], 201);
+        } catch (\Exception $e) {
+            return new JsonResponse(['message' => 'Error creating ligne decaissement', 'error' => $e->getMessage()], 500);
+        }
+    }
+
     public function update(Request $request, $id): JsonResponse
     {
         $ligne = LigneDecaissement::find($id);

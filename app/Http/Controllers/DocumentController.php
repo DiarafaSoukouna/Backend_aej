@@ -123,6 +123,7 @@ class DocumentController extends Controller
     {
         $validation = Validator::make($request->all(), [
             'file' => 'required|file|max:51200', // Max 50MB
+            'filename' => 'nullable|string|max:255',
             'folder' => 'required|string|max:255',
             'micro_projet_id' => 'nullable|exists:micro_projets,id',
         ]);
@@ -137,12 +138,13 @@ class DocumentController extends Controller
         try {
             $folder = $request->input('folder');
             $file = $request->file('file');
+            $fileName = $request->input('filename') ?? $file->getClientOriginalName();
             $safeFolder = str_replace('..', '', $folder);
             $safeFolder = preg_replace('/[^a-zA-Z0-9_\-\/]/', '', $safeFolder);
             $path = $file->store($safeFolder, 'public');
 
             $document = Document::create([
-                'name' => $file->getClientOriginalName(),
+                'name' => $fileName,
                 'path' => $path,
                 'type' => $file->getMimeType(),
                 'size' => $file->getSize(),

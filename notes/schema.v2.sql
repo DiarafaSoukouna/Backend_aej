@@ -493,6 +493,7 @@ CREATE TABLE
         description TEXT,
         order INT NOT NULL,
         is_active BOOLEAN NOT NULL DEFAULT TRUE,
+        is_async BOOLEAN NOT NULL DEFAULT TRUE,
         valid_from DATE NOT NULL DEFAULT (CURRENT_DATE),
         valid_to DATE,
         created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -688,26 +689,10 @@ CREATE TABLE
         secteur_id BIGINT UNSIGNED,
         commune_id BIGINT UNSIGNED,
         agence_id BIGINT UNSIGNED,
-        agence_imputation_id BIGINT UNSIGNED,
         promoteur_id BIGINT UNSIGNED NOT NULL,
         stade_projet ENUM ('CREATION', 'DEVELOPPEMENT') DEFAULT 'CREATION',
         type_projet ENUM ('INDIVIDUEL', 'COLLECTIF') DEFAULT 'INDIVIDUEL',
-        statut ENUM (
-            'BROUILLON',
-            'EN_SOUMISSION',
-            'EN_COURS',
-            'EN_ANALYSE',
-            'EN_ATTENTE',
-            'ANNULE',
-            'NON_APPROUVE',
-            'APPROUVE',
-            'EN_FORMATION',
-            'EN_FINANCEMENT',
-            'EN_DECAISSEMENT',
-            'EN_SUIVI',
-            'EN_REMBOURSEMENT',
-            'TERMINE'
-        ) DEFAULT 'BROUILLON',
+        statut VARCHAR(50) DEFAULT 'BROUILLON',
         localisation VARCHAR(50),
         geolocalisation TEXT,
         date_certification DATE,
@@ -721,7 +706,6 @@ CREATE TABLE
         FOREIGN KEY (secteur_id) REFERENCES secteurs (id) ON DELETE RESTRICT,
         FOREIGN KEY (commune_id) REFERENCES communes (id) ON DELETE RESTRICT,
         FOREIGN KEY (agence_id) REFERENCES agences_regionales (id) ON DELETE RESTRICT,
-        FOREIGN KEY (agence_imputation_id) REFERENCES agences_regionales (id) ON DELETE RESTRICT,
         FOREIGN KEY (promoteur_id) REFERENCES promoteurs (id) ON DELETE RESTRICT
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
@@ -772,6 +756,18 @@ CREATE TABLE
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         FOREIGN KEY (lot_id) REFERENCES lots_transmission (id) ON DELETE RESTRICT,
         FOREIGN KEY (micro_projet_id) REFERENCES micro_projets (id) ON DELETE RESTRICT
+    ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
+
+CREATE TABLE
+    IF NOT EXISTS imputations_agences (
+        id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+        agence_id BIGINT UNSIGNED,
+        micro_projet_id BIGINT UNSIGNED,
+        statut ENUM ('EN_ATTENTE', 'APPROUVE', 'NON_APPROUVE') DEFAULT 'EN_ATTENTE',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        FOREIGN KEY (agence_id) REFERENCES agences_regionales (id) ON DELETE CASCADE,
+        FOREIGN KEY (micro_projet_id) REFERENCES micro_projets (id) ON DELETE CASCADE
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
 CREATE TABLE

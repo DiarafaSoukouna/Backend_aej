@@ -84,6 +84,7 @@ use App\Http\Controllers\QuestionEvaluationController;
 use App\Http\Controllers\AiReport\IndividualReportController;
 use App\Http\Controllers\AiReport\GlobalReportController;
 use App\Http\Controllers\AiReport\PeriodicBulletinController;
+use App\Http\Controllers\ImputationAgenceController;
 
 // Middleware de maintenance global - toutes les routes passent par ce middleware
 // Route::middleware('checkMaintenance')->group(function () {
@@ -96,8 +97,7 @@ use App\Http\Controllers\AiReport\PeriodicBulletinController;
         Route::get('refresh', [AuthController::class, 'refresh']);
 
         Route::middleware('verifyToken')->group(function () {
-            // Initialiser le compteur de limiteur throttle
-            Route::post('logout', [AuthController::class, 'logout']);
+            Route::middleware('throttle:10,1')->post('logout', [AuthController::class, 'logout']);
             Route::get('me', [AuthController::class, 'me']);
         });
     });
@@ -159,6 +159,9 @@ use App\Http\Controllers\AiReport\PeriodicBulletinController;
         Route::apiResource('projets', MicroProjetController::class);
         Route::post('projets/multiple', [MicroProjetController::class, 'storeMultiple']);
         Route::patch('projets/{id}', [MicroProjetController::class, 'patch']);
+        Route::apiResource('imputations-agences', ImputationAgenceController::class);
+        Route::post('imputations-agences/multiple', [ImputationAgenceController::class, 'storeMultiple']);
+        Route::patch('imputations-agences/{id}', [ImputationAgenceController::class, 'patch']);
 
         // Formulaires d'évaluation
         Route::apiResource('formulaires-evaluation', FormulaireEvaluationController::class);
@@ -185,10 +188,14 @@ use App\Http\Controllers\AiReport\PeriodicBulletinController;
         // Workflow Instances
         Route::prefix('workflow-instances')->group(function () {
             Route::apiResource('instances', WorkflowInstanceController::class);
+            Route::post('instances/multiple', [WorkflowInstanceController::class, 'storeMultiple']);
             Route::patch('instances/{id}', [WorkflowInstanceController::class, 'patch']);
             Route::apiResource('histories', WorkflowInstanceHistoryController::class);
+            Route::post('histories/multiple', [WorkflowInstanceHistoryController::class, 'storeMultiple']);
             Route::apiResource('deliverables', WorkflowInstanceDeliverableController::class);
+            Route::post('deliverables/multiple', [WorkflowInstanceDeliverableController::class, 'storeMultiple']);
             Route::apiResource('comments', WorkflowInstanceCommentController::class);
+            Route::post('comments/multiple', [WorkflowInstanceCommentController::class, 'storeMultiple']);
         });
 
         // Suivis & Indicateurs
@@ -222,6 +229,7 @@ use App\Http\Controllers\AiReport\PeriodicBulletinController;
         Route::apiResource('lots-micro-projets', LotMicroProjetController::class);
         Route::apiResource('ligne-decaissements', LigneDecaissementController::class);
         Route::patch('ligne-decaissements/{id}', [LigneDecaissementController::class, 'patch']);
+        Route::post('ligne-decaissements/multiple', [LigneDecaissementController::class, 'storeMultiple']);
         Route::apiResource('execution-ligne-decaissements', ExecutionLigneDecaissementController::class);
         Route::patch('execution-ligne-decaissements/{id}', [ExecutionLigneDecaissementController::class, 'patch']);
         Route::apiResource('recouvrements', RecouvrementController::class);

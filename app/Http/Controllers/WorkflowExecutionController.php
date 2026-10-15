@@ -106,7 +106,6 @@ class WorkflowExecutionController extends Controller
 
         // Update micro-projet with agency imputation
         if ($instance->microProjet) {
-            $instance->microProjet->agence_imputation_id = $validated['agence_id'];
             $instance->microProjet->statut = 'IMPUTE_AGENCE';
             $instance->microProjet->save();
         }

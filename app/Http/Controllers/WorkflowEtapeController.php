@@ -36,6 +36,7 @@ class WorkflowEtapeController extends Controller
             'description' => 'nullable|string',
             'order' => 'required|integer',
             'is_active' => 'boolean',
+            'is_async' => 'boolean',
             'valid_from' => 'nullable|date',
             'valid_to' => 'nullable|date',
         ]);
@@ -80,6 +81,7 @@ class WorkflowEtapeController extends Controller
             'description' => 'nullable|string',
             'order' => 'sometimes|required|integer',
             'is_active' => 'boolean',
+            'is_async' => 'boolean',
             'valid_from' => 'nullable|date',
             'valid_to' => 'nullable|date',
         ]);
