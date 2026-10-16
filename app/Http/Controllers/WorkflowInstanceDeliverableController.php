@@ -20,9 +20,12 @@ class WorkflowInstanceDeliverableController extends Controller
             if ($request->has($filter)) $query->where($filter, $request->$filter);
         }
 
-        $deliverable = $query->get();
+        $deliverable = $query->paginate($request->get('per_page', 20));
 
-        return response()->json(['message' => 'Deliverables retrieved successfully', 'data' => $deliverable]);
+        return response()->json([
+            'message' => 'Deliverables retrieved successfully', 
+            'data' => $deliverable->values(),
+        ]);
     }
 
     public function show($id): JsonResponse

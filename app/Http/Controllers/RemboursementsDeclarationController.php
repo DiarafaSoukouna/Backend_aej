@@ -19,10 +19,18 @@ class RemboursementsDeclarationController extends Controller
             $declarations = $declarations->where('promoteur_id', $request->promoteur_id);
         if ($request->has('statut') && !empty($request->statut)) 
             $declarations = $declarations->where('statut', $request->statut);
+        
+        $declarationData = $declarations->paginate($request->get('per_page', 20));
 
         return new JsonResponse([
             'message' => 'Declarations retrieved successfully',
-            'data' => $declarations
+            'data' => $declarationData,
+            'pagination' => [
+                'current_page' => $declarationData->currentPage(),
+                'last_page' => $declarationData->lastPage(),
+                'per_page' => $declarationData->perPage(),
+                'total' => $declarationData->total(),
+            ]
         ], 200);
     }
 

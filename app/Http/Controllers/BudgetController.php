@@ -11,7 +11,7 @@ class BudgetController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $budgets = Budget::with(['microProjet', 'validePar', 'planDecaissements', 'planRemboursements'])->get();
+        $budgets = Budget::with(['microProjet', 'validePar', 'planDecaissements', 'planRemboursements']);
 
         if ($request->has('micro_projet_id') && !empty($request->micro_projet_id))
             $budgets = $budgets->where('micro_projet_id', $request->micro_projet_id);
@@ -24,7 +24,12 @@ class BudgetController extends Controller
         if ($request->has('reception_acte_credit') && !empty($request->reception_acte_credit))
             $budgets = $budgets->where('reception_acte_credit', $request->reception_acte_credit);
 
-        return new JsonResponse(['Message' => 'Budget list retrieved successfully', 'data' => $budgets], 200);
+        $budgetData = $budgets->paginate($request->get('per_page', 20));
+
+        return new JsonResponse([
+            'Message' => 'Budget list retrieved successfully', 
+            'data' => $budgetData
+        ], 200);
     }
 
     public function show($id): JsonResponse

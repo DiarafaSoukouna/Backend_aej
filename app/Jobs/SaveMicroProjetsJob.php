@@ -33,54 +33,91 @@ class SaveMicroProjetsJob implements ShouldQueue, ShouldBeUnique
     public function handle(): void
     {
         $start = microtime(true);
+        $report = [
+            'success' => 0,
+            'failed' => 0,
+            'errors_by_reason' => [],
+            'details' => []
+        ];
 
-        $dataDir = storage_path('data');
-        $this->dataFile = $dataDir . '/projets_data.json';
-        $this->pagesDir = $dataDir . '/pages';
-        if (!is_dir($this->pagesDir)) {
-            mkdir($this->pagesDir, 0775, true);
-        }
-
-        $baseUrl = rtrim(config('aej_api.backoffice_url'), '/');
-        $this->endpoint = $baseUrl . '/' . ltrim(config('aej_api.backoffice_endpoints.micro_projets'), '/');
-        $this->token = $this->authenticate() ?? throw new RuntimeException('Backoffice authentication failed');
-
-        $first = $this->fetchOne(1);
-        if ($first === null) {
-            throw new RuntimeException('Unable to fetch first page');
-        }
-        $lastPage = (int) ($first['meta']['last_page'] ?? 1);
-        $expected = (int) ($first['meta']['total'] ?? 0);
-        $this->writePage(1, $first['data'] ?? []);
-
-        $missing = [];
-        for ($p = 2; $p <= $lastPage; $p++) {
-            if (!is_file($this->pageFile($p))) {
-                $missing[] = $p;
+        try {
+            $dataDir = storage_path('data');
+            $this->dataFile = $dataDir . '/projets_data.json';
+            $this->pagesDir = $dataDir . '/pages';
+            if (!is_dir($this->pagesDir)) {
+                mkdir($this->pagesDir, 0775, true);
             }
+
+            $baseUrl = rtrim(config('aej_api.backoffice_url'), '/');
+            $this->endpoint = $baseUrl . '/' . ltrim(config('aej_api.backoffice_endpoints.micro_projets'), '/');
+            $this->token = $this->authenticate() ?? throw new RuntimeException('Backoffice authentication failed');
+
+            $first = $this->fetchOne(1);
+            if ($first === null) {
+                throw new RuntimeException('Unable to fetch first page');
+            }
+            $lastPage = (int) ($first['meta']['last_page'] ?? 1);
+            $expected = (int) ($first['meta']['total'] ?? 0);
+            $this->writePage(1, $first['data'] ?? []);
+
+            $missing = [];
+            for ($p = 2; $p <= $lastPage; $p++) {
+                if (!is_file($this->pageFile($p))) {
+                    $missing[] = $p;
+                }
+            }
+
+            Log::info('Micro projets fetch started', [
+                'total_pages' => $lastPage,
+                'expected_records' => $expected,
+                'pages_to_fetch' => count($missing),
+                'pages_already_done' => $lastPage - 1 - count($missing),
+            ]);
+
+            $failed = $this->fetchPages($missing);
+
+            if ($failed) {
+                $report['failed'] = count($failed);
+                $report['errors_by_reason']['pages_failed'] = count($failed);
+                $report['details']['failed_pages'] = $failed;
+                throw new RuntimeException('Pages still failing after retries: ' . implode(',', $failed));
+            }
+
+            $total = $this->mergePages($lastPage);
+
+            if ($expected > 0 && $total < $expected) {
+                $report['failed'] = $expected - $total;
+                $report['errors_by_reason']['incomplete_data'] = $expected - $total;
+                throw new RuntimeException("Data incomplete: {$total}/{$expected} records");
+            }
+
+            $this->cleanupPages();
+
+            $report['success'] = $total;
+            $report['details'] = [
+                'total_pages' => $lastPage,
+                'total_records' => $total,
+                'seconds' => round(microtime(true) - $start, 2),
+            ];
+
+            Log::info('Micro projets fetch completed successfully', $report);
+        } catch (\Throwable $e) {
+            $report['failed'] = 1;
+            $reason = $e->getMessage();
+            if (!isset($report['errors_by_reason'][$reason])) {
+                $report['errors_by_reason'][$reason] = 0;
+            }
+            $report['errors_by_reason'][$reason]++;
+            $report['details']['error'] = $reason;
+
+            Log::error('SaveMicroProjetsJob failed', [
+                'error' => $e->getMessage(),
+                'report' => $report,
+            ]);
+            throw $e;
         }
 
-        Log::info('Micro projets fetch started', [
-            'total_pages' => $lastPage,
-            'expected_records' => $expected,
-            'pages_to_fetch' => count($missing),
-            'pages_already_done' => $lastPage - 1 - count($missing),
-        ]);
-
-        $failed = $this->fetchPages($missing);
-
-        if ($failed) throw new RuntimeException('Pages still failing after retries: ' . implode(',', $failed));
-
-        $total = $this->mergePages($lastPage);
-
-        if ($expected > 0 && $total < $expected) throw new RuntimeException("Data incomplete: {$total}/{$expected} records");
-
-        $this->cleanupPages();
-
-        Log::info('Micro projets fetch completed', [
-            'total_records' => $total,
-            'seconds' => round(microtime(true) - $start, 2),
-        ]);
+        cache()->put('save_micro_projets_report', $report, now()->addHours(1));
     }
 
     public function uniqueId(): string
@@ -243,8 +280,8 @@ class SaveMicroProjetsJob implements ShouldQueue, ShouldBeUnique
             CURLOPT_HTTPHEADER => ['Accept: application/json', 'Authorization: Bearer ' . $this->token],
             CURLOPT_TIMEOUT => 120,
             CURLOPT_CONNECTTIMEOUT => 15,
-            CURLOPT_ENCODING => '',                         // gzip/deflate : moins de données transférées
-            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_2TLS, // HTTP/2 si disponible
+            CURLOPT_ENCODING => '',                         
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_2TLS, 
             CURLOPT_TCP_KEEPALIVE => 1,
         ]);
 

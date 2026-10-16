@@ -9,10 +9,29 @@ use App\Models\Suivi;
 
 class SuiviController extends Controller
 {
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        $suivis = Suivi::with(['microProjet', 'promoteur'])->get();
-        return new JsonResponse(['Message' => 'Suivi list retrieved successfully', 'data' => $suivis], 200);
+        $suivis = Suivi::with(['microProjet', 'promoteur']);
+        $filters = ['micro_projet_id', 'promoteur_id'];
+
+        foreach ($filters as $filter) {
+            if ($suivis->has($filter)) {
+                $suivis = $suivis->where($filter, $suivis->get($filter));
+            }
+        }
+
+        $suiviData = $suivis->paginate($request->get('per_page', 20));
+
+        return new JsonResponse([
+            'Message' => 'Suivi list retrieved successfully',
+            'data' => $suiviData,
+            'pagination' => [
+                'current_page' => $suiviData->currentPage(),
+                'last_page' => $suiviData->lastPage(),
+                'per_page' => $suiviData->perPage(),
+                'total' => $suiviData->total(),
+            ]
+        ], 200);
     }
 
     public function show($id): JsonResponse
@@ -46,7 +65,6 @@ class SuiviController extends Controller
                 'message' => 'Suivi created successfully',
                 'data' => $suivi
             ], 201);
-
         } catch (\Exception $e) {
             return new JsonResponse([
                 'message' => 'Error creating suivi',
@@ -82,7 +100,6 @@ class SuiviController extends Controller
                 'message' => 'Suivi updated successfully',
                 'data' => $suivi
             ], 200);
-
         } catch (\Exception $e) {
             return new JsonResponse([
                 'message' => 'Error updating suivi',
@@ -101,7 +118,6 @@ class SuiviController extends Controller
         try {
             $suivi->delete();
             return new JsonResponse(['Message' => 'Suivi deleted successfully'], 200);
-
         } catch (\Exception $e) {
             return new JsonResponse([
                 'message' => 'Error deleting suivi',

@@ -315,9 +315,16 @@ class AejApiController extends Controller
             $jobSave = new SaveMicroProjetsJob();
             $jobSave->handle();
 
+            $report = cache()->get('save_micro_projets_report', [
+                'success' => 0,
+                'failed' => 0,
+                'errors_by_reason' => [],
+                'details' => []
+            ]);
+
             return new JsonResponse([
                 'message' => 'Micro projets saved successfully',
-                'note' => 'Save is complete. Check logs for detailed statistics.',
+                'report' => $report,
             ], 202);
         } catch (\Exception $e) {
             Log::error('Error saving micro projets', [
@@ -327,6 +334,12 @@ class AejApiController extends Controller
             return new JsonResponse([
                 'message' => 'Error saving micro projets',
                 'error' => $e->getMessage(),
+                'report' => [
+                    'success' => 0,
+                    'failed' => 1,
+                    'errors_by_reason' => ['exception' => 1],
+                    'details' => ['error' => $e->getMessage()]
+                ]
             ], 500);
         }
     }
@@ -338,9 +351,17 @@ class AejApiController extends Controller
             $jobSync = new SyncMicroProjetsJob();
             $jobSync->handle();
 
+            $report = cache()->get('sync_micro_projets_report', [
+                'success' => 0,
+                'failed' => 0,
+                'skipped' => 0,
+                'errors_by_reason' => [],
+                'details' => []
+            ]);
+
             return new JsonResponse([
                 'message' => 'Micro projets synchronisation successfully',
-                'note' => 'Synchronisation is complete. Check logs for detailed statistics.',
+                'report' => $report,
             ], 202);
         } catch (\Exception $e) {
             Log::error('Error synchronizing micro projets', [
@@ -350,6 +371,13 @@ class AejApiController extends Controller
             return new JsonResponse([
                 'message' => 'Error synchronizing micro projets',
                 'error' => $e->getMessage(),
+                'report' => [
+                    'success' => 0,
+                    'failed' => 1,
+                    'skipped' => 0,
+                    'errors_by_reason' => ['exception' => 1],
+                    'details' => ['error' => $e->getMessage()]
+                ]
             ], 500);
         }
     }

@@ -17,9 +17,17 @@ class SousPrefectureController extends Controller
         if ($request->has('departement_id') && !empty($request->departement_id))
             $sousPrefectures = $sousPrefectures->where('departement_id', $request->departement_id);
 
+        $sousPrefectureData = $sousPrefectures->paginate($request->get('per_page', 20));
+
         return new JsonResponse([
             'message' => 'Sous prefectures retrieved successfully',
-            'data' => $sousPrefectures
+            'data' => $sousPrefectureData,
+            'pagination' => [
+                'current_page' => $sousPrefectureData->currentPage(),
+                'last_page' => $sousPrefectureData->lastPage(),
+                'per_page' => $sousPrefectureData->perPage(),
+                'total' => $sousPrefectureData->total(),
+            ]
         ], 200);
     }
 

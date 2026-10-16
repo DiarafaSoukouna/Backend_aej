@@ -11,17 +11,24 @@ class RegionController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $regions = Region::get();
+        $regions = Region::with(['entreprises']);
+        $regionData = $regions->paginate($request->get('per_page', 20));
 
         return new JsonResponse([
             'message' => 'Regions retrieved successfully',
-            'data' => $regions
+            'data' => $regionData,
+            'pagination' => [
+                'current_page' => $regionData->currentPage(),
+                'last_page' => $regionData->lastPage(),
+                'per_page' => $regionData->perPage(),
+                'total' => $regionData->total(),
+            ]
         ], 200);
     }
 
     public function show($id): JsonResponse
     {
-        $region = Region::with(['departements'])->find($id);
+        $region = Region::with(['departements', 'entreprises'])->find($id);
         if (!$region) {
             return new JsonResponse(['message' => 'Region not found'], 404);
         }

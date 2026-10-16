@@ -25,8 +25,19 @@ class TransactionController extends Controller
             $transactions = $transactions->where('type', $request->type);
         if ($request->has('statut') && !empty($request->statut)) 
             $transactions = $transactions->where('statut', $request->statut);
+        
+        $transactionData = $transactions->paginate($request->get('per_page', 20));
 
-        return new JsonResponse(['Message' => 'Transaction list retrieved successfully', 'data' => $transactions], 200);
+        return new JsonResponse([
+            'Message' => 'Transaction list retrieved successfully', 
+            'data' => $transactionData->values(),
+            'pagination' => [
+                'current_page' => $transactionData->currentPage(),
+                'last_page' => $transactionData->lastPage(),
+                'per_page' => $transactionData->perPage(),
+                'total' => $transactionData->total(),
+            ]
+        ], 200);
     }
 
     public function show($id): JsonResponse

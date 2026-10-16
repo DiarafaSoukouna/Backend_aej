@@ -23,9 +23,17 @@ class TableauAmortissementController extends Controller
             $lignes = $lignes->where('periode', (int) $request->periode);
         }
 
+        $ligneData = $lignes->paginate($request->get('per_page', 20));
+
         return new JsonResponse([
             'message' => 'Tableau amortissements retrieved successfully',
-            'data' => $lignes->values(),
+            'data' => $ligneData->values(),
+            'pagination' => [
+                'current_page' => $ligneData->currentPage(),
+                'last_page' => $ligneData->lastPage(),
+                'per_page' => $ligneData->perPage(),
+                'total' => $ligneData->total(),
+            ]
         ], 200);
     }
 

@@ -19,8 +19,19 @@ class RemboursementController extends Controller
             $remboursements = $remboursements->where('promoteur_id', $request->promoteur_id);
         if ($request->has('statut') && !empty($request->statut)) 
             $remboursements = $remboursements->where('statut', $request->statut);
+        
+        $remboursementData = $remboursements->paginate($request->get('per_page', 20));
 
-        return new JsonResponse(['Message' => 'Remboursement list retrieved successfully', 'data' => $remboursements], 200);
+        return new JsonResponse([
+            'message' => 'Remboursement list retrieved successfully',
+            'data' => $remboursementData,
+            'pagination' => [
+                'current_page' => $remboursementData->currentPage(),
+                'last_page' => $remboursementData->lastPage(),
+                'per_page' => $remboursementData->perPage(),
+                'total' => $remboursementData->total(),
+            ]
+        ], 200);
     }
 
     public function show($id): JsonResponse

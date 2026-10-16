@@ -22,7 +22,18 @@ class RecouvrementController extends Controller
         if ($request->has('type_action') && !empty($request->type_action)) 
             $recouvrements = $recouvrements->where('type_action', $request->type_action);
 
-        return new JsonResponse(['message' => 'Recouvrements retrieved successfully', 'data' => $recouvrements], 200);
+        $recouvrementData = $recouvrements->paginate($request->get('per_page', 20));
+
+        return new JsonResponse([
+            'message' => 'Recouvrements retrieved successfully',
+            'data' => $recouvrementData,
+            'pagination' => [
+                'current_page' => $recouvrementData->currentPage(),
+                'last_page' => $recouvrementData->lastPage(),
+                'per_page' => $recouvrementData->perPage(),
+                'total' => $recouvrementData->total(),
+            ]
+        ], 200);
     }
 
     public function show($id): JsonResponse

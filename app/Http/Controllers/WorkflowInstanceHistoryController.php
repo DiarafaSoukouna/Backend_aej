@@ -25,9 +25,12 @@ class WorkflowInstanceHistoryController extends Controller
             if ($request->has($filter)) $query->where($filter, $request->$filter);
         }
         
-        $history = $query->get();
+        $history = $query->paginate($request->get('per_page', 20));
 
-        return response()->json(['message' => 'History retrieved successfully', 'data' => $history]);
+        return response()->json([
+            'message' => 'History retrieved successfully', 
+            'data' => $history->values(),
+        ]);
     }
 
     public function show($id): JsonResponse

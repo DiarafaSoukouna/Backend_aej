@@ -18,8 +18,11 @@ class WorkflowInstanceCommentController extends Controller
             if ($request->has($filter)) $query->where($filter, $request->$filter);
         }
 
-        $comments = $query->get();
-        return response()->json(['message' => 'Comments retrieved successfully', 'data' => $comments]);
+        $comments = $query->paginate($request->get('per_page', 20));
+        return response()->json([
+            'message' => 'Comments retrieved successfully', 
+            'data' => $comments->values(),
+        ]);
     }
 
     public function show($id): JsonResponse

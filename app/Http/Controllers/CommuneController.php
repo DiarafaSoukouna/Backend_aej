@@ -12,14 +12,23 @@ class CommuneController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $communes = Commune::with(['sousPrefecture'])->get();
+        $communes = Commune::with(['sousPrefecture']);
 
         if ($request->has('sous_prefecture_id') && !empty($request->sous_prefecture_id))
             $communes = $communes->where('sous_prefecture_id', $request->sous_prefecture_id);
 
+
+        $communeData = $communes->paginate($request->get('per_page', 20));
+
         return new JsonResponse([
             'message' => 'Communes retrieved successfully',
-            'data' => $communes
+            'data' => $communeData,
+            'pagination' => [
+                'current_page' => $communeData->currentPage(),
+                'last_page' => $communeData->lastPage(),
+                'per_page' => $communeData->perPage(),
+                'total' => $communeData->total(),
+            ]
         ], 200);
     }
 
@@ -73,7 +82,7 @@ class CommuneController extends Controller
 
         $validation = Validator::make($request->all(), [
             'sous_prefecture_id' => 'sometimes|required|exists:sous_prefectures,id',
-            'code' => 'sometimes|nullable|string|max:50|unique:communes,code,'.$id,
+            'code' => 'sometimes|nullable|string|max:50|unique:communes,code,' . $id,
             'nom' => 'sometimes|required|string|max:100',
         ]);
 

@@ -11,20 +11,28 @@ class PlanDecaissementController extends Controller
 {
     public function index(Request $request)
     {
-        $plans = PlanDecaissement::with(['microProjet', 'budget', 'compteFinancement', 'ligneDecaissements'])->get();
+        $query = PlanDecaissement::with(['microProjet', 'budget', 'compteFinancement', 'ligneDecaissements']);
 
         if ($request->has('micro_projet_id') && !empty($request->micro_projet_id))
-            $plans = $plans->where('micro_projet_id', $request->micro_projet_id);
+            $query = $query->where('micro_projet_id', $request->micro_projet_id);
         if ($request->has('compte_financement_id') && !empty($request->compte_financement_id))
-            $plans = $plans->where('compte_financement_id', $request->compte_financement_id);
+            $query = $query->where('compte_financement_id', $request->compte_financement_id);
         if ($request->has('budget_id') && !empty($request->budget_id))
-            $plans = $plans->where('budget_id', $request->budget_id);
+            $query = $query->where('budget_id', $request->budget_id);
         if ($request->has('statut') && !empty($request->statut))
-            $plans = $plans->where('statut', $request->statut);
+            $query = $query->where('statut', $request->statut);
+
+        $plans = $query->paginate($request->get('per_page',20));
 
         return new JsonResponse([
             'message' => 'Plans de décaissement retrieved successfully',
-            'data' => $plans
+            'data' => $plans,
+            'pagination' => [
+                'current_page' => $plans->currentPage(),
+                'last_page' => $plans->lastPage(),
+                'per_page' => $plans->perPage(),
+                'total' => $plans->total(),
+            ],
         ], 200);
     }
 
