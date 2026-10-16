@@ -146,11 +146,11 @@ class SyncMicroProjetsJob implements ShouldQueue
     private function processMicroProjetsPage(array $items): array
     {
         $personnelStats = $this->syncPersonnelsFromPromoteurs($items);
-        $this->syncPromoteursFromMicroProjets($items);
+        $promoteurStats = $this->syncPromoteursFromMicroProjets($items);
         $stats = $this->syncMicroProjetsData($items);
         $this->syncWorkflowInstancesForMicroProjets($items);
 
-        $stats['errors'] += $personnelStats['errors'];
+        $stats['errors'] += $personnelStats['errors'] + $promoteurStats['errors'];
 
         return $stats;
     }
@@ -192,7 +192,6 @@ class SyncMicroProjetsJob implements ShouldQueue
 
         $now = now();
         $rows = [];
-        $errors = 0;
         foreach ($wanted as $email => $p) {
             if (isset($existing[$email])) continue;
             $parts = explode(' ', $p['nom_complet'] ?? '');
@@ -209,28 +208,39 @@ class SyncMicroProjetsJob implements ShouldQueue
             ];
         }
 
-        try {
-            $this->insertChunked(Personnel::class, $rows);
-        } catch (\Throwable $e) {
-            $errors = count($rows);
-            Log::error('Error inserting personnels', ['error' => $e->getMessage()]);
+        $chunkRows = array_chunk($rows, self::INSERT_CHUNK);
+        $insertedCount = 0;
+        foreach ($chunkRows as $chunk) {
+            try {
+                $insertedCount += Personnel::query()->insertOrIgnore($chunk);
+            } catch (\Throwable $e) {
+                Log::error('Error inserting personnels chunk', [
+                    'chunk_size' => count($chunk),
+                    'error' => $e->getMessage(),
+                ]);
+            }
         }
 
-        return ['created' => count($rows), 'errors' => $errors];
+        return ['created' => $insertedCount, 'errors' => 0];
     }
 
-    private function syncPromoteursFromMicroProjets(array $items): void
+    private function syncPromoteursFromMicroProjets(array $items): array
     {
         $emails = [];
         foreach ($items as $item) {
             if (isset($item['promoteur'])) $emails[$this->promoteurEmail($item['promoteur'])] = true;
         }
-        if (!$emails) return;
+        if (!$emails) return ['created' => 0, 'errors' => 0];
 
         $personnels = [];
         foreach (array_chunk(array_keys($emails), 5000) as $chunk) {
             $personnels += Personnel::whereIn('email', $chunk)->pluck('id', 'email')->all();
         }
+
+        $promoteurIds = array_filter(array_map(fn($i) => $i['promoteur']['id'] ?? null, $items));
+        $existingPromoteurs = Promoteur::whereIn('id', $promoteurIds)
+            ->pluck('id', 'id')
+            ->all();
 
         $now = now();
         $rows = [];
@@ -239,6 +249,9 @@ class SyncMicroProjetsJob implements ShouldQueue
             $p = $item['promoteur'];
             $personnelId = $personnels[$this->promoteurEmail($p)] ?? null;
             if (!$personnelId) continue;
+
+            // Skip if promoteur already exists
+            if (isset($existingPromoteurs[$p['id']])) continue;
 
             [$prenom, $nom] = $this->splitName($p['nom_complet'] ?? '');
             $rows[$p['id']] = [
@@ -254,13 +267,20 @@ class SyncMicroProjetsJob implements ShouldQueue
             ];
         }
 
-        foreach (array_chunk(array_values($rows), self::INSERT_CHUNK) as $chunk) {
-            Promoteur::query()->upsert(
-                $chunk,
-                ['id'],
-                ['nom', 'prenom', 'email', 'telephone', 'matriculeaej', 'personnel_id', 'updated_at']
-            );
+        $chunkRows = array_chunk(array_values($rows), self::INSERT_CHUNK);
+        $insertedCount = 0;
+        foreach ($chunkRows as $chunk) {
+            try {
+                $insertedCount += Promoteur::query()->insertOrIgnore($chunk);
+            } catch (\Throwable $e) {
+                Log::error('Error inserting promoteurs chunk', [
+                    'chunk_size' => count($chunk),
+                    'error' => $e->getMessage(),
+                ]);
+            }
         }
+
+        return ['created' => $insertedCount, 'errors' => 0];
     }
 
     private function syncMicroProjetsData(array $items): array
@@ -274,6 +294,7 @@ class SyncMicroProjetsJob implements ShouldQueue
         $now = now();
         $rows = [];
         $skipped = 0;
+        $errors = 0;
 
         foreach ($items as $item) {
             $id = $item['id'];
@@ -310,9 +331,21 @@ class SyncMicroProjetsJob implements ShouldQueue
             ];
         }
 
-        $this->insertChunked(MicroProjet::class, array_values($rows));
+        $chunkRows = array_chunk(array_values($rows), self::INSERT_CHUNK);
+        $insertedCount = 0;
+        foreach ($chunkRows as $chunk) {
+            try {
+                $insertedCount += MicroProjet::query()->insertOrIgnore($chunk);
+            } catch (\Throwable $e) {
+                $errors += count($chunk);
+                Log::error('Error inserting micro projets chunk', [
+                    'chunk_size' => count($chunk),
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
 
-        return ['created' => count($rows), 'skipped' => $skipped, 'errors' => 0];
+        return ['created' => $insertedCount, 'skipped' => $skipped, 'errors' => $errors];
     }
 
     private function syncWorkflowInstancesForMicroProjets(array $items): void

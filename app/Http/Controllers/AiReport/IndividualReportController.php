@@ -213,8 +213,8 @@ budgets: id, micro_projet_id, intitule, montant_accorde, date_accord, source, st
 plan_remboursements: id, micro_projet_id, budget_id, date_ouverture, decision, montant_credit, interets, duree_pret, duree_remboursement, fichier_amortissement, fichier_convention
 tableau_amortissements: id, plan_remboursement_id, periode, date_echeance, montant_echeance, capital_rembourse, capital_restant, interets, amortissement_capital, statut
 remboursements: id, plan_remboursement_id, promoteur_id, montant_echu, montant_paye, montant_impaye, penalites, date_paiement, statut
-recouvrements: id, micro_projet_id, plan_remboursement_id, montant, date_recouvrement, mode_recouvrement, statut
-decaissements: id, budget_id, micro_projet_id, montant, date_decaissement, statut
+recouvrements: id, micro_projet_id, plan_remboursement_id, montant_recouvre, date_recouvrement, mode_recouvrement, statut
+decaissements: id, budget_id, micro_projet_id, montant_decaisse, date_decaissement, statut
 exploitations: id, micro_projet_id, date_visite, statut_projet, nbre_emplois, chiffre_affaires
 organisme_financements: id, nom, sigle, type, region_id
 secteurs: id, code, libelle
