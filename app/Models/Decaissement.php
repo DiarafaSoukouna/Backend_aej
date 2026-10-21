@@ -32,4 +32,9 @@ class Decaissement extends Model
     {
         return $this->belongsTo(AgenceRegionale::class, 'agence_id');
     }
+
+    public function suiviDecaissements()
+    {
+        return $this->hasMany(SuiviDecaissement::class, 'decaissement_id');
+    }
 }

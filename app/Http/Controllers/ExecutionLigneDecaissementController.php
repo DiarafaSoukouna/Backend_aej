@@ -44,7 +44,7 @@ class ExecutionLigneDecaissementController extends Controller
     {
         $validation = Validator::make($request->all(), [
             'ligne_decaissement_id' => 'nullable|exists:ligne_decaissements,id',
-            'statut' => 'nullable|in:VALIDE,NON_VALIDE',
+            'statut' => 'nullable|in:VALIDE,NON_VALIDE,EN_COURS',
             'mode_decaisse' => 'nullable|in:CHEQUE,VIREMENT',
             'date_decaisse' => 'nullable|date',
             'justificatif_path' => 'nullable|string',
@@ -81,7 +81,7 @@ class ExecutionLigneDecaissementController extends Controller
 
         $validation = Validator::make($request->all(), [
             'ligne_decaissement_id' => 'nullable|exists:ligne_decaissements,id',
-            'statut' => 'nullable|in:VALIDE,NON_VALIDE',
+            'statut' => 'nullable|in:VALIDE,NON_VALIDE,EN_COURS',
             'mode_decaisse' => 'nullable|in:CHEQUE,VIREMENT',
             'date_decaisse' => 'nullable|date',
             'justificatif_path' => 'nullable|string',
@@ -117,7 +117,7 @@ class ExecutionLigneDecaissementController extends Controller
         }
 
         $validation = Validator::make($request->all(), [
-            'statut' => 'nullable|in:VALIDE,NON_VALIDE',
+            'statut' => 'nullable|in:VALIDE,NON_VALIDE,EN_COURS',
             'mode_decaisse' => 'nullable|in:CHEQUE,VIREMENT',
             'date_decaisse' => 'nullable|date',
             'justificatif_path' => 'nullable|string',

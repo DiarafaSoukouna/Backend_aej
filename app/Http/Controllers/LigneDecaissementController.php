@@ -11,7 +11,7 @@ class LigneDecaissementController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $lignes = LigneDecaissement::with(['planDecaissement'])->get();
+        $lignes = LigneDecaissement::with(['planDecaissement']);
 
         if ($request->has('plan_decaissement_id') && !empty($request->plan_decaissement_id))
             $lignes = $lignes->where('plan_decaissement_id', $request->plan_decaissement_id);

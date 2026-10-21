@@ -175,7 +175,7 @@ class MicroProjetController extends Controller
                 }
             }
 
-            $guichetProjet = Guichet::where('code', $microProjet->guichet_code)->first();
+            $guichetProjet = Guichet::where('id', $microProjet->guichet_id)->first();
             $workflowVersion = WorkflowVersion::where('workflow_code', $guichetProjet->workflow_code)->where('is_default', true)->first();
             $startEtape = WorkflowEtape::where('workflow_version', $workflowVersion->code)->first();
             $workflowInstance = new WorkflowInstance();
@@ -281,7 +281,7 @@ class MicroProjetController extends Controller
                 $microProjet = MicroProjet::create($microProjetData);
                 $microProjets[] = $microProjet;
 
-                $guichetProjet = Guichet::where('code', $microProjetData['guichet_code'])->first();
+                $guichetProjet = Guichet::where('id', $microProjetData['guichet_id'])->first();
                 $workflowVersion = WorkflowVersion::where('workflow_code', $guichetProjet->workflow_code)->where('is_default', true)->first();
                 $startEtape = WorkflowEtape::where('workflow_version', $workflowVersion->code)->first();
                 $workflowInstance = new WorkflowInstance();

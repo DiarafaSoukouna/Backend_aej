@@ -11,7 +11,7 @@ class RemboursementController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $remboursements = Remboursement::with(['planRemboursement', 'promoteur'])->get();
+        $remboursements = Remboursement::with(['planRemboursement', 'promoteur']);
 
         if ($request->has('plan_remboursement_id') && !empty($request->plan_remboursement_id)) 
             $remboursements = $remboursements->where('plan_remboursement_id', $request->plan_remboursement_id);
@@ -36,7 +36,7 @@ class RemboursementController extends Controller
 
     public function show($id): JsonResponse
     {
-        $remboursement = Remboursement::with(['planRemboursement', 'promoteur'])->find($id);
+        $remboursement = Remboursement::with(['planRemboursement', 'promoteur', 'suiviRemboursements'])->find($id);
         if (!$remboursement) {
             return new JsonResponse(['Message' => 'Remboursement not found'], 404);
         }
@@ -55,7 +55,7 @@ class RemboursementController extends Controller
             'date_paiement' => 'nullable|date',
             'justificatif_path' => 'nullable|string',
             'observations' => 'nullable|string',
-            'statut' => 'nullable|in:EN_ATTENTE,PAYE,PARTIEL,NON_PAYE',
+            'statut' => 'nullable|in:EN_ATTENTE,PAYE,PARTIEL,NON_PAYE,EN_COURS',
         ]);
 
         if ($validation->fails()) {
@@ -98,7 +98,7 @@ class RemboursementController extends Controller
             'date_paiement' => 'nullable|date',
             'justificatif_path' => 'nullable|string',
             'observations' => 'nullable|string',
-            'statut' => 'nullable|in:EN_ATTENTE,PAYE,PARTIEL,NON_PAYE',
+            'statut' => 'nullable|in:EN_ATTENTE,PAYE,PARTIEL,NON_PAYE,EN_COURS',
         ]);
 
         if ($validation->fails()) {
@@ -139,7 +139,7 @@ class RemboursementController extends Controller
             'date_paiement' => 'nullable|date',
             'justificatif_path' => 'nullable|string',
             'observations' => 'nullable|string',
-            'statut' => 'nullable|in:EN_ATTENTE,PAYE,PARTIEL,NON_PAYE',
+            'statut' => 'nullable|in:EN_ATTENTE,PAYE,PARTIEL,NON_PAYE,EN_COURS',
         ]);
 
         if ($validation->fails()) {

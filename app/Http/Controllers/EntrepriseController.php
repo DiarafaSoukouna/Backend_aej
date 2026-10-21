@@ -20,7 +20,7 @@ class EntrepriseController extends Controller
             }
         }
         
-        $entrepriseData = $entreprises->paginate($request->get('per_page', 20));;
+        $entrepriseData = $entreprises->paginate($request->get('per_page', 20));
 
         return response()->json([
             'message' => 'Entreprises retrieved successfully',

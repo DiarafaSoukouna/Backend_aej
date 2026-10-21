@@ -36,7 +36,7 @@ class DecaissementController extends Controller
 
     public function show($id): JsonResponse
     {
-        $decaissement = Decaissement::with(['planDecaissement', 'agence'])->find($id);
+        $decaissement = Decaissement::with(['planDecaissement', 'agence', 'suiviDecaissements'])->find($id);
         if (!$decaissement) {
             return new JsonResponse(['Message' => 'Decaissement not found'], 404);
         }
@@ -54,7 +54,7 @@ class DecaissementController extends Controller
             'montant_decaisse' => 'nullable|numeric',
             'date_decaissement' => 'nullable|date',
             'reference_banque' => 'nullable|string',
-            'statut' => 'nullable|in:EN_ATTENTE,VALIDE,NON_VALIDE',
+            'statut' => 'nullable|in:EN_ATTENTE,VALIDE,NON_VALIDE,EN_COURS',
             'numero_decaissement' => 'nullable|string',
             'justificatif_path' => 'nullable|string',
             'observations' => 'nullable|string',
@@ -94,7 +94,7 @@ class DecaissementController extends Controller
             'montant_decaisse' => 'nullable|numeric',
             'date_decaissement' => 'nullable|date',
             'reference_banque' => 'nullable|string',
-            'statut' => 'nullable|in:EN_ATTENTE,VALIDE,NON_VALIDE',
+            'statut' => 'nullable|in:EN_ATTENTE,VALIDE,NON_VALIDE,EN_COURS',
             'numero_decaissement' => 'nullable|string',
             'justificatif_path' => 'nullable|string',
             'observations' => 'nullable|string',
@@ -134,7 +134,7 @@ class DecaissementController extends Controller
             'montant_decaisse' => 'nullable|numeric',
             'date_decaissement' => 'nullable|date',
             'reference_banque' => 'nullable|string',
-            'statut' => 'nullable|in:EN_ATTENTE,VALIDE,NON_VALIDE',
+            'statut' => 'nullable|in:EN_ATTENTE,VALIDE,NON_VALIDE,EN_COURS',
             'numero_decaissement' => 'nullable|string',
             'justificatif_path' => 'nullable|string',
             'observations' => 'nullable|string',

@@ -12,7 +12,7 @@ class VilleController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $villes = Ville::with(['commune'])->get();
+        $villes = Ville::with(['commune']);
 
         if ($request->has('commune_id') && !empty($request->commune_id))
             $villes = $villes->where('commune_id', $request->commune_id);

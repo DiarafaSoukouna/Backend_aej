@@ -11,7 +11,7 @@ class RemboursementsDeclarationController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $declarations = RemboursementsDeclaration::with(['planRemboursement', 'promoteur'])->get();
+        $declarations = RemboursementsDeclaration::with(['planRemboursement', 'promoteur']);
 
         if ($request->has('plan_remboursement_id') && !empty($request->plan_remboursement_id)) 
             $declarations = $declarations->where('plan_remboursement_id', $request->plan_remboursement_id);

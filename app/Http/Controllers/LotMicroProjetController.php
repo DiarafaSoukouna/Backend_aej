@@ -53,9 +53,14 @@ class LotMicroProjetController extends Controller
     {
         $validation = Validator::make($request->all(), [
             'lot_id' => 'required|exists:lots_transmission,id',
-            'micro_projet_ids' => 'required|array',
-            'micro_projet_ids.*' => 'exists:micro_projets,id',
             'statut' => 'nullable|in:EN_ATTENTE,APPROUVE,NON_APPROUVE',
+            'micro_projets' => 'required|array',
+            'micro_projets.*.micro_projet_id' => 'required|exists:micro_projets,id',
+            'micro_projets.*.montant_remboursement' => 'nullable|numeric',
+            'micro_projets.*.taux_interet' => 'nullable|numeric',
+            'micro_projets.*.duree_remboursement' => 'nullable|integer',
+            'micro_projets.*.duree_differee' => 'nullable|integer',
+            'micro_projets.*.fichier_courrier' => 'nullable|string',
         ]);
 
         if ($validation->fails()) {
@@ -64,18 +69,23 @@ class LotMicroProjetController extends Controller
 
         try {
             $lotId = $request->input('lot_id');
-            $microProjetIds = $request->input('micro_projet_ids');
+            $microProjetIds = $request->input('micro_projets');
             $statut = $request->input('statut', 'EN_ATTENTE');
 
             $createdRecords = [];
             foreach ($microProjetIds as $microProjetId) {
                 $lotMicroProjet = LotMicroProjet::create([
                     'lot_id' => $lotId,
-                    'micro_projet_id' => $microProjetId,
+                    'micro_projet_id' => $microProjetId['micro_projet_id'],
+                    'montant_remboursement' => $microProjetId['montant_remboursement'] ?? null,
+                    'taux_interet' => $microProjetId['taux_interet'] ?? null,
+                    'duree_remboursement' => $microProjetId['duree_remboursement'] ?? null,
+                    'duree_differee' => $microProjetId['duree_differee'] ?? null,
+                    'fichier_courrier' => $microProjetId['fichier_courrier'] ?? null,
                     'statut' => $statut,
                 ]);
                 $createdRecords[] = $lotMicroProjet->load(['lot', 'microProjet']);
-                LotImportation::where('micro_projet_id', $microProjetId)->delete();
+                LotImportation::where('micro_projet_id', $microProjetId['micro_projet_id'])->delete();
             }
 
             return new JsonResponse([
@@ -97,6 +107,11 @@ class LotMicroProjetController extends Controller
         $validation = Validator::make($request->all(), [
             'lot_id' => 'sometimes|required|exists:lots_transmission,id',
             'micro_projet_id' => 'sometimes|required|exists:micro_projets,id',
+            'montant_remboursement' => 'sometimes|numeric',
+            'taux_interet' => 'sometimes|numeric',
+            'duree_remboursement' => 'sometimes|integer',
+            'duree_differee' => 'sometimes|integer',
+            'fichier_courrier' => 'sometimes|string',
             'statut' => 'sometimes|in:EN_ATTENTE,APPROUVE,NON_APPROUVE',
         ]);
 

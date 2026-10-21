@@ -11,7 +11,7 @@ class TransactionController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $transactions = Transaction::with(['microProjet', 'promoteur', 'categorie', 'saisiPar'])->get();
+        $transactions = Transaction::with(['microProjet', 'promoteur', 'categorie', 'saisiPar']);
         
         if ($request->has('micro_projet_id') && !empty($request->micro_projet_id)) 
             $transactions = $transactions->where('micro_projet_id', $request->micro_projet_id);

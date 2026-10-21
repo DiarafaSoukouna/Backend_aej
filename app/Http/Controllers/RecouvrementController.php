@@ -11,7 +11,7 @@ class RecouvrementController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $recouvrements = Recouvrement::with(['microProjet', 'planRemboursement', 'agent'])->get();
+        $recouvrements = Recouvrement::with(['microProjet', 'planRemboursement', 'agent']);
 
         if ($request->has('micro_projet_id') && !empty($request->micro_projet_id)) 
             $recouvrements = $recouvrements->where('micro_projet_id', $request->micro_projet_id);

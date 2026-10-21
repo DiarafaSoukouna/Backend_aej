@@ -12,7 +12,7 @@ class SousPrefectureController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $sousPrefectures = SousPrefecture::with(['departement'])->get();
+        $sousPrefectures = SousPrefecture::with(['departement']);
 
         if ($request->has('departement_id') && !empty($request->departement_id))
             $sousPrefectures = $sousPrefectures->where('departement_id', $request->departement_id);

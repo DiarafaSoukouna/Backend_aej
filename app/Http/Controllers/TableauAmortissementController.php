@@ -11,7 +11,7 @@ class TableauAmortissementController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $lignes = TableauAmortissement::with(['planRemboursement'])->get();
+        $lignes = TableauAmortissement::with(['planRemboursement']);
 
         if ($request->filled('plan_remboursement_id')) {
             $lignes = $lignes->where('plan_remboursement_id', (int) $request->plan_remboursement_id);
