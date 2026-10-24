@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class SuiviDecaissement extends Model
 {
     protected $fillable = [
-        'decaissement_id',
+        'ligne_decaissement_id',
         'montant_decaisse',
         'date_decaisse',
         'justificatif_path',
@@ -21,8 +21,8 @@ class SuiviDecaissement extends Model
 
     public $timestamps = false;
 
-    public function decaissement()
+    public function ligneDecaissement()
     {
-        return $this->belongsTo(Decaissement::class, 'decaissement_id');
+        return $this->belongsTo(LigneDecaissement::class, 'ligne_decaissement_id');
     }
 }

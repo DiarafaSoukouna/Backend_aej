@@ -11,10 +11,10 @@ class SuiviRemboursementController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $suiviRemboursements = SuiviRemboursement::with(['remboursement']);
+        $suiviRemboursements = SuiviRemboursement::with(['amortissement']);
 
-        if ($request->has('remboursement_id') && !empty($request->remboursement_id))
-            $suiviRemboursements = $suiviRemboursements->where('remboursement_id', $request->remboursement_id);
+        if ($request->has('amortissement_id') && !empty($request->amortissement_id))
+            $suiviRemboursements = $suiviRemboursements->where('amortissement_id', $request->amortissement_id);
 
         $suiviRemboursementData = $suiviRemboursements->paginate($request->get('per_page', 20));
 
@@ -32,7 +32,7 @@ class SuiviRemboursementController extends Controller
 
     public function show($id): JsonResponse
     {
-        $suiviRemboursement = SuiviRemboursement::with(['remboursement'])->find($id);
+        $suiviRemboursement = SuiviRemboursement::with(['amortissement'])->find($id);
         if (!$suiviRemboursement) {
             return new JsonResponse(['Message' => 'Suivi remboursement not found'], 404);
         }
@@ -45,7 +45,7 @@ class SuiviRemboursementController extends Controller
     public function store(Request $request): JsonResponse
     {
         $validation = Validator::make($request->all(), [
-            'remboursement_id' => 'required|exists:remboursements,id',
+            'amortissement_id' => 'required|exists:tableau_amortissements,id',
             'montant_paye' => 'nullable|numeric',
             'date_paiement' => 'nullable|date',
             'justificatif_path' => 'nullable|string',
@@ -81,7 +81,7 @@ class SuiviRemboursementController extends Controller
         }
 
         $validation = Validator::make($request->all(), [
-            'remboursement_id' => 'nullable|exists:remboursements,id',
+            'amortissement_id' => 'nullable|exists:tableau_amortissements,id',
             'montant_paye' => 'nullable|numeric',
             'date_paiement' => 'nullable|date',
             'justificatif_path' => 'nullable|string',
@@ -117,7 +117,7 @@ class SuiviRemboursementController extends Controller
         }
 
         $validation = Validator::make($request->all(), [
-            'remboursement_id' => 'nullable|exists:remboursements,id',
+            'amortissement_id' => 'nullable|exists:tableau_amortissements,id',
             'montant_paye' => 'nullable|numeric',
             'date_paiement' => 'nullable|date',
             'justificatif_path' => 'nullable|string',

@@ -39,7 +39,7 @@ class TableauAmortissementController extends Controller
 
     public function show($id): JsonResponse
     {
-        $ligne = TableauAmortissement::with(['planRemboursement'])->find($id);
+        $ligne = TableauAmortissement::with(['planRemboursement', 'suiviRemboursements'])->find($id);
         if (!$ligne) {
             return new JsonResponse(['message' => 'Tableau amortissement not found'], 404);
         }

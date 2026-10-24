@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class SuiviRemboursement extends Model
 {
     protected $fillable = [
-        'remboursement_id',
+        'amortissement_id',
         'montant_paye',
         'date_paiement',
         'justificatif_path',
@@ -21,8 +21,8 @@ class SuiviRemboursement extends Model
 
     public $timestamps = false;
 
-    public function remboursement()
+    public function amortissement()
     {
-        return $this->belongsTo(Remboursement::class, 'remboursement_id');
+        return $this->belongsTo(TableauAmortissement::class, 'amortissement_id');
     }
 }

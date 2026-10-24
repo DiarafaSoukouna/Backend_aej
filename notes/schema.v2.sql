@@ -959,12 +959,12 @@ CREATE TABLE
 CREATE TABLE
     IF NOT EXISTS suivi_decaissements (
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-        decaissement_id BIGINT UNSIGNED,
+        ligne_decaissement_id BIGINT UNSIGNED,
         montant_decaisse DECIMAL(18, 2),
         date_decaisse DATE,
         justificatif_path TEXT,
         observations TEXT,
-        FOREIGN KEY (decaissement_id) REFERENCES decaissements (id) ON DELETE CASCADE
+        FOREIGN KEY (ligne_decaissement_id) REFERENCES ligne_decaissements (id) ON DELETE CASCADE
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
 CREATE TABLE 
@@ -1042,12 +1042,12 @@ CREATE TABLE
 CREATE TABLE
     IF NOT EXISTS suivi_remboursements (
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-        remboursement_id BIGINT UNSIGNED,
+        amortissement_id BIGINT UNSIGNED,
         montant_paye DECIMAL(18, 2),
         date_paiement DATE,
         justificatif_path TEXT,
         observations TEXT,
-        FOREIGN KEY (remboursement_id) REFERENCES remboursements (id) ON DELETE CASCADE
+        FOREIGN KEY (amortissement_id) REFERENCES tableau_amortissements (id) ON DELETE CASCADE
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
 CREATE TABLE 

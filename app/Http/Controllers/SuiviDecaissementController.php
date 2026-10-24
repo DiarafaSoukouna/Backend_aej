@@ -11,10 +11,10 @@ class SuiviDecaissementController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $suiviDecaissements = SuiviDecaissement::with(['decaissement']);
+        $suiviDecaissements = SuiviDecaissement::with(['ligneDecaissement']);
 
-        if ($request->has('decaissement_id') && !empty($request->decaissement_id))
-            $suiviDecaissements = $suiviDecaissements->where('decaissement_id', $request->decaissement_id);
+        if ($request->has('ligne_decaissement_id') && !empty($request->ligne_decaissement_id))
+            $suiviDecaissements = $suiviDecaissements->where('ligne_decaissement_id', $request->ligne_decaissement_id);
 
         $suiviDecaissementData = $suiviDecaissements->paginate($request->get('per_page', 20));
 
@@ -32,7 +32,7 @@ class SuiviDecaissementController extends Controller
 
     public function show($id): JsonResponse
     {
-        $suiviDecaissement = SuiviDecaissement::with(['decaissement'])->find($id);
+        $suiviDecaissement = SuiviDecaissement::with(['ligneDecaissement'])->find($id);
         if (!$suiviDecaissement) {
             return new JsonResponse(['Message' => 'Suivi decaissement not found'], 404);
         }
@@ -45,7 +45,7 @@ class SuiviDecaissementController extends Controller
     public function store(Request $request): JsonResponse
     {
         $validation = Validator::make($request->all(), [
-            'decaissement_id' => 'required|exists:decaissements,id',
+            'ligne_decaissement_id' => 'required|exists:ligne_decaissements,id',
             'montant_decaisse' => 'nullable|numeric',
             'date_decaisse' => 'nullable|date',
             'justificatif_path' => 'nullable|string',
@@ -81,7 +81,7 @@ class SuiviDecaissementController extends Controller
         }
 
         $validation = Validator::make($request->all(), [
-            'decaissement_id' => 'nullable|exists:decaissements,id',
+            'ligne_decaissement_id' => 'nullable|exists:ligne_decaissements,id',
             'montant_decaisse' => 'nullable|numeric',
             'date_decaisse' => 'nullable|date',
             'justificatif_path' => 'nullable|string',
@@ -117,7 +117,7 @@ class SuiviDecaissementController extends Controller
         }
 
         $validation = Validator::make($request->all(), [
-            'decaissement_id' => 'nullable|exists:decaissements,id',
+            'ligne_decaissement_id' => 'nullable|exists:ligne_decaissements,id',
             'montant_decaisse' => 'nullable|numeric',
             'date_decaisse' => 'nullable|date',
             'justificatif_path' => 'nullable|string',

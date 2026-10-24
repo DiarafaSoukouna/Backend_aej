@@ -36,7 +36,7 @@ class DecaissementController extends Controller
 
     public function show($id): JsonResponse
     {
-        $decaissement = Decaissement::with(['planDecaissement', 'agence', 'suiviDecaissements'])->find($id);
+        $decaissement = Decaissement::with(['planDecaissement', 'agence'])->find($id);
         if (!$decaissement) {
             return new JsonResponse(['Message' => 'Decaissement not found'], 404);
         }

@@ -36,9 +36,4 @@ class Remboursement extends Model
     {
         return $this->belongsTo(Promoteur::class, 'promoteur_id');
     }
-
-    public function suiviRemboursements()
-    {
-        return $this->hasMany(SuiviRemboursement::class, 'remboursement_id');
-    }
 }

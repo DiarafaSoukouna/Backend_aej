@@ -36,7 +36,7 @@ class RemboursementController extends Controller
 
     public function show($id): JsonResponse
     {
-        $remboursement = Remboursement::with(['planRemboursement', 'promoteur', 'suiviRemboursements'])->find($id);
+        $remboursement = Remboursement::with(['planRemboursement', 'promoteur'])->find($id);
         if (!$remboursement) {
             return new JsonResponse(['Message' => 'Remboursement not found'], 404);
         }
