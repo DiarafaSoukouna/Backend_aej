@@ -44,4 +44,9 @@ class LigneDecaissement extends Model
     {
         return $this->hasMany(DecaissementsDeclaration::class, 'ligne_decaissement_id');
     }
+
+    public function suiviDecaissements()
+    {
+        return $this->hasMany(SuiviDecaissement::class, 'ligne_decaissement_id');
+    }
 }

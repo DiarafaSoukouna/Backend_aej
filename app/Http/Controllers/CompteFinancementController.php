@@ -11,7 +11,7 @@ class CompteFinancementController extends Controller
 {
     public function index(Request $request)
     {
-        $comptes = CompteFinancement::with(['organisme', 'microProjet', 'budget'])->get();
+        $comptes = CompteFinancement::with(['organisme', 'microProjet', 'budget']);
 
         if ($request->has('micro_projet_id') && !empty($request->micro_projet_id))
             $comptes = $comptes->where('micro_projet_id', $request->micro_projet_id);
@@ -24,9 +24,11 @@ class CompteFinancementController extends Controller
         if ($request->has('avis_partenaire') && !empty($request->avis_partenaire))
             $comptes = $comptes->where('avis_partenaire', $request->avis_partenaire);
 
+        $comptesData = $comptes->paginate($request->get('per_page', 20));
+
         return new JsonResponse([
             'message' => 'Comptes financement retrieved successfully',
-            'data' => $comptes
+            'data' => $comptesData
         ], 200);
     }
 

@@ -47,7 +47,6 @@ class MicroProjetController extends Controller
             'secteur_id',
             'commune_id',
             'agence_id',
-            'agence_imputation_id',
             'promoteur_id',
             'stade_projet',
             'type_projet',
@@ -56,6 +55,12 @@ class MicroProjetController extends Controller
 
         foreach ($filters as $filter) {
             if ($request->filled($filter)) $query->where($filter, $request->input($filter));
+        }
+
+        if ($request->filled('matriculeaej')) {
+            $query->whereHas('promoteur', function ($q) use ($request) {
+                $q->where('matriculeaej', $request->input('matriculeaej'));
+            });
         }
 
         if ($request->filled('current_etape_code')) {
@@ -139,11 +144,10 @@ class MicroProjetController extends Controller
             'secteur_id' => 'nullable|exists:secteurs,id',
             'commune_id' => 'nullable|exists:communes,id',
             'agence_id' => 'nullable|exists:agences_regionales,id',
-            'agence_imputation_id' => 'nullable|exists:agences_regionales,id',
             'promoteur_id' => 'nullable|exists:promoteurs,id',
             'stade_projet' => 'nullable|in:CREATION,DEVELOPPEMENT',
             'type_projet' => 'nullable|in:INDIVIDUEL,COLLECTIF',
-            'statut' => 'nullable|in:BROUILLON,EN_SOUMISSION,EN_COURS,EN_ANALYSE,EN_ATTENTE,ANNULE,NON_APPROUVE,APPROUVE,EN_FORMATION,EN_FINANCEMENT,EN_DECAISSEMENT,EN_SUIVI,EN_REMBOURSEMENT,TERMINE',
+            'statut' => 'nullable|string|max:50',
             'localisation' => 'nullable|string|max:50',
             'geolocalisation' => 'nullable|string',
             'date_certification' => 'nullable|date',
@@ -171,7 +175,7 @@ class MicroProjetController extends Controller
                 }
             }
 
-            $guichetProjet = Guichet::where('code', $microProjet->guichet_code)->first();
+            $guichetProjet = Guichet::where('id', $microProjet->guichet_id)->first();
             $workflowVersion = WorkflowVersion::where('workflow_code', $guichetProjet->workflow_code)->where('is_default', true)->first();
             $startEtape = WorkflowEtape::where('workflow_version', $workflowVersion->code)->first();
             $workflowInstance = new WorkflowInstance();
@@ -208,11 +212,10 @@ class MicroProjetController extends Controller
             'micro_projets.*.commune_code' => 'nullable|string',
             'micro_projets.*.agence_code' => 'nullable|string',
             'micro_projets.*.secteur_libelle' => 'nullable|string',
-            'micro_projets.*.agence_imputation_code' => 'nullable|string',
             'micro_projets.*.promoteur_email' => 'nullable|string',
             'micro_projets.*.stade_projet' => 'nullable|in:CREATION,DEVELOPPEMENT',
             'micro_projets.*.type_projet' => 'nullable|in:INDIVIDUEL,COLLECTIF',
-            'micro_projets.*.statut' => 'nullable|in:BROUILLON,EN_SOUMISSION,EN_COURS,EN_ANALYSE,EN_ATTENTE,ANNULE,NON_APPROUVE,APPROUVE,EN_FORMATION,EN_FINANCEMENT,EN_DECAISSEMENT,EN_SUIVI,EN_REMBOURSEMENT,TERMINE',
+            'micro_projets.*.statut' => 'nullable|string|max:50',
             'micro_projets.*.localisation' => 'nullable|string|max:50',
             'micro_projets.*.geolocalisation' => 'nullable|string',
             'micro_projets.*.date_certification' => 'nullable|date',
@@ -233,7 +236,6 @@ class MicroProjetController extends Controller
             $communeCodes = array_filter(array_unique(array_column($request->micro_projets, 'commune_code')));
             $agenceCodes = array_filter(array_unique(array_column($request->micro_projets, 'agence_code')));
             $secteurLibelles = array_filter(array_unique(array_column($request->micro_projets, 'secteur_libelle')));
-            $agenceImputationCodes = array_filter(array_unique(array_column($request->micro_projets, 'agence_imputation_code')));
             $promoteurMatricules = array_filter(array_unique(array_column($request->micro_projets, 'promoteur_email')));
 
             $dispositifs = Dispositif::whereIn('code', $dispositifCodes)->pluck('id', 'code')->toArray();
@@ -242,7 +244,6 @@ class MicroProjetController extends Controller
             $communes = Commune::whereIn('code', $communeCodes)->pluck('id', 'code')->toArray();
             $agences = AgenceRegionale::whereIn('code', $agenceCodes)->pluck('id', 'code')->toArray();
             $secteurLibelles = Secteur::whereIn('libelle', $secteurLibelles)->pluck('id', 'libelle')->toArray();
-            $agenceImputations = AgenceRegionale::whereIn('code', $agenceImputationCodes)->pluck('id', 'code')->toArray();
             $promoteurs = Promoteur::whereIn('email', $promoteurMatricules)->pluck('id', 'email')->toArray();
             $existingCodes = MicroProjet::whereIn('code', array_column($request->micro_projets, 'code'))->pluck('id', 'code')->toArray();
             $existingMatricules = MicroProjet::whereIn('matricule', array_column($request->micro_projets, 'matricule'))->pluck('id', 'matricule')->toArray();
@@ -255,7 +256,6 @@ class MicroProjetController extends Controller
                 $microProjetData['commune_id'] = $communes[$microProjetData['commune_code']] ?? null;
                 $microProjetData['agence_id'] = $agences[$microProjetData['agence_code']] ?? null;
                 $microProjetData['secteur_id'] = $secteurLibelles[$microProjetData['secteur_libelle']] ?? null;
-                $microProjetData['agence_imputation_id'] = $agenceImputations[$microProjetData['agence_imputation_code']] ?? null;
                 $microProjetData['promoteur_id'] = $promoteurs[$microProjetData['promoteur_email']] ?? null;
 
                 unset(
@@ -265,7 +265,6 @@ class MicroProjetController extends Controller
                     $microProjetData['commune_code'],
                     $microProjetData['agence_code'],
                     $microProjetData['secteur_libelle'],
-                    $microProjetData['agence_imputation_code'],
                     $microProjetData['promoteur_email']
                 );
 
@@ -282,7 +281,7 @@ class MicroProjetController extends Controller
                 $microProjet = MicroProjet::create($microProjetData);
                 $microProjets[] = $microProjet;
 
-                $guichetProjet = Guichet::where('code', $microProjetData['guichet_code'])->first();
+                $guichetProjet = Guichet::where('id', $microProjetData['guichet_id'])->first();
                 $workflowVersion = WorkflowVersion::where('workflow_code', $guichetProjet->workflow_code)->where('is_default', true)->first();
                 $startEtape = WorkflowEtape::where('workflow_version', $workflowVersion->code)->first();
                 $workflowInstance = new WorkflowInstance();
@@ -325,11 +324,10 @@ class MicroProjetController extends Controller
             'secteur_id' => 'nullable|exists:secteurs,id',
             'commune_id' => 'nullable|exists:communes,id',
             'agence_id' => 'nullable|exists:agences_regionales,id',
-            'agence_imputation_id' => 'nullable|exists:agences_regionales,id',
             'promoteur_id' => 'nullable|exists:promoteurs,id',
             'stade_projet' => 'nullable|in:CREATION,DEVELOPPEMENT',
             'type_projet' => 'nullable|in:INDIVIDUEL,COLLECTIF',
-            'statut' => 'nullable|in:BROUILLON,EN_SOUMISSION,EN_COURS,EN_ANALYSE,EN_ATTENTE,ANNULE,NON_APPROUVE,APPROUVE,EN_FORMATION,EN_FINANCEMENT,EN_DECAISSEMENT,EN_SUIVI,EN_REMBOURSEMENT,TERMINE',
+            'statut' => 'nullable|string|max:50',
             'localisation' => 'nullable|string|max:50',
             'geolocalisation' => 'nullable|string',
             'date_certification' => 'nullable|date',
@@ -377,11 +375,10 @@ class MicroProjetController extends Controller
             'secteur_id' => 'nullable|exists:secteurs,id',
             'commune_id' => 'nullable|exists:communes,id',
             'agence_id' => 'nullable|exists:agences_regionales,id',
-            'agence_imputation_id' => 'nullable|exists:agences_regionales,id',
             'promoteur_id' => 'nullable|exists:promoteurs,id',
             'stade_projet' => 'nullable|in:CREATION,DEVELOPPEMENT',
             'type_projet' => 'nullable|in:INDIVIDUEL,COLLECTIF',
-            'statut' => 'nullable|in:BROUILLON,EN_SOUMISSION,EN_COURS,EN_ANALYSE,EN_ATTENTE,ANNULE,NON_APPROUVE,APPROUVE,EN_FORMATION,EN_FINANCEMENT,EN_DECAISSEMENT,EN_SUIVI,EN_REMBOURSEMENT,TERMINE',
+            'statut' => 'nullable|string|max:50',
             'localisation' => 'nullable|string|max:50',
             'geolocalisation' => 'nullable|string',
             'date_certification' => 'nullable|date',

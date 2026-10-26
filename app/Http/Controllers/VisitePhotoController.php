@@ -18,7 +18,7 @@ class VisitePhotoController extends Controller
             if ($request->filled($filter)) $query->where($filter, $request->input($filter));
         }
 
-        $perPage = $request->get('per_page', 15);
+        $perPage = $request->get('per_page', 20);
         $photos = $query->paginate($perPage);
         
         return response()->json([

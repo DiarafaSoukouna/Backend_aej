@@ -9,10 +9,31 @@ use Illuminate\Support\Facades\Validator;
 
 class EmbaucheController extends Controller
 {
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        $embauches = Embauche::with(['promoteur', 'entreprise', 'microProjet', 'typeEmploi'])->get();
-        return response()->json(['message' => 'Embauches retrieved successfully', 'data' => $embauches]);
+        $embauches = Embauche::with(['promoteur', 'entreprise', 'microProjet', 'typeEmploi']);
+        $filters = ['promoteur_id', 'entreprise_id', 'micro_projet_id', 'type_emploi_id'];
+
+        foreach ($filters as $filter) {
+            if ($request->has($filter)) {
+                $embauches->where($filter, $request->input($filter));
+            }
+        }
+
+        $embaucheData = $embauches->paginate($request->get('per_page', 20));
+
+        return response()->json(
+            [
+                'message' => 'Embauches retrieved successfully',
+                'data' => $embaucheData,
+                'pagination' => [
+                    'current_page' => $embaucheData->currentPage(),
+                    'last_page' => $embaucheData->lastPage(),
+                    'per_page' => $embaucheData->perPage(),
+                    'total' => $embaucheData->total(),
+                ]
+            ],
+        );
     }
 
     public function show($id): JsonResponse

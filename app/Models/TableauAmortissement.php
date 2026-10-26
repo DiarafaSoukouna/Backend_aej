@@ -36,4 +36,9 @@ class TableauAmortissement extends Model
     {
         return $this->belongsTo(PlanRemboursement::class, 'plan_remboursement_id');
     }
+
+    public function suiviRemboursements()
+    {
+        return $this->hasMany(SuiviRemboursement::class, 'amortissement_id');
+    }
 }

@@ -18,7 +18,6 @@ class MicroProjet extends Model
         'secteur_id',
         'commune_id',
         'agence_id',
-        'agence_imputation_id',
         'promoteur_id',
         'stade_projet',
         'type_projet',
@@ -64,11 +63,6 @@ class MicroProjet extends Model
     public function agence()
     {
         return $this->belongsTo(AgenceRegionale::class, 'agence_id');
-    }
-
-    public function agenceImputation()
-    {
-        return $this->belongsTo(AgenceRegionale::class, 'agence_imputation_id');
     }
 
     public function promoteur()
@@ -119,6 +113,11 @@ class MicroProjet extends Model
     public function lotTransmission()
     {
         return $this->hasOneThrough(LotTransmission::class, LotMicroProjet::class, 'micro_projet_id', 'id', 'id', 'lot_id');
+    }
+
+    public function agenceImputation()
+    {
+        return $this->hasOne(ImputationAgence::class, 'micro_projet_id');
     }
 
     public function transactions()

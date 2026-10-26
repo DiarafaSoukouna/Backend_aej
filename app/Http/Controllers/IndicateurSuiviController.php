@@ -9,10 +9,23 @@ use App\Models\IndicateurSuivi;
 
 class IndicateurSuiviController extends Controller
 {
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        $indicateursSuivi = IndicateurSuivi::with('indicateur', 'promoteur')->get();
-        return new JsonResponse(['Message' => 'IndicateurSuivi list retrieved successfully', 'data' => $indicateursSuivi], 200);
+        $indicateursSuivi = IndicateurSuivi::with('indicateur', 'promoteur');
+        $filters = ['indicateur_id', 'promoteur_id'];
+
+        foreach ($filters as $filter) {
+            if ($request->filled($filter)) {
+                $indicateursSuivi->where($filter, $request->input($filter));
+            }
+        }
+
+        $indicateurSuiviData = $indicateursSuivi->paginate($request->get('per_page', 20));
+
+        return new JsonResponse([
+            'Message' => 'IndicateurSuivi list retrieved successfully',
+            'data' => $indicateurSuiviData
+        ], 200);
     }
 
     public function show($id): JsonResponse
@@ -47,7 +60,6 @@ class IndicateurSuiviController extends Controller
                 'message' => 'IndicateurSuivi created successfully',
                 'data' => $indicateurSuivi
             ], 201);
-
         } catch (\Exception $e) {
             return new JsonResponse([
                 'message' => 'Error creating indicateurSuivi',
@@ -84,7 +96,6 @@ class IndicateurSuiviController extends Controller
                 'message' => 'IndicateurSuivi updated successfully',
                 'data' => $indicateurSuivi
             ], 200);
-
         } catch (\Exception $e) {
             return new JsonResponse([
                 'message' => 'Error updating indicateurSuivi',
@@ -103,7 +114,6 @@ class IndicateurSuiviController extends Controller
         try {
             $indicateurSuivi->delete();
             return new JsonResponse(['Message' => 'IndicateurSuivi deleted successfully'], 200);
-
         } catch (\Exception $e) {
             return new JsonResponse([
                 'message' => 'Error deleting indicateurSuivi',

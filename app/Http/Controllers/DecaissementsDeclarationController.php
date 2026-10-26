@@ -11,7 +11,7 @@ class DecaissementsDeclarationController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $declarations = DecaissementsDeclaration::with(['planDecaissement', 'ligneDecaissement', 'promoteur'])->get();
+        $declarations = DecaissementsDeclaration::with(['planDecaissement', 'ligneDecaissement', 'promoteur']);
 
         if ($request->has('plan_decaissement_id') && !empty($request->plan_decaissement_id)) 
             $declarations = $declarations->where('plan_decaissement_id', $request->plan_decaissement_id);
@@ -22,9 +22,17 @@ class DecaissementsDeclarationController extends Controller
         if ($request->has('statut') && !empty($request->statut)) 
             $declarations = $declarations->where('statut', $request->statut);
 
+        $declarationData = $declarations->paginate($request->get('per_page', 20));
+
         return new JsonResponse([
             'message' => 'Déclarations de décaissement retrieved successfully',
-            'data' => $declarations
+            'data' => $declarationData,
+            'pagination' => [
+                'current_page' => $declarationData->currentPage(),
+                'last_page' => $declarationData->lastPage(),
+                'per_page' => $declarationData->perPage(),
+                'total' => $declarationData->total(),
+            ]
         ], 200);
     }
 

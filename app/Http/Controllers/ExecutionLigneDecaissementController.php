@@ -11,7 +11,7 @@ class ExecutionLigneDecaissementController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $executions = ExecutionLigneDecaissement::with(['ligneDecaissement'])->get();
+        $executions = ExecutionLigneDecaissement::with(['ligneDecaissement']);
 
         if ($request->has('ligne_decaissement_id') && !empty($request->ligne_decaissement_id))
             $executions = $executions->where('ligne_decaissement_id', $request->ligne_decaissement_id);
@@ -20,9 +20,11 @@ class ExecutionLigneDecaissementController extends Controller
         if ($request->has('mode_decaisse') && !empty($request->mode_decaisse))
             $executions = $executions->where('mode_decaisse', $request->mode_decaisse);
 
+        $executionData = $executions->paginate($request->get('per_page', 20));
+
         return new JsonResponse([
             'message' => 'Execution ligne decaissements retrieved successfully',
-            'data' => $executions
+            'data' => $executionData
         ], 200);
     }
 
@@ -42,7 +44,7 @@ class ExecutionLigneDecaissementController extends Controller
     {
         $validation = Validator::make($request->all(), [
             'ligne_decaissement_id' => 'nullable|exists:ligne_decaissements,id',
-            'statut' => 'nullable|in:VALIDE,NON_VALIDE',
+            'statut' => 'nullable|in:VALIDE,NON_VALIDE,EN_COURS',
             'mode_decaisse' => 'nullable|in:CHEQUE,VIREMENT',
             'date_decaisse' => 'nullable|date',
             'justificatif_path' => 'nullable|string',
@@ -79,7 +81,7 @@ class ExecutionLigneDecaissementController extends Controller
 
         $validation = Validator::make($request->all(), [
             'ligne_decaissement_id' => 'nullable|exists:ligne_decaissements,id',
-            'statut' => 'nullable|in:VALIDE,NON_VALIDE',
+            'statut' => 'nullable|in:VALIDE,NON_VALIDE,EN_COURS',
             'mode_decaisse' => 'nullable|in:CHEQUE,VIREMENT',
             'date_decaisse' => 'nullable|date',
             'justificatif_path' => 'nullable|string',
@@ -115,7 +117,7 @@ class ExecutionLigneDecaissementController extends Controller
         }
 
         $validation = Validator::make($request->all(), [
-            'statut' => 'nullable|in:VALIDE,NON_VALIDE',
+            'statut' => 'nullable|in:VALIDE,NON_VALIDE,EN_COURS',
             'mode_decaisse' => 'nullable|in:CHEQUE,VIREMENT',
             'date_decaisse' => 'nullable|date',
             'justificatif_path' => 'nullable|string',

@@ -9,12 +9,26 @@ use Illuminate\Support\Facades\Validator;
 
 class ObservationController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $observations = Observation::with(['microProjet', 'auteur'])->get();
+        $observations = Observation::with(['microProjet', 'auteur']);
+
+        if ($request->has('micro_projet_id') && !empty($request->micro_projet_id))
+            $observations = $observations->where('micro_projet_id', $request->micro_projet_id);
+        if ($request->has('auteur_id') && !empty($request->auteur_id))
+            $observations = $observations->where('auteur_id', $request->auteur_id);
+
+        $observationData = $observations->paginate($request->get('per_page', 20));
+
         return new JsonResponse([
             'message' => 'Observations retrieved successfully',
-            'data' => $observations
+            'data' => $observationData,
+            'pagination' => [
+                'current_page' => $observationData->currentPage(),
+                'last_page' => $observationData->lastPage(),
+                'per_page' => $observationData->perPage(),
+                'total' => $observationData->total(),
+            ]
         ], 200);
     }
 

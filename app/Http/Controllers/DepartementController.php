@@ -12,14 +12,22 @@ class DepartementController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $departements = Departement::with(['region'])->get();
+        $departements = Departement::with(['region']);
 
         if ($request->has('region_id') && !empty($request->region_id))
             $departements = $departements->where('region_id', $request->region_id);
 
+        $departementData = $departements->paginate($request->get('per_page', 20));
+
         return new JsonResponse([
             'message' => 'Departements retrieved successfully',
-            'data' => $departements
+            'data' => $departementData,
+            'pagination' => [
+                'current_page' => $departementData->currentPage(),
+                'last_page' => $departementData->lastPage(),
+                'per_page' => $departementData->perPage(),
+                'total' => $departementData->total(),
+            ]
         ], 200);
     }
 

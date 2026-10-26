@@ -12,14 +12,22 @@ class VilleController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $villes = Ville::with(['commune'])->get();
+        $villes = Ville::with(['commune']);
 
         if ($request->has('commune_id') && !empty($request->commune_id))
             $villes = $villes->where('commune_id', $request->commune_id);
+        
+        $villeData = $villes->paginate($request->get('per_page', 20));
 
         return new JsonResponse([
             'message' => 'Villes retrieved successfully',
-            'data' => $villes
+            'data' => $villeData->values(),
+            'pagination' => [
+                'current_page' => $villeData->currentPage(),
+                'last_page' => $villeData->lastPage(),
+                'per_page' => $villeData->perPage(),
+                'total' => $villeData->total(),
+            ]
         ], 200);
     }
 

@@ -11,7 +11,7 @@ class TableauAmortissementController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $lignes = TableauAmortissement::with(['planRemboursement'])->get();
+        $lignes = TableauAmortissement::with(['planRemboursement']);
 
         if ($request->filled('plan_remboursement_id')) {
             $lignes = $lignes->where('plan_remboursement_id', (int) $request->plan_remboursement_id);
@@ -23,15 +23,23 @@ class TableauAmortissementController extends Controller
             $lignes = $lignes->where('periode', (int) $request->periode);
         }
 
+        $ligneData = $lignes->paginate($request->get('per_page', 20));
+
         return new JsonResponse([
             'message' => 'Tableau amortissements retrieved successfully',
-            'data' => $lignes->values(),
+            'data' => $ligneData->values(),
+            'pagination' => [
+                'current_page' => $ligneData->currentPage(),
+                'last_page' => $ligneData->lastPage(),
+                'per_page' => $ligneData->perPage(),
+                'total' => $ligneData->total(),
+            ]
         ], 200);
     }
 
     public function show($id): JsonResponse
     {
-        $ligne = TableauAmortissement::with(['planRemboursement'])->find($id);
+        $ligne = TableauAmortissement::with(['planRemboursement', 'suiviRemboursements'])->find($id);
         if (!$ligne) {
             return new JsonResponse(['message' => 'Tableau amortissement not found'], 404);
         }

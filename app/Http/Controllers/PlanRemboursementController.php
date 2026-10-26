@@ -11,21 +11,29 @@ class PlanRemboursementController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $plans = PlanRemboursement::with(['microProjet', 'budget', 'tableauAmortissements'])->get();
+        $query = PlanRemboursement::with(['microProjet', 'budget', 'tableauAmortissements']);
 
         if ($request->filled('micro_projet_id')) {
-            $plans = $plans->where('micro_projet_id', (int) $request->micro_projet_id);
+            $query = $query->where('micro_projet_id', (int) $request->micro_projet_id);
         }
         if ($request->filled('budget_id')) {
-            $plans = $plans->where('budget_id', (int) $request->budget_id);
+            $query = $query->where('budget_id', (int) $request->budget_id);
         }
         if ($request->filled('decision')) {
-            $plans = $plans->where('decision', $request->decision);
+            $query = $query->where('decision', $request->decision);
         }
+
+        $plans = $query->paginate($request->get('per_page', 20));
 
         return new JsonResponse([
             'message' => 'Plans remboursement retrieved successfully',
-            'data' => $plans->values(),
+            'data' => $plans->items(),
+            'pagination' => [
+                'current_page' => $plans->currentPage(),
+                'last_page' => $plans->lastPage(),
+                'per_page' => $plans->perPage(),
+                'total' => $plans->total(),
+            ],
         ], 200);
     }
 

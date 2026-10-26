@@ -11,21 +11,32 @@ class LigneDecaissementController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $lignes = LigneDecaissement::with(['planDecaissement'])->get();
-        
-        if ($request->has('plan_decaissement_id') && !empty($request->plan_decaissement_id)) 
+        $lignes = LigneDecaissement::with(['planDecaissement']);
+
+        if ($request->has('plan_decaissement_id') && !empty($request->plan_decaissement_id))
             $lignes = $lignes->where('plan_decaissement_id', $request->plan_decaissement_id);
-        if ($request->has('mode_decaisse') && !empty($request->mode_decaisse)) 
+        if ($request->has('mode_decaisse') && !empty($request->mode_decaisse))
             $lignes = $lignes->where('mode_decaisse', $request->mode_decaisse);
-        if ($request->has('statut') && !empty($request->statut)) 
+        if ($request->has('statut') && !empty($request->statut))
             $lignes = $lignes->where('statut', $request->statut);
 
-        return new JsonResponse(['message' => 'Lignes decaissement retrieved successfully', 'data' => $lignes], 200);
+        $ligneData = $lignes->paginate($request->get('per_page', 20));
+
+        return new JsonResponse([
+            'message' => 'Lignes decaissement retrieved successfully',
+            'data' => $ligneData,
+            'pagination' => [
+                'current_page' => $ligneData->currentPage(),
+                'last_page' => $ligneData->lastPage(),
+                'per_page' => $ligneData->perPage(),
+                'total' => $ligneData->total(),
+            ]
+        ], 200);
     }
 
     public function show($id): JsonResponse
     {
-        $ligne = LigneDecaissement::with(['planDecaissement', 'executionLignes'])->find($id);
+        $ligne = LigneDecaissement::with(['planDecaissement', 'executionLignes', 'suiviDecaissements'])->find($id);
         if (!$ligne) {
             return new JsonResponse(['message' => 'Ligne decaissement not found'], 404);
         }
@@ -55,6 +66,39 @@ class LigneDecaissementController extends Controller
         try {
             $ligne = LigneDecaissement::create($validation->validated());
             return new JsonResponse(['message' => 'Ligne decaissement created successfully', 'data' => $ligne], 201);
+        } catch (\Exception $e) {
+            return new JsonResponse(['message' => 'Error creating ligne decaissement', 'error' => $e->getMessage()], 500);
+        }
+    }
+
+    public function storeMultiple(Request $request): JsonResponse
+    {
+        $validation = Validator::make($request->all(), [
+            'ligne_decaissements' => 'required|array|min:1',
+            'ligne_decaissements.*.plan_decaissement_id' => 'nullable|exists:plan_decaissements,id',
+            'ligne_decaissements.*.numero_ligne' => 'nullable|integer',
+            'ligne_decaissements.*.object_ligne' => 'nullable|string|max:100',
+            'ligne_decaissements.*.montant_ligne' => 'nullable|numeric',
+            'ligne_decaissements.*.mode_decaisse' => 'nullable|in:CHEQUE,VIREMENT',
+            'ligne_decaissements.*.date_prevue' => 'nullable|date',
+            'ligne_decaissements.*.intitule_prestataire' => 'nullable|string|max:100',
+            'ligne_decaissements.*.numero_compte' => 'nullable|string|max:100',
+            'ligne_decaissements.*.contact' => 'nullable|string|max:100',
+            'ligne_decaissements.*.statut' => 'nullable|in:VALIDE,NON_VALIDE',
+            'ligne_decaissements.*.observations' => 'nullable|string',
+        ]);
+
+        if ($validation->fails()) {
+            return new JsonResponse(['message' => 'Validation failed', 'errors' => $validation->errors()], 422);
+        }
+
+        try {
+            $ligneDecaissements = [];
+            foreach ($request->ligne_decaissements as $ligneDecaissementData) {
+                $ligneDecaissements[] = LigneDecaissement::create($ligneDecaissementData);
+            }
+
+            return new JsonResponse(['message' => 'Ligne decaissement created successfully', 'data' => $ligneDecaissements], 201);
         } catch (\Exception $e) {
             return new JsonResponse(['message' => 'Error creating ligne decaissement', 'error' => $e->getMessage()], 500);
         }

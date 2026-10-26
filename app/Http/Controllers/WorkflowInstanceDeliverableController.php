@@ -3,16 +3,29 @@
 namespace App\Http\Controllers;
 
 use App\Models\WorkflowInstanceDeliverable;
+use App\Models\WorkflowInstance;
+use App\Models\WorkflowDeliverable;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Validator;
 
 class WorkflowInstanceDeliverableController extends Controller
 {
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        $deliverables = WorkflowInstanceDeliverable::with(['workflowInstance', 'deliverable', 'producedBy'])->get();
-        return response()->json(['message' => 'Deliverables retrieved successfully', 'data' => $deliverables]);
+        $query = WorkflowInstanceDeliverable::with(['workflowInstance', 'deliverable', 'producedBy']);
+        $filters = ['workflow_instance_id', 'deliverable_code', 'produced_by_id'];
+
+        foreach ($filters as $filter) {
+            if ($request->has($filter)) $query->where($filter, $request->$filter);
+        }
+
+        $deliverable = $query->paginate($request->get('per_page', 20));
+
+        return response()->json([
+            'message' => 'Deliverables retrieved successfully', 
+            'data' => $deliverable->values(),
+        ]);
     }
 
     public function show($id): JsonResponse
@@ -52,6 +65,59 @@ class WorkflowInstanceDeliverableController extends Controller
             ], 500);
         }
 
+    }
+
+    public function storeMultiple(Request $request): JsonResponse
+    {
+        $validation = Validator::make($request->all(), [
+            'deliverables' => 'required|array|min:1',
+            'deliverables.*.workflow_instance_id' => 'required|exists:workflow_instance,id',
+            'deliverables.*.deliverable_code' => 'required|exists:workflow_deliverables,code',
+            'deliverables.*.file_path' => 'required|string',
+            'deliverables.*.file_name' => 'required|string|max:255',
+            'deliverables.*.file_size' => 'required|integer',
+            'deliverables.*.file_type' => 'nullable|string|max:100',
+            'deliverables.*.observations' => 'nullable|string',
+            'deliverables.*.produced_at' => 'nullable|date',
+            'deliverables.*.produced_by_id' => 'nullable|exists:personnels,id',
+        ]);
+
+        if ($validation->fails()) {
+            return response()->json([
+                'message' => 'Validation failed',
+                'errors' => $validation->errors()
+            ], 422);
+        }
+
+        try {
+            $deliverableCodes = array_filter(array_unique(array_column($request->deliverables, 'deliverable_code')));
+            $workflowInstanceIds = array_filter(array_unique(array_column($request->deliverables, 'workflow_instance_id')));
+            $producedByIds = array_filter(array_unique(array_column($request->deliverables, 'produced_by_id')));
+
+            $deliverablesMap = !empty($deliverableCodes) ? \App\Models\WorkflowDeliverable::whereIn('code', $deliverableCodes)->pluck('id', 'code')->toArray() : [];
+            $workflowInstancesMap = !empty($workflowInstanceIds) ? WorkflowInstance::whereIn('id', $workflowInstanceIds)->pluck('id', 'id')->toArray() : [];
+            $personnelsMap = !empty($producedByIds) ? \App\Models\Personnel::whereIn('id', $producedByIds)->pluck('id', 'id')->toArray() : [];
+
+            $deliverables = [];
+            foreach ($request->deliverables as $deliverableData) {
+                $deliverableData['deliverable_id'] = $deliverablesMap[$deliverableData['deliverable_code']] ?? null;
+                unset($deliverableData['deliverable_code']);
+
+                $deliverable = WorkflowInstanceDeliverable::create($deliverableData);
+                $deliverables[] = $deliverable;
+            }
+
+            return response()->json([
+                'message' => 'Deliverables created successfully',
+                'data' => $deliverables,
+                'total' => count($deliverables)
+            ], 201);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'message' => 'Error creating deliverables',
+                'error' => $th->getMessage()
+            ], 500);
+        }
     }
 
     public function update(Request $request, $id): JsonResponse

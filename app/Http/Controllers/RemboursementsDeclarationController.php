@@ -11,7 +11,7 @@ class RemboursementsDeclarationController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $declarations = RemboursementsDeclaration::with(['planRemboursement', 'promoteur'])->get();
+        $declarations = RemboursementsDeclaration::with(['planRemboursement', 'promoteur']);
 
         if ($request->has('plan_remboursement_id') && !empty($request->plan_remboursement_id)) 
             $declarations = $declarations->where('plan_remboursement_id', $request->plan_remboursement_id);
@@ -19,10 +19,18 @@ class RemboursementsDeclarationController extends Controller
             $declarations = $declarations->where('promoteur_id', $request->promoteur_id);
         if ($request->has('statut') && !empty($request->statut)) 
             $declarations = $declarations->where('statut', $request->statut);
+        
+        $declarationData = $declarations->paginate($request->get('per_page', 20));
 
         return new JsonResponse([
             'message' => 'Declarations retrieved successfully',
-            'data' => $declarations
+            'data' => $declarationData,
+            'pagination' => [
+                'current_page' => $declarationData->currentPage(),
+                'last_page' => $declarationData->lastPage(),
+                'per_page' => $declarationData->perPage(),
+                'total' => $declarationData->total(),
+            ]
         ], 200);
     }
 

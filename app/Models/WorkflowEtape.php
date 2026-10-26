@@ -16,6 +16,7 @@ class WorkflowEtape extends Model
         'description',
         'order',
         'is_active',
+        'is_async',
         'valid_from',
         'valid_to',
     ];

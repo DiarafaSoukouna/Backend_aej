@@ -9,10 +9,23 @@ use Illuminate\Support\Facades\Validator;
 
 class EntrepriseController extends Controller
 {
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        $entreprises = Entreprise::with(['typeEntreprise', 'region', 'commune', 'embauches'])->get();
-        return response()->json(['message' => 'Entreprises retrieved successfully', 'data' => $entreprises]);
+        $entreprises = Entreprise::with(['typeEntreprise', 'region', 'commune', 'embauches']);
+        $filters = ['type_entreprise_id', 'region_id', 'commune_id', 'rccm', 'ninea'];
+
+        foreach ($filters as $filter) {
+            if ($request->has($filter)) {
+                $entreprises->where($filter, $request->get($filter));
+            }
+        }
+        
+        $entrepriseData = $entreprises->paginate($request->get('per_page', 20));
+
+        return response()->json([
+            'message' => 'Entreprises retrieved successfully',
+            'data' => $entrepriseData
+        ]);
     }
 
     public function show($id): JsonResponse

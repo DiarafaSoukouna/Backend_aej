@@ -9,10 +9,25 @@ use Illuminate\Http\JsonResponse;
 
 class NotificationController extends Controller
 {
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        $notifications = Notification::all();
-        return new JsonResponse(['Message' => 'Notifications list retrieved successfully', 'data' => $notifications], 200);
+        $notifications = Notification::with(['personnel']);
+
+        if ($request->has('personnel_id') && !empty($request->personnel_id))
+            $notifications = $notifications->where('personnel_id', $request->personnel_id);
+
+        $notificationData = $notifications->paginate($request->get('per_page', 20));
+
+        return new JsonResponse([
+            'message' => 'Notifications list retrieved successfully',
+            'data' => $notificationData,
+            'pagination' => [
+                'current_page' => $notificationData->currentPage(),
+                'last_page' => $notificationData->lastPage(),
+                'per_page' => $notificationData->perPage(),
+                'total' => $notificationData->total(),
+            ]
+        ], 200);
     }
 
     public function show($id): JsonResponse
@@ -47,7 +62,6 @@ class NotificationController extends Controller
                 'message' => 'Notification created successfully',
                 'data' => $notification
             ], 201);
-
         } catch (\Exception $e) {
             return new JsonResponse([
                 'message' => 'Error creating notification',
@@ -84,7 +98,6 @@ class NotificationController extends Controller
                 'message' => 'Notification updated successfully',
                 'data' => $notification
             ], 200);
-
         } catch (\Exception $e) {
             return new JsonResponse([
                 'message' => 'Error updating notification',

@@ -22,7 +22,7 @@ class PermissionController extends Controller
       'role_id' => 'required|exists:roles,id',
       'module' => 'required|string|max:255',
       'autorise' => 'required|boolean',
-      'acces' => 'required|boolean',
+      'acces' => 'required|string|max:255',
       'full_access' => 'required|boolean'
       ]);
 
@@ -60,7 +60,7 @@ class PermissionController extends Controller
           'role_id' => 'sometimes|required|exists:roles,id',
           'module' => 'sometimes|required|string|max:255',
           'autorise' => 'sometimes|required|boolean',
-          'acces' => 'sometimes|required|boolean',
+          'acces' => 'sometimes|required|string|max:255',
           'full_access' => 'sometimes|required|boolean'
         ]);
     

@@ -9,10 +9,20 @@ use Illuminate\Support\Facades\Validator;
 
 class WorkflowInstanceCommentController extends Controller
 {
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        $comments = WorkflowInstanceComment::with(['workflowInstance', 'etape', 'commentedBy'])->get();
-        return response()->json(['message' => 'Comments retrieved successfully', 'data' => $comments]);
+        $query = WorkflowInstanceComment::with(['workflowInstance', 'etape', 'commentedBy']);
+        $filters = ['workflow_instance_id', 'etape_code', 'commented_by_id'];
+
+        foreach ($filters as $filter) {
+            if ($request->has($filter)) $query->where($filter, $request->$filter);
+        }
+
+        $comments = $query->paginate($request->get('per_page', 20));
+        return response()->json([
+            'message' => 'Comments retrieved successfully', 
+            'data' => $comments->values(),
+        ]);
     }
 
     public function show($id): JsonResponse
@@ -45,6 +55,44 @@ class WorkflowInstanceCommentController extends Controller
             return response()->json([
                 'message' => 'Comment creation failed',
                 'errors' => $th->getMessage()
+            ], 500);
+        }
+    }
+
+    public function storeMultiple(Request $request): JsonResponse
+    {
+        $validation = Validator::make($request->all(), [
+            'comments' => 'required|array|min:1',
+            'comments.*.workflow_instance_id' => 'required|exists:workflow_instance,id',
+            'comments.*.etape_code' => 'required|string|max:50|exists:workflow_etapes,code',
+            'comments.*.commented_by_id' => 'nullable|exists:personnels,id',
+            'comments.*.comment' => 'required|string',
+            'comments.*.created_at' => 'nullable|date',
+        ]);
+
+        if ($validation->fails()) {
+            return response()->json([
+                'message' => 'Validation failed',
+                'errors' => $validation->errors()
+            ], 422);
+        }
+
+        try {
+            $comments = [];
+            foreach ($request->comments as $commentData) {
+                $comment = WorkflowInstanceComment::create($commentData);
+                $comments[] = $comment;
+            }
+
+            return response()->json([
+                'message' => 'Comments created successfully',
+                'data' => $comments,
+                'total' => count($comments)
+            ], 201);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'message' => 'Error creating comments',
+                'error' => $th->getMessage()
             ], 500);
         }
     }

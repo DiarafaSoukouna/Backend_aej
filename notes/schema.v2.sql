@@ -493,6 +493,7 @@ CREATE TABLE
         description TEXT,
         order INT NOT NULL,
         is_active BOOLEAN NOT NULL DEFAULT TRUE,
+        is_async BOOLEAN NOT NULL DEFAULT TRUE,
         valid_from DATE NOT NULL DEFAULT (CURRENT_DATE),
         valid_to DATE,
         created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -688,26 +689,10 @@ CREATE TABLE
         secteur_id BIGINT UNSIGNED,
         commune_id BIGINT UNSIGNED,
         agence_id BIGINT UNSIGNED,
-        agence_imputation_id BIGINT UNSIGNED,
         promoteur_id BIGINT UNSIGNED NOT NULL,
         stade_projet ENUM ('CREATION', 'DEVELOPPEMENT') DEFAULT 'CREATION',
         type_projet ENUM ('INDIVIDUEL', 'COLLECTIF') DEFAULT 'INDIVIDUEL',
-        statut ENUM (
-            'BROUILLON',
-            'EN_SOUMISSION',
-            'EN_COURS',
-            'EN_ANALYSE',
-            'EN_ATTENTE',
-            'ANNULE',
-            'NON_APPROUVE',
-            'APPROUVE',
-            'EN_FORMATION',
-            'EN_FINANCEMENT',
-            'EN_DECAISSEMENT',
-            'EN_SUIVI',
-            'EN_REMBOURSEMENT',
-            'TERMINE'
-        ) DEFAULT 'BROUILLON',
+        statut VARCHAR(50) DEFAULT 'BROUILLON',
         localisation VARCHAR(50),
         geolocalisation TEXT,
         date_certification DATE,
@@ -721,7 +706,6 @@ CREATE TABLE
         FOREIGN KEY (secteur_id) REFERENCES secteurs (id) ON DELETE RESTRICT,
         FOREIGN KEY (commune_id) REFERENCES communes (id) ON DELETE RESTRICT,
         FOREIGN KEY (agence_id) REFERENCES agences_regionales (id) ON DELETE RESTRICT,
-        FOREIGN KEY (agence_imputation_id) REFERENCES agences_regionales (id) ON DELETE RESTRICT,
         FOREIGN KEY (promoteur_id) REFERENCES promoteurs (id) ON DELETE RESTRICT
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
@@ -767,11 +751,28 @@ CREATE TABLE
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
         lot_id BIGINT UNSIGNED,
         micro_projet_id BIGINT UNSIGNED,
+        montant_remboursement DECIMAL(15, 2) DEFAULT 0,
+        taux_interet DECIMAL(5, 2),
+        duree_remboursement INT,
+        duree_differee INT,
+        fichier_courrier TEXT,
         statut ENUM ('EN_ATTENTE', 'APPROUVE', 'NON_APPROUVE') DEFAULT 'EN_ATTENTE',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         FOREIGN KEY (lot_id) REFERENCES lots_transmission (id) ON DELETE RESTRICT,
         FOREIGN KEY (micro_projet_id) REFERENCES micro_projets (id) ON DELETE RESTRICT
+    ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
+
+CREATE TABLE
+    IF NOT EXISTS imputations_agences (
+        id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+        agence_id BIGINT UNSIGNED,
+        micro_projet_id BIGINT UNSIGNED,
+        statut ENUM ('EN_ATTENTE', 'APPROUVE', 'NON_APPROUVE') DEFAULT 'EN_ATTENTE',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        FOREIGN KEY (agence_id) REFERENCES agences_regionales (id) ON DELETE CASCADE,
+        FOREIGN KEY (micro_projet_id) REFERENCES micro_projets (id) ON DELETE CASCADE
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
 CREATE TABLE
@@ -908,7 +909,7 @@ CREATE TABLE
     IF NOT EXISTS execution_ligne_decaissements (
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
         ligne_decaissement_id BIGINT UNSIGNED,
-        statut ENUM ('VALIDE', 'NON_VALIDE'),
+        statut ENUM ('EN_COURS', 'VALIDE', 'NON_VALIDE'),
         mode_decaisse ENUM ('CHEQUE', 'VIREMENT'),
         date_decaisse DATE,
         justificatif_path TEXT,
@@ -946,13 +947,24 @@ CREATE TABLE
         montant_decaisse DECIMAL(18, 2),
         date_decaissement DATE,
         reference_banque TEXT,
-        statut ENUM ('EN_ATTENTE', 'VALIDE', 'NON_VALIDE') DEFAULT 'EN_ATTENTE',
+        statut ENUM ('EN_ATTENTE','EN_COURS', 'VALIDE', 'NON_VALIDE') DEFAULT 'EN_ATTENTE',
         justificatif_path TEXT,
         observations TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         FOREIGN KEY (plan_decaissement_id) REFERENCES plan_decaissements (id),
         FOREIGN KEY (agence_id) REFERENCES agences_regionales (id)
+    ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
+
+CREATE TABLE
+    IF NOT EXISTS suivi_decaissements (
+        id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+        ligne_decaissement_id BIGINT UNSIGNED,
+        montant_decaisse DECIMAL(18, 2),
+        date_decaisse DATE,
+        justificatif_path TEXT,
+        observations TEXT,
+        FOREIGN KEY (ligne_decaissement_id) REFERENCES ligne_decaissements (id) ON DELETE CASCADE
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
 CREATE TABLE 
@@ -1020,11 +1032,22 @@ CREATE TABLE
         date_paiement DATE,
         justificatif_path TEXT,
         observations TEXT,
-        statut ENUM ('EN_ATTENTE', 'PAYE', 'PARTIEL', 'NON_PAYE') DEFAULT 'NON_PAYE',
+        statut ENUM ('EN_ATTENTE', 'EN_COURS', 'PAYE', 'PARTIEL', 'NON_PAYE') DEFAULT 'NON_PAYE',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         FOREIGN KEY (promoteur_id) REFERENCES promoteurs (id) ON DELETE RESTRICT,
         FOREIGN KEY (plan_remboursement_id) REFERENCES plan_remboursements (id) ON DELETE RESTRICT
+    ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
+
+CREATE TABLE
+    IF NOT EXISTS suivi_remboursements (
+        id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+        amortissement_id BIGINT UNSIGNED,
+        montant_paye DECIMAL(18, 2),
+        date_paiement DATE,
+        justificatif_path TEXT,
+        observations TEXT,
+        FOREIGN KEY (amortissement_id) REFERENCES tableau_amortissements (id) ON DELETE CASCADE
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
 CREATE TABLE 
