@@ -12,3 +12,8 @@ Artisan::command('inspire', function () {
 // Schedule AEJ referentiels synchronization daily at midnight
 Schedule::job(new SyncAejReferentielsJob('all'))->dailyAt('00:00')
     ->description('Sync all AEJ referentiels from external API');
+
+// Envoi hebdomadaire des rappels de remboursement (lundi matin à 08:00)
+Schedule::command('rappels:envoyer-hebdomadaire')
+    ->weeklyOn(1, '08:00')
+    ->description('Envoi automatique des rappels de remboursement aux promoteurs ayant au moins 3 impayés consécutifs');

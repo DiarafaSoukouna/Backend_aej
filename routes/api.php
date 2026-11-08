@@ -78,6 +78,7 @@ use App\Http\Controllers\SuiviRemboursementController;
 use App\Http\Controllers\PlanRemboursementController;
 use App\Http\Controllers\TableauAmortissementController;
 use App\Http\Controllers\RecouvrementController;
+use App\Http\Controllers\RappelRemboursementController;
 use App\Http\Controllers\DashboardAgencesController;
 use App\Http\Controllers\DashboardPartenairesController;
 use App\Http\Controllers\DashboardEntreprisesController;
@@ -235,6 +236,17 @@ use App\Http\Controllers\ImputationAgenceController;
         Route::apiResource('execution-ligne-decaissements', ExecutionLigneDecaissementController::class);
         Route::patch('execution-ligne-decaissements/{id}', [ExecutionLigneDecaissementController::class, 'patch']);
         Route::apiResource('recouvrements', RecouvrementController::class);
+
+        // Rappels de remboursement & Suivi des impayés
+        Route::prefix('rappels')->group(function () {
+            Route::get('eligibles', [RappelRemboursementController::class, 'getEligibles']);
+            Route::get('statistiques', [RappelRemboursementController::class, 'getStatistiques']);
+            Route::post('hebdomadaire', [RappelRemboursementController::class, 'traiterRappelsHebdomadaires']);
+            Route::get('projets/{id}/historique', [RappelRemboursementController::class, 'getHistorique']);
+            Route::post('projets/{id}/historique', [RappelRemboursementController::class, 'storeEvenement']);
+            Route::post('projets/{id}/envoyer', [RappelRemboursementController::class, 'envoyerRappel']);
+            Route::get('projets/{id}/pdf', [RappelRemboursementController::class, 'previewPdf']);
+        });
         Route::apiResource('decaissements', DecaissementController::class);
         Route::patch('decaissements/{id}', [DecaissementController::class, 'patch']);
         Route::apiResource('decaissements-suivis', SuiviDecaissementController::class);
