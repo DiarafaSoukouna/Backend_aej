@@ -2,7 +2,7 @@
 
 ---
 
-## 1. Configuration globale
+## 1. Configuration globale.  
 
 ### `configurations`
 Table **singleton** (une seule ligne en pratique) qui centralise tous les paramètres globaux de la plateforme : identité visuelle (logo/sigle du système et de la structure), coordonnées de contact, devise et taux de change, paramètres de sécurité (délai d'inactivité, nombre de sessions/tentatives de connexion, délai de changement de mot de passe), mode maintenance, et paramètres d'intégration (WhatsApp Business, SMTP pour les notifications email).

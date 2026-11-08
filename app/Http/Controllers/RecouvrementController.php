@@ -22,7 +22,21 @@ class RecouvrementController extends Controller
         if ($request->has('type_action') && !empty($request->type_action)) 
             $recouvrements = $recouvrements->where('type_action', $request->type_action);
 
-        $recouvrementData = $recouvrements->paginate($request->get('per_page', 20));
+        if ($request->has('all') || $request->get('per_page') === 'all') {
+            $allData = $recouvrements->get();
+            return new JsonResponse([
+                'message' => 'Recouvrements retrieved successfully',
+                'data' => $allData,
+                'pagination' => [
+                    'current_page' => 1,
+                    'last_page' => 1,
+                    'per_page' => $allData->count(),
+                    'total' => $allData->count(),
+                ]
+            ], 200);
+        }
+
+        $recouvrementData = $recouvrements->paginate((int)$request->get('per_page', 20));
 
         return new JsonResponse([
             'message' => 'Recouvrements retrieved successfully',
@@ -63,8 +77,33 @@ class RecouvrementController extends Controller
         }
 
         try {
-            $recouvrement = Recouvrement::create($validation->validated());
-            return new JsonResponse(['message' => 'Recouvrement created successfully', 'data' => $recouvrement], 201);
+            $data = $validation->validated();
+            $recouvrement = Recouvrement::create($data);
+
+            // Si l'action est un passage au CONTENTIEUX (sortie du portefeuille)
+            if ($recouvrement->type_action === 'CONTENTIEUX' && $recouvrement->micro_projet_id) {
+                // 1. Mettre à jour le statut officiel du micro-projet
+                \App\Models\MicroProjet::where('id', $recouvrement->micro_projet_id)
+                    ->update(['statut' => 'CONTENTIEUX']);
+
+                // 2. Consigner l'événement dans le journal d'historique des rappels & suivis
+                \App\Models\RappelHistorique::create([
+                    'micro_projet_id'  => $recouvrement->micro_projet_id,
+                    'promoteur_id'     => $recouvrement->microProjet?->promoteur_id,
+                    'personnel_id'     => $recouvrement->agent_id,
+                    'type'             => 'CONTENTIEUX',
+                    'canal'            => 'SYSTEME',
+                    'titre'            => 'Sortie du portefeuille — Transmission au Contentieux',
+                    'description'      => $recouvrement->observations ?: 'Dossier sorti du portefeuille actif et transmis à l\'avocat de l\'AEJ.',
+                    'statut'           => 'EFFECTUE',
+                    'date_action'      => $recouvrement->date_recouvrement ?: now(),
+                ]);
+            }
+
+            return new JsonResponse([
+                'message' => 'Recouvrement created successfully',
+                'data' => $recouvrement->load(['microProjet', 'planRemboursement', 'agent'])
+            ], 201);
         } catch (\Exception $e) {
             return new JsonResponse(['message' => 'Error creating recouvrement', 'error' => $e->getMessage()], 500);
         }
@@ -93,7 +132,14 @@ class RecouvrementController extends Controller
         }
 
         try {
-            $recouvrement->update($validation->validated());
+            $data = $validation->validated();
+            $recouvrement->update($data);
+
+            if ($recouvrement->type_action === 'CONTENTIEUX' && $recouvrement->micro_projet_id) {
+                \App\Models\MicroProjet::where('id', $recouvrement->micro_projet_id)
+                    ->update(['statut' => 'CONTENTIEUX']);
+            }
+
             return new JsonResponse(['message' => 'Recouvrement updated successfully', 'data' => $recouvrement], 200);
         } catch (\Exception $e) {
             return new JsonResponse(['message' => 'Error updating recouvrement', 'error' => $e->getMessage()], 500);

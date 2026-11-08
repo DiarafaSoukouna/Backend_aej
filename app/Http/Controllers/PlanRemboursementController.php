@@ -23,7 +23,21 @@ class PlanRemboursementController extends Controller
             $query = $query->where('decision', $request->decision);
         }
 
-        $plans = $query->paginate($request->get('per_page', 20));
+        if ($request->has('all') || $request->get('per_page') === 'all') {
+            $allPlans = $query->get();
+            return new JsonResponse([
+                'message' => 'Plans remboursement retrieved successfully',
+                'data' => $allPlans,
+                'pagination' => [
+                    'current_page' => 1,
+                    'last_page' => 1,
+                    'per_page' => $allPlans->count(),
+                    'total' => $allPlans->count(),
+                ],
+            ], 200);
+        }
+
+        $plans = $query->paginate((int)$request->get('per_page', 20));
 
         return new JsonResponse([
             'message' => 'Plans remboursement retrieved successfully',
