@@ -107,4 +107,9 @@ class Promoteur extends Model
     {
         return $this->hasMany(Remboursement::class, 'promoteur_id');
     }
+
+    public function rappelHistoriques()
+    {
+        return $this->hasMany(RappelHistorique::class, 'promoteur_id')->orderBy('date_action', 'desc');
+    }
 }

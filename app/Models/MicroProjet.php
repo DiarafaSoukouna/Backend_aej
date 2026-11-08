@@ -27,12 +27,16 @@ class MicroProjet extends Model
         'date_certification',
         'date_transmission_partenaire',
         'synced_at',
+        'compteur_rappels_impayes',
+        'dernier_rappel_at',
     ];
 
     protected $casts = [
         'montant_total' => 'decimal:2',
         'date_certification' => 'date',
         'date_transmission_partenaire' => 'date',
+        'dernier_rappel_at' => 'datetime',
+        'compteur_rappels_impayes' => 'integer',
     ];
 
     public function dispositif()
@@ -163,5 +167,10 @@ class MicroProjet extends Model
     public function garanties()
     {
         return $this->hasMany(Garantie::class, 'micro_projet_id');
+    }
+
+    public function rappelHistoriques()
+    {
+        return $this->hasMany(RappelHistorique::class, 'micro_projet_id')->orderBy('date_action', 'desc');
     }
 }

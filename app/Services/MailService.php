@@ -64,22 +64,45 @@ class MailService
             $options
         );
 
-        config([
-            'mail.mailers.smtp.host' => $this->smtpConfig['host'],
-            'mail.mailers.smtp.port' => $this->smtpConfig['port'],
-            'mail.mailers.smtp.encryption' => $this->smtpConfig['encryption'],
-            'mail.mailers.smtp.username' => $this->smtpConfig['username'],
-            'mail.mailers.smtp.password' => $this->smtpConfig['password'],
-            'mail.from.address' => $this->smtpConfig['from']['address'],
-            'mail.from.name' => $this->smtpConfig['from']['name'],
-        ]);
+        if ($this->smtpConfig) {
+            config([
+                'mail.mailers.smtp.host' => $this->smtpConfig['host'],
+                'mail.mailers.smtp.port' => $this->smtpConfig['port'],
+                'mail.mailers.smtp.encryption' => $this->smtpConfig['encryption'],
+                'mail.mailers.smtp.username' => $this->smtpConfig['username'],
+                'mail.mailers.smtp.password' => $this->smtpConfig['password'],
+                'mail.from.address' => $this->smtpConfig['from']['address'],
+                'mail.from.name' => $this->smtpConfig['from']['name'],
+            ]);
+        }
 
         return Mail::html(
             $html,
-            function ($message) use ($email, $subject) {
+            function ($message) use ($email, $subject, $options) {
                 $message
                     ->to($email)
                     ->subject($subject);
+
+                if (!empty($options['attachments'])) {
+                    foreach ($options['attachments'] as $attachment) {
+                        if (is_array($attachment)) {
+                            if (!empty($attachment['path']) && file_exists($attachment['path'])) {
+                                $message->attach($attachment['path'], [
+                                    'as' => $attachment['as'] ?? basename($attachment['path']),
+                                    'mime' => $attachment['mime'] ?? 'application/pdf',
+                                ]);
+                            } elseif (!empty($attachment['data'])) {
+                                $message->attachData(
+                                    $attachment['data'],
+                                    $attachment['as'] ?? 'document.pdf',
+                                    ['mime' => $attachment['mime'] ?? 'application/pdf']
+                                );
+                            }
+                        } elseif (is_string($attachment) && file_exists($attachment)) {
+                            $message->attach($attachment);
+                        }
+                    }
+                }
             }
         );
     }
@@ -233,5 +256,52 @@ class MailService
         return $this->send($email, 'Alerte étape du workflow – AEJ', $content, [
             'headerTitle' => 'Alerte étape du workflow',
         ]);
+    }
+
+    /**
+     * ###############################################################
+     * Rappel formel d'échéances impayées au promoteur avec rapport PDF joint.
+     */
+    public function sendRappelRemboursementEmail(string $email, array $data, ?string $pdfPath = null)
+    {
+        $content = view('emails.rappel-remboursement', [
+            'promoteur'     => $data['promoteur'],
+            'projet'        => $data['projet'],
+            'echeances'     => $data['echeances'],
+            'total_impaye'  => $data['total_impaye'],
+            'numero_rappel' => $data['numero_rappel'],
+            'max_rappels'   => $data['max_rappels'] ?? 5,
+            'date_rappel'   => $data['date_rappel'] ?? now(),
+        ])->render();
+
+        $intituleProjet = is_array($data['projet']) 
+            ? ($data['projet']['intitule'] ?? ($data['projet']['code'] ?? 'Votre projet'))
+            : ($data['projet']->intitule ?? ($data['projet']->code ?? 'Votre projet'));
+
+        $codeProjet = is_array($data['projet'])
+            ? ($data['projet']['code'] ?? 'PROJET')
+            : ($data['projet']->code ?? 'PROJET');
+
+        $subject = sprintf(
+            'Rappel formel #%d/5 : Échéances de remboursement impayées – %s',
+            $data['numero_rappel'],
+            $intituleProjet
+        );
+
+        $options = [
+            'headerTitle' => 'Rappel formel de remboursement',
+        ];
+
+        if ($pdfPath && file_exists($pdfPath)) {
+            $options['attachments'] = [
+                [
+                    'path' => $pdfPath,
+                    'as'   => 'Rapport_Situation_Remboursement_' . $codeProjet . '.pdf',
+                    'mime' => 'application/pdf',
+                ]
+            ];
+        }
+
+        return $this->send($email, $subject, $content, $options);
     }
 }
