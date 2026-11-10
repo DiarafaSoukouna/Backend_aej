@@ -1385,3 +1385,287 @@ SET
 END IF;
 
 END / / DELIMITER;
+
+-- ##############################################################
+-- INDEXES POUR LES TABLES MICRO-PROJETS
+-- ##############################################################
+
+ALTER TABLE micro_projets
+    ADD INDEX idx_micro_projets_organisme (organisme_id),
+    ADD INDEX idx_micro_projets_guichet (guichet_id),
+    ADD INDEX idx_micro_projets_secteur (secteur_id),
+    ADD INDEX idx_micro_projets_commune (commune_id),
+    ADD INDEX idx_micro_projets_stade_projet (stade_projet),
+    ADD INDEX idx_micro_projets_type_projet (type_projet),
+    ADD INDEX idx_micro_projets_created_at (created_at),
+    ADD INDEX idx_micro_projets_agence_statut (agence_id, statut),
+    ADD INDEX idx_micro_projets_promoteur_statut (promoteur_id, statut),
+    ADD INDEX idx_micro_projets_dispositif_statut (dispositif_id, statut),
+    ADD INDEX idx_micro_projets_statut_created_at (statut, created_at),
+    ADD FULLTEXT INDEX micro_projets_fulltext (code,intitule,description);
+
+ALTER TABLE promoteurs
+    ADD INDEX idx_promoteurs_sexe (sexe_id),
+    ADD INDEX idx_promoteurs_personnel (personnel_id),
+    ADD INDEX idx_promoteurs_lieuhabitation (lieuhabitation_id),
+    ADD INDEX idx_promoteurs_secteuractivite (secteuractivite_id),
+    ADD INDEX idx_promoteurs_soussecteuractivite (soussecteuractivite_id),
+    ADD INDEX idx_promoteurs_created_at (created_at),
+    ADD INDEX idx_promoteurs_agence_statut (agenceregionale_id, statut),
+    ADD FULLTEXT INDEX promoteurs_fulltext (nom,prenom,email,matriculeaej);
+
+ALTER TABLE personnels
+    ADD INDEX idx_personnels_is_active (is_active),
+    ADD INDEX idx_personnels_created_at (created_at),
+    ADD INDEX idx_personnels_agence_active (agence_id, is_active);
+
+-- ##############################################################
+-- INDEXES POUR LES TABLES FINANCIÈRES
+-- ##############################################################
+
+ALTER TABLE budgets
+    ADD INDEX idx_budgets_micro_projet (micro_projet_id),
+    ADD INDEX idx_budgets_statut (statut),
+    ADD INDEX idx_budgets_created_at (created_at),
+    ADD INDEX idx_budgets_statut_created (statut, created_at);
+
+ALTER TABLE compte_financements
+    ADD INDEX idx_compte_financements_micro_projet (micro_projet_id),
+    ADD INDEX idx_compte_financements_organisme (organisme_id),
+    ADD INDEX idx_compte_financements_etat_ouverture (etat_ouverture),
+    ADD INDEX idx_compte_financements_avis_partenaire (avis_partenaire),
+    ADD INDEX idx_compte_financements_created_at (created_at),
+    ADD INDEX idx_compte_financements_micro_statut (micro_projet_id, etat_ouverture);
+
+ALTER TABLE plan_decaissements
+    ADD INDEX idx_plan_decaissements_micro_projet (micro_projet_id),
+    ADD INDEX idx_plan_decaissements_budget (budget_id),
+    ADD INDEX idx_plan_decaissements_compte_financement (compte_financement_id),
+    ADD INDEX idx_plan_decaissements_statut (statut),
+    ADD INDEX idx_plan_decaissements_date_prevue (date_prevue),
+    ADD INDEX idx_plan_decaissements_statut_date (statut, date_prevue);
+
+ALTER TABLE ligne_decaissements
+    ADD INDEX idx_ligne_decaissements_plan (plan_decaissement_id),
+    ADD INDEX idx_ligne_decaissements_statut (statut),
+    ADD INDEX idx_ligne_decaissements_date_prevue (date_prevue);
+
+ALTER TABLE execution_ligne_decaissements
+    ADD INDEX idx_execution_ligne_decaissements_ligne (ligne_decaissement_id),
+    ADD INDEX idx_execution_ligne_decaissements_statut (statut),
+    ADD INDEX idx_execution_ligne_decaissements_date (date_decaisse);
+
+ALTER TABLE decaissements
+    ADD INDEX idx_decaissements_plan (plan_decaissement_id),
+    ADD INDEX idx_decaissements_agence (agence_id),
+    ADD INDEX idx_decaissements_statut (statut),
+    ADD INDEX idx_decaissements_date (date_decaissement),
+    ADD INDEX idx_decaissements_agence_statut (agence_id, statut),
+    ADD INDEX idx_decaissements_statut_date (statut, date_decaissement);
+
+ALTER TABLE decaissements_declarations
+    ADD INDEX idx_decaissements_declarations_plan (plan_decaissement_id),
+    ADD INDEX idx_decaissements_declarations_ligne (ligne_decaissement_id),
+    ADD INDEX idx_decaissements_declarations_promoteur (promoteur_id),
+    ADD INDEX idx_decaissements_declarations_statut (statut),
+    ADD INDEX idx_decaissements_declarations_date (date_declaree);
+
+ALTER TABLE suivi_decaissements
+    ADD INDEX idx_suivi_decaissements_ligne (ligne_decaissement_id),
+    ADD INDEX idx_suivi_decaissements_date (date_decaisse);
+
+ALTER TABLE plan_remboursements
+    ADD INDEX idx_plan_remboursements_micro_projet (micro_projet_id),
+    ADD INDEX idx_plan_remboursements_budget (budget_id),
+    ADD INDEX idx_plan_remboursements_decision (decision),
+    ADD INDEX idx_plan_remboursements_date_ouverture (date_ouverture);
+
+ALTER TABLE tableau_amortissements
+    ADD INDEX idx_tableau_amortissements_plan (plan_remboursement_id),
+    ADD INDEX idx_tableau_amortissements_statut (statut),
+    ADD INDEX idx_tableau_amortissements_date_echeance (date_echeance),
+    ADD INDEX idx_tableau_amortissements_statut_date (statut, date_echeance);
+
+ALTER TABLE remboursements_declarations
+    ADD INDEX idx_remboursements_declarations_plan (plan_remboursement_id),
+    ADD INDEX idx_remboursements_declarations_promoteur (promoteur_id),
+    ADD INDEX idx_remboursements_declarations_statut (statut),
+    ADD INDEX idx_remboursements_declarations_date (date_declaree);
+
+ALTER TABLE remboursements
+    ADD INDEX idx_remboursements_plan (plan_remboursement_id),
+    ADD INDEX idx_remboursements_promoteur (promoteur_id),
+    ADD INDEX idx_remboursements_statut (statut),
+    ADD INDEX idx_remboursements_date_paiement (date_paiement),
+    ADD INDEX idx_remboursements_promoteur_statut (promoteur_id, statut),
+    ADD INDEX idx_remboursements_statut_date (statut, date_paiement);
+
+ALTER TABLE suivi_remboursements
+    ADD INDEX idx_suivi_remboursements_amortissement (amortissement_id),
+    ADD INDEX idx_suivi_remboursements_date (date_paiement);
+
+ALTER TABLE recouvrements
+    ADD INDEX idx_recouvrements_micro_projet (micro_projet_id),
+    ADD INDEX idx_recouvrements_plan (plan_remboursement_id),
+    ADD INDEX idx_recouvrements_agent (agent_id),
+    ADD INDEX idx_recouvrements_type_action (type_action),
+    ADD INDEX idx_recouvrements_date (date_recouvrement),
+    ADD INDEX idx_recouvrements_type_date (type_action, date_recouvrement);
+
+ALTER TABLE garanties
+    ADD INDEX idx_garanties_micro_projet (micro_projet_id),
+    ADD INDEX idx_garanties_organisme (organisme_id),
+    ADD INDEX idx_garanties_statut (statut),
+    ADD INDEX idx_garanties_date_rappel (date_rappel),
+    ADD INDEX idx_garanties_statut_date (statut, date_rappel);
+
+-- ##############################################################
+-- INDEXES POUR LES TABLES DE SUIVI ET OBSERVATIONS
+-- ##############################################################
+
+ALTER TABLE transactions_financieres
+    ADD INDEX idx_transactions_micro_projet (micro_projet_id),
+    ADD INDEX idx_transactions_categorie (categorie_id),
+    ADD INDEX idx_transactions_date (date_transaction),
+    ADD INDEX idx_transactions_created_at (created_at);
+
+ALTER TABLE exploitations
+    ADD INDEX idx_exploitations_micro_projet (micro_projet_id),
+    ADD INDEX idx_exploitations_agent (agent_id),
+    ADD INDEX idx_exploitations_date_debut (date_debut_visite),
+    ADD INDEX idx_exploitations_created_at (created_at);
+
+ALTER TABLE observations
+    ADD INDEX idx_observations_micro_projet (micro_projet_id),
+    ADD INDEX idx_observations_auteur (auteur_id),
+    ADD INDEX idx_observations_created_at (created_at);
+
+ALTER TABLE documents
+    ADD INDEX idx_documents_micro_projet (micro_projet_id),
+    ADD INDEX idx_documents_created_by (created_by),
+    ADD INDEX idx_documents_type (type),
+    ADD INDEX idx_documents_created_at (created_at);
+
+-- ##############################################################
+-- INDEXES POUR LES TABLES DE LOTS
+-- ##############################################################
+
+ALTER TABLE lots_transmission
+    ADD INDEX idx_lots_transmission_organisme (organisme_id),
+    ADD INDEX idx_lots_transmission_guichet (guichet_id),
+    ADD INDEX idx_lots_transmission_statut (statut),
+    ADD INDEX idx_lots_transmission_date (date_transmission),
+    ADD INDEX idx_lots_transmission_statut_date (statut, date_transmission);
+
+ALTER TABLE lots_importation
+    ADD INDEX idx_lots_importation_micro_projet (micro_projet_id),
+    ADD INDEX idx_lots_importation_created_at (created_at);
+
+ALTER TABLE lots_micro_projets
+    ADD INDEX idx_lots_micro_projets_lot (lot_id),
+    ADD INDEX idx_lots_micro_projets_micro_projet (micro_projet_id),
+    ADD INDEX idx_lots_micro_projets_statut (statut);
+
+ALTER TABLE imputations_agences
+    ADD INDEX idx_imputations_agences_agence (agence_id),
+    ADD INDEX idx_imputations_agences_micro_projet (micro_projet_id),
+    ADD INDEX idx_imputations_agences_statut (statut),
+    ADD INDEX idx_imputations_agences_agence_statut (agence_id, statut);
+
+-- ##############################################################
+-- INDEXES POUR LES TABLES DE WORKFLOW
+-- ##############################################################
+
+ALTER TABLE workflow_instances
+    ADD INDEX idx_workflow_instances_micro_projet (micro_projet_id),
+    ADD INDEX idx_workflow_instances_version (workflow_version),
+    ADD INDEX idx_workflow_instances_current_etape (current_etape_code),
+    ADD INDEX idx_workflow_instances_statut (statut),
+    ADD INDEX idx_workflow_instances_created_at (created_at),
+    ADD INDEX idx_workflow_instances_etape_statut (current_etape_code, statut);
+
+ALTER TABLE workflow_instance_history
+    ADD INDEX idx_workflow_instance_history_instance (workflow_instance_id),
+    ADD INDEX idx_workflow_instance_history_etape (etape_code),
+    ADD INDEX idx_workflow_instance_history_created_at (created_at);
+
+-- ##############################################################
+-- INDEXES POUR LES TABLES DE FORMULAIRES ET ÉVALUATIONS
+-- ##############################################################
+
+ALTER TABLE formulaire_evaluations
+    ADD INDEX idx_formulaire_evaluations_micro_projet (micro_projet_id),
+    ADD INDEX idx_formulaire_evaluations_created_at (created_at);
+
+ALTER TABLE evaluations
+    ADD INDEX idx_evaluations_formulaire (formulaire_id),
+    ADD INDEX idx_evaluations_date_evaluation (date_evaluation),
+    ADD INDEX idx_evaluations_created_at (created_at);
+
+-- ##############################################################
+-- INDEXES POUR LES TABLES DE RÉFÉRENTIELS GÉOGRAPHIQUES
+-- ##############################################################
+
+ALTER TABLE regions
+    ADD INDEX idx_regions_code (code);
+
+ALTER TABLE departements
+    ADD INDEX idx_departements_region (region_id),
+    ADD INDEX idx_departements_code (code);
+
+ALTER TABLE sous_prefectures
+    ADD INDEX idx_sous_prefectures_departement (departement_id),
+    ADD INDEX idx_sous_prefectures_code (code);
+
+ALTER TABLE communes
+    ADD INDEX idx_communes_sous_prefecture (sous_prefecture_id),
+    ADD INDEX idx_communes_code (code);
+
+ALTER TABLE villes
+    ADD INDEX idx_villes_commune (commune_id),
+    ADD INDEX idx_villes_code (code);
+
+ALTER TABLE lieux_habitation
+    ADD INDEX idx_lieux_habitation_ville (ville_id);
+
+-- ##############################################################
+-- INDEXES POUR LES TABLES DE RÉFÉRENTIELS MÉTIER
+-- ##############################################################
+
+ALTER TABLE sous_secteurs
+    ADD INDEX idx_sous_secteurs_secteur (secteur_activite_id);
+
+ALTER TABLE structures
+    ADD INDEX idx_structures_niveau (niveau_id),
+    ADD INDEX idx_structures_parent (parent_id);
+
+ALTER TABLE fonctions
+    ADD INDEX idx_fonctions_structure (structure_id);
+
+ALTER TABLE type_entreprises
+    ADD INDEX idx_type_entreprises_code (code);
+
+ALTER TABLE entreprises
+    ADD INDEX idx_entreprises_type (type_entreprise_id),
+    ADD INDEX idx_entreprises_region (region_id),
+    ADD INDEX idx_entreprises_commune (commune_id),
+    ADD INDEX idx_entreprises_rccm (rccm),
+    ADD INDEX idx_entreprises_ninea (ninea);
+
+ALTER TABLE type_organismes
+    ADD INDEX idx_type_organismes_code (code);
+
+ALTER TABLE organisme_financements
+    ADD INDEX idx_organisme_financements_type (type),
+    ADD INDEX idx_organisme_financements_region (region_id);
+
+ALTER TABLE agences_regionales
+    ADD INDEX idx_agences_regionales_region (region_id),
+    ADD INDEX idx_agences_regionales_code (code);
+
+ALTER TABLE roles
+    ADD INDEX idx_roles_code (code);
+
+ALTER TABLE permissions
+    ADD INDEX idx_permissions_role (role_id),
+    ADD INDEX idx_permissions_module (module);
