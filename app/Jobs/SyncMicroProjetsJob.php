@@ -314,7 +314,7 @@ class SyncMicroProjetsJob implements ShouldQueue
 
             $rows[$id] = [
                 'id'           => $id,
-                'code'         => $item['code'] ?? 'PRO_' . ($item['matricule'] ?? ''),
+                'code'         => $item['code'] ?? $item['matricule'] ?? '',
                 'matricule'    => $item['matricule'] ?? null,
                 'intitule'     => $item['intitule'] ?? null,
                 'description'  => $item['description'] ?? null,

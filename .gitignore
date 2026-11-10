@@ -21,8 +21,9 @@
 /storage/*.key
 /storage/pail
 /storage/data
-/notes/data
+/storage/backups
 /vendor
+/notes
 /trash
 _ide_helper.php
 Homestead.json
