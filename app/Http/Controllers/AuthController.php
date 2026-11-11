@@ -98,10 +98,10 @@ class AuthController extends Controller
             if (!$configOTP) {
                 $cookies = $this->initCookies($personnel);
 
-                return new JsonResponse([
+                return (new JsonResponse([
                     'message' => 'Utilisateur connecté avec succès.',
                     'user_id' => $personnel->id
-                ], 200)
+                ], 200))
                     ->withCookie($cookies['accessToken'])
                     ->withCookie($cookies['refreshToken']);
             }
@@ -267,10 +267,10 @@ class AuthController extends Controller
             $validOtp->markAsUsed();
             $cookies = $this->initCookies($personnel);
 
-            return new JsonResponse([
+            return (new JsonResponse([
                 'message' => 'Code OTP validé, utilisateur connecté avec succès.',
                 'user_id' => $personnel->id
-            ], 200)
+            ], 200))
                 ->withCookie($cookies['accessToken'])
                 ->withCookie($cookies['refreshToken']);
         } catch (\Exception $e) {
@@ -335,10 +335,10 @@ class AuthController extends Controller
         $tokenModel->delete();
         $cookies = $this->initCookies($personnel);
 
-        return new JsonResponse([
+        return (new JsonResponse([
             'message' => 'Token refresh avec succès',
             'user_id' => $personnel->id,
-        ], 200)
+        ], 200))
             ->withCookie($cookies['accessToken'])
             ->withCookie($cookies['refreshToken']);
     }
