@@ -29,6 +29,11 @@ class SaveMicroProjetsJob implements ShouldQueue, ShouldBeUnique
     private string $endpoint = '';
     private string $pagesDir = '';
     private string $dataFile = '';
+    private string $progressFile = '';
+
+    private int $lastSuccessfulPage = 0;
+    private int $totalPages = 0;
+    private int $totalProjects = 0;
 
     public function handle(): void
     {
@@ -42,11 +47,18 @@ class SaveMicroProjetsJob implements ShouldQueue, ShouldBeUnique
 
         try {
             $dataDir = storage_path('data');
-            $this->dataFile = $dataDir . '/projets_data.json';
+            $this->progressFile = $dataDir . '/micro_projets_progress.json';
+            $this->dataFile = $dataDir . '/micro_projets_data.json';
             $this->pagesDir = $dataDir . '/pages';
+
             if (!is_dir($this->pagesDir)) {
                 mkdir($this->pagesDir, 0775, true);
             }
+            if (!is_dir(dirname($this->progressFile))) {
+                mkdir(dirname($this->progressFile), 0775, true);
+            }
+
+            $this->loadProgress();
 
             $baseUrl = rtrim(config('aej_api.backoffice_url'), '/');
             $this->endpoint = $baseUrl . '/' . ltrim(config('aej_api.backoffice_endpoints.micro_projets'), '/');
@@ -58,10 +70,14 @@ class SaveMicroProjetsJob implements ShouldQueue, ShouldBeUnique
             }
             $lastPage = (int) ($first['meta']['last_page'] ?? 1);
             $expected = (int) ($first['meta']['total'] ?? 0);
+            $this->totalPages = $lastPage;
+            $this->totalProjects = $expected;
+
             $this->writePage(1, $first['data'] ?? []);
 
             $missing = [];
-            for ($p = 2; $p <= $lastPage; $p++) {
+            $startPage = max(2, $this->lastSuccessfulPage + 1);
+            for ($p = $startPage; $p <= $lastPage; $p++) {
                 if (!is_file($this->pageFile($p))) {
                     $missing[] = $p;
                 }
@@ -71,7 +87,8 @@ class SaveMicroProjetsJob implements ShouldQueue, ShouldBeUnique
                 'total_pages' => $lastPage,
                 'expected_records' => $expected,
                 'pages_to_fetch' => count($missing),
-                'pages_already_done' => $lastPage - 1 - count($missing),
+                'pages_already_done' => $startPage - 1,
+                'resuming_from_page' => $this->lastSuccessfulPage > 0 ? $this->lastSuccessfulPage + 1 : 'start',
             ]);
 
             $failed = $this->fetchPages($missing);
@@ -92,6 +109,7 @@ class SaveMicroProjetsJob implements ShouldQueue, ShouldBeUnique
             }
 
             $this->cleanupPages();
+            $this->resetProgress();
 
             $report['success'] = $total;
             $report['details'] = [
@@ -114,6 +132,7 @@ class SaveMicroProjetsJob implements ShouldQueue, ShouldBeUnique
                 'error' => $e->getMessage(),
                 'report' => $report,
             ]);
+            $this->saveProgress();
             throw $e;
         }
 
@@ -128,6 +147,63 @@ class SaveMicroProjetsJob implements ShouldQueue, ShouldBeUnique
     public function failed(Throwable $e): void
     {
         Log::error('SaveMicroProjetsJob failed', ['error' => $e->getMessage()]);
+        $this->saveProgress();
+    }
+
+    /* ------------------------------------------------------------------ */
+    /*  Progression                                                       */
+    /* ------------------------------------------------------------------ */
+    private function loadProgress(): void
+    {
+        if (!is_file($this->progressFile)) {
+            return;
+        }
+
+        try {
+            $content = file_get_contents($this->progressFile);
+            $progress = json_decode($content, true);
+
+            if (is_array($progress)) {
+                $this->lastSuccessfulPage = (int) ($progress['last_successful_page'] ?? 0);
+                $this->totalPages = (int) ($progress['total_pages'] ?? 0);
+                $this->totalProjects = (int) ($progress['total_projects'] ?? 0);
+
+                Log::info('Progress loaded', [
+                    'last_successful_page' => $this->lastSuccessfulPage,
+                    'total_pages' => $this->totalPages,
+                    'total_projects' => $this->totalProjects,
+                ]);
+            }
+        } catch (\Throwable $e) {
+            Log::warning('Failed to load progress file', ['error' => $e->getMessage()]);
+        }
+    }
+
+    private function saveProgress(): void
+    {
+        $progress = [
+            'last_successful_page' => $this->lastSuccessfulPage,
+            'next_page' => $this->lastSuccessfulPage + 1,
+            'total_pages' => $this->totalPages,
+            'total_projects' => $this->totalProjects,
+            'updated_at' => now()->toIso8601String(),
+        ];
+
+        try {
+            $tmp = $this->progressFile . '.tmp';
+            file_put_contents($tmp, json_encode($progress, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+            rename($tmp, $this->progressFile);
+        } catch (\Throwable $e) {
+            Log::warning('Failed to save progress', ['error' => $e->getMessage()]);
+        }
+    }
+
+    private function resetProgress(): void
+    {
+        if (is_file($this->progressFile)) {
+            @unlink($this->progressFile);
+        }
+        Log::info('Progress reset');
     }
 
     /* ------------------------------------------------------------------ */
@@ -237,9 +313,11 @@ class SaveMicroProjetsJob implements ShouldQueue, ShouldBeUnique
 
                 if (is_array($json) && isset($json['data']) && is_array($json['data'])) {
                     $this->writePage($item['page'], $json['data']);
+                    $this->lastSuccessfulPage = $item['page'];
                     $done++;
                     if ($done % 50 === 0 || $done === $totalToFetch) {
                         Log::info('Fetch progress', ['done' => $done, 'of' => $totalToFetch]);
+                        $this->saveProgress();
                     }
                     continue;
                 }
@@ -268,6 +346,8 @@ class SaveMicroProjetsJob implements ShouldQueue, ShouldBeUnique
         }
 
         curl_multi_close($mh);
+
+        $this->saveProgress();
 
         return $failed;
     }
